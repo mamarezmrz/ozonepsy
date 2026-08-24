@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthModal, type AuthModalMode } from "@/components/auth-modal";
+import { SiteNotification } from "@/components/site-notification";
 
 const consultationLinks = [
   ["مشاوره فردی", "/consultations/individual"],
@@ -59,7 +60,27 @@ export function SiteHeader() {
   const [consultationsOpen, setConsultationsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>("login");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const consultationsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result: { authenticated?: boolean } | null) => {
+        if (!cancelled) setIsAuthenticated(result?.authenticated === true);
+      })
+      .catch(() => {
+        if (!cancelled) setIsAuthenticated(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!consultationsOpen) return;
@@ -83,6 +104,22 @@ export function SiteHeader() {
     closeMenu();
     setAuthModalMode("login");
     setAuthModalOpen(true);
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (!response.ok) throw new Error("Logout failed");
+      setIsAuthenticated(false);
+      setNotification({ message: "با موفقیت خارج شدید.", tone: "success" });
+    } catch {
+      setNotification({ message: "خروج انجام نشد. دوباره تلاش کنید.", tone: "error" });
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -132,10 +169,36 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header-actions">
-          <button type="button" className="site-header-login focus-ring" onClick={openAuthModal} aria-haspopup="dialog" aria-expanded={authModalOpen}>
-            <span className="site-header-user-icon" aria-hidden="true" />
-            <span dir="rtl">ورود / ثبت نام</span>
-          </button>
+          {isAuthenticated === null ? (
+            <span className="site-header-login site-header-login-placeholder" aria-hidden="true">
+              <span className="site-header-user-icon" />
+              <span dir="rtl">ورود / ثبت نام</span>
+            </span>
+          ) : isAuthenticated ? (
+            <>
+              <button
+                type="button"
+                className="site-header-logout focus-ring"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                aria-label="خروج از حساب کاربری"
+                title="خروج"
+              >
+                <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M1 1L8 1V2L2 2L2 13H8V14H1L1 1ZM10.8536 4.14645L14.1932 7.48614L10.8674 11.0891L10.1326 10.4109L12.358 8L4 8V7L12.2929 7L10.1464 4.85355L10.8536 4.14645Z" fill="currentColor" />
+                </svg>
+              </button>
+              <Link href="/dashboard" className="site-header-login focus-ring" onClick={closeMenu}>
+                <span className="site-header-user-icon" aria-hidden="true" />
+                <span dir="rtl">حساب کاربری</span>
+              </Link>
+            </>
+          ) : (
+            <button type="button" className="site-header-login focus-ring" onClick={openAuthModal} aria-haspopup="dialog" aria-expanded={authModalOpen}>
+              <span className="site-header-user-icon" aria-hidden="true" />
+              <span dir="rtl">ورود / ثبت نام</span>
+            </button>
+          )}
           <button
             type="button"
             className="site-header-menu-toggle focus-ring"
@@ -163,7 +226,12 @@ export function SiteHeader() {
         mode={authModalMode}
         onClose={() => setAuthModalOpen(false)}
         onModeChange={setAuthModalMode}
+        onNotification={(message, tone = "success") => {
+          setNotification({ message, tone });
+          if (tone === "success") setIsAuthenticated(true);
+        }}
       />
+      {notification && <SiteNotification message={notification.message} tone={notification.tone} onDismiss={() => setNotification(null)} />}
     </>
   );
 }

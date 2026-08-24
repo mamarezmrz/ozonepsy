@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { PageLoader } from "@/components/page-loader";
 import { ScrollToTopButton } from "@/components/scroll-to-top";
 import "./globals.css";
 
@@ -12,4 +13,4 @@ const ozoneFont = localFont({
 });
 
 export const metadata: Metadata = { title: { default: "اُزون | مشاوره آنلاین روانشناسی", template: "%s | اُزون" }, description: "مشاوره آنلاین روانشناسی فردی و گروهی برای ایرانیان خارج از کشور." };
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="fa" dir="rtl"><body className={ozoneFont.variable}>{children}<ScrollToTopButton /></body></html>; }
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="fa" dir="rtl"><body className={ozoneFont.variable}>{children}<ScrollToTopButton /><PageLoader /></body></html>; }
