@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HomeFaq, HomeSocialCarousel, HomeTestimonials } from "@/components/home-interactive";
-import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { SiteFooter, SiteHeader } from "@/components/site-header-server";
 
 const asset = (name: string) => `/figma-home/${name}`;
 

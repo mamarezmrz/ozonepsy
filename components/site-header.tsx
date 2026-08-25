@@ -29,6 +29,8 @@ const breadcrumbLabels: Record<string, string> = {
   "/group-therapy": "گروه درمانی",
   "/therapists": "مشاوران اُزون",
   "/pricing": "قیمت‌گذاری و خرید",
+  "/support-fund": "صندوق حمایت",
+  "/partners": "همکاران اُزون",
   "/about": "درباره ما",
   "/contact": "تماس با ما",
   "/free-session": "پیش‌مشاوره رایگان",
@@ -54,33 +56,16 @@ function getBreadcrumbLabel(pathname: string) {
   return "صفحه";
 }
 
-export function SiteHeader() {
+export function SiteHeader({ initialAuthenticated = false }: { initialAuthenticated?: boolean }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [consultationsOpen, setConsultationsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>("login");
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notification, setNotification] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const consultationsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((result: { authenticated?: boolean } | null) => {
-        if (!cancelled) setIsAuthenticated(result?.authenticated === true);
-      })
-      .catch(() => {
-        if (!cancelled) setIsAuthenticated(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!consultationsOpen) return;
@@ -141,13 +126,7 @@ export function SiteHeader() {
                 onClick={() => setConsultationsOpen((open) => !open)}
               >
                 <span>حوزه‌های مشاوره</span>
-                <Image
-                  src="/icons/chevron-down.svg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className={consultationsOpen ? "is-open" : ""}
-                />
+                <span className={`site-header-consultation-chevron${consultationsOpen ? " is-open" : ""}`} aria-hidden="true" />
               </button>
               {consultationsOpen && (
                 <div id="consultations-submenu" className="site-header-submenu">
@@ -169,12 +148,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header-actions">
-          {isAuthenticated === null ? (
-            <span className="site-header-login site-header-login-placeholder" aria-hidden="true">
-              <span className="site-header-user-icon" />
-              <span dir="rtl">ورود / ثبت نام</span>
-            </span>
-          ) : isAuthenticated ? (
+          {isAuthenticated ? (
             <>
               <button
                 type="button"

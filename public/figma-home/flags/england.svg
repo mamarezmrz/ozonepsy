@@ -1,0 +1,7 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip-england)">
+    <path d="M0 0H80V80H0V0Z" fill="white"/>
+    <path d="M33.3333 0H46.6667V80H33.3333V0ZM0 33.3333H80V46.6667H0V33.3333Z" fill="#CF142B"/>
+  </g>
+  <defs><clipPath id="clip-england"><rect width="80" height="80" rx="40" fill="white"/></clipPath></defs>
+</svg>

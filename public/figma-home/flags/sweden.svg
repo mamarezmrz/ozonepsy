@@ -1,0 +1,7 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip-sweden)">
+    <path d="M0 0H80V80H0V0Z" fill="#005293"/>
+    <path d="M20.9375 0V32H0V48H20.9375V80H36.9375V48H80V32H36.9375V0H20.9375Z" fill="#FECB00"/>
+  </g>
+  <defs><clipPath id="clip-sweden"><rect width="80" height="80" rx="40" fill="white"/></clipPath></defs>
+</svg>
