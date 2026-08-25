@@ -1,11 +1,26 @@
-import { products } from "@/lib/data";
-import { IndividualConsultationPage } from "@/components/individual-consultation-page";
-import { ProductCard, SectionTitle } from "@/components/ui";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { ConsultationCategoryPage } from "@/components/individual-consultation-page";
 import { SiteFooter, SiteHeader } from "@/components/site-header-server";
+import { getConsultationCategoryContent } from "@/lib/consultation-categories";
+import { createPageMetadata } from "@/lib/seo";
+
+const categoryDescriptions: Record<string, string> = {
+  individual: "مشاوره فردی آنلاین و محرمانه برای شناخت بهتر خود و عبور از چالش‌ها.",
+  couples: "زوج‌درمانی و مشاوره رابطه برای گفت‌وگویی امن‌تر و ساختن رابطه‌ای پایدارتر.",
+  teenagers: "مشاوره تخصصی کودک و نوجوان برای رشد، آرامش و ساختن پیوندهای امن.",
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
+  const { category } = await params;
+  const content = getConsultationCategoryContent(category);
+  return content ? createPageMetadata(content.title, categoryDescriptions[category]) : createPageMetadata("صفحه پیدا نشد");
+}
+
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
-  if (category === "individual") return <><SiteHeader /><IndividualConsultationPage /><SiteFooter /></>;
+  const content = getConsultationCategoryContent(category);
+  if (!content) notFound();
 
-  const title = category === "couples" ? "زوج و رابطه" : category === "teenagers" ? "کودک و نوجوان" : "مشاوره فردی";
-  return <><SiteHeader /><main className="container-oz py-16"><SectionTitle eyebrow="حوزه مشاوره" title={title} description="با انتخاب یک خدمت، مسیر مناسب خودتان را شروع کنید." /><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{products.filter((product) => product.kind !== "course").map((product) => <ProductCard key={product.id} product={product} />)}</div></main><SiteFooter /></>;
+  return <><SiteHeader /><ConsultationCategoryPage content={content} /><SiteFooter /></>;
 }

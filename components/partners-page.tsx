@@ -1,30 +1,21 @@
 import { AboutPreconsultation } from "@/components/about-page";
 import { PartnersExpandableGrid, type PartnerItem } from "@/components/partners-expandable-grid";
+import { institutionProfiles } from "@/lib/institutions";
+import { therapistProfiles } from "@/lib/therapists";
 
-const institutions: PartnerItem[] = [
-  { name: "مرکز مشاوره همشهری", description: "مرکز مشاوره و خدمات روانشناختی", image: "partner-1.png" },
-  { name: "مرکز مشاوره آسمان", description: "مرکز مشاوره و خدمات روانشناختی", image: "partner-2.png" },
-  { name: "مرکز مشاوره آسمان", description: "مرکز مشاوره و خدمات روانشناختی", image: "partner-3.jpg" },
-  { name: "مرکز مشاوره راه نو", description: "مرکز روانشناسی و مشاوره", image: "partner-4.png" },
-  { name: "مرکز مشاوره خانواده", description: "مرکز مشاوره خانواده و روابط", image: "partner-5.png" },
-  { name: "مرکز مشاوره آسمان", description: "مرکز مشاوره و خدمات روانشناختی", image: "partner-2.png" },
-  { name: "مرکز مشاوره راه نو", description: "مرکز روانشناسی و مشاوره", image: "partner-4.png" },
-  { name: "مرکز مشاوره خانواده", description: "مرکز مشاوره خانواده و روابط", image: "partner-5.png" },
-];
+const institutions: PartnerItem[] = [...institutionProfiles, ...institutionProfiles.slice(0, 3)].map((profile) => ({
+  name: profile.name,
+  description: profile.specialty,
+  image: profile.image,
+  href: `/institutes/${profile.slug}`,
+}));
 
-const therapists: PartnerItem[] = [
-  { name: "دکتر رضا مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-6.jpg" },
-  { name: "دکتر سارا مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-7.jpg" },
-  { name: "دکتر علی مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-8.jpg" },
-  { name: "دکتر محمد مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-9.jpg" },
-  { name: "دکتر نازنین مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-10.jpg" },
-  { name: "دکتر امیر مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-11.jpg" },
-  { name: "دکتر رضا مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-6.jpg" },
-  { name: "دکتر سارا مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-7.jpg" },
-  { name: "دکتر علی مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-8.jpg" },
-  { name: "دکتر محمد مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-9.jpg" },
-  { name: "دکتر نازنین مولودی", description: "کارشناس ارشد روانشناسی بالینی", image: "partner-10.jpg" },
-];
+const therapists: PartnerItem[] = [...therapistProfiles, ...therapistProfiles.slice(0, 5)].map((profile) => ({
+  name: profile.name,
+  description: profile.specialty,
+  image: profile.image,
+  href: `/therapists/${profile.slug}`,
+}));
 
 export function PartnersPage() {
   return (

@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { AboutPage } from "@/components/about-page";
 import { ContactPage } from "@/components/contact-page";
 import { CoursesPage } from "@/components/courses-page";
 import { FreeSessionPage } from "@/components/free-session-page";
+import { GroupTherapyPage } from "@/components/group-therapy-page";
 import { PricingPage } from "@/components/pricing-page";
 import { PartnersPage } from "@/components/partners-page";
 import { SupportFundPage } from "@/components/support-fund-page";
 import { SiteFooter, SiteHeader } from "@/components/site-header-server";
 import { products } from "@/lib/data";
 import { ProductCard, SectionTitle } from "@/components/ui";
+import { createPageMetadata } from "@/lib/seo";
 
 const content: Record<string, { title: string; description: string }> = {
   consultations: { title: "حوزه‌های مشاوره", description: "از میان مسیرهای مختلف مشاوره، گزینه‌ای را پیدا کنید که به نیاز امروزتان نزدیک است." },
@@ -22,6 +25,12 @@ const content: Record<string, { title: string; description: string }> = {
   partners: { title: "همکاران اُزون", description: "با موسسات و مشاوران حرفه‌ای همکار اُزون آشنا شوید." },
   "free-session": { title: "پیش‌مشاوره رایگان", description: "قبل از شروع، چند دقیقه درباره نیازتان با ما صحبت کنید." },
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ section: string }> }): Promise<Metadata> {
+  const { section } = await params;
+  const page = content[section];
+  return page ? createPageMetadata(page.title, page.description) : createPageMetadata("صفحه پیدا نشد");
+}
 
 export default async function ListingPage({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
@@ -45,6 +54,9 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
   }
   if (section === "courses") {
     return <><SiteHeader /><CoursesPage /><SiteFooter /></>;
+  }
+  if (section === "group-therapy") {
+    return <><SiteHeader /><GroupTherapyPage /><SiteFooter /></>;
   }
   if (section === "partners") {
     return <><SiteHeader /><PartnersPage /><SiteFooter /></>;

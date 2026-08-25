@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 export type PartnerItem = {
   name: string;
   description: string;
   image: string;
+  href?: string;
 };
 
 type PartnersExpandableGridProps = {
@@ -42,7 +44,7 @@ export function PartnersExpandableGrid({ title, items, variant }: PartnersExpand
 }
 
 function PartnerCard({ item, variant }: { item: PartnerItem; variant: "institution" | "therapist" }) {
-  return (
+  const card = (
     <article className={`partner-card partner-card-${variant}`}>
       <div className="partner-card-media">
         <Image src={`/figma-home/${item.image}`} alt={item.name} fill sizes="(max-width: 560px) 100vw, (max-width: 900px) 45vw, 300px" />
@@ -53,4 +55,6 @@ function PartnerCard({ item, variant }: { item: PartnerItem; variant: "instituti
       </div>
     </article>
   );
+
+  return item.href ? <Link href={item.href} className="partner-card-link" aria-label={`مشاهده ${item.name}`}>{card}</Link> : card;
 }

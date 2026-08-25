@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthModal, type AuthModalMode } from "@/components/auth-modal";
 import { SiteNotification } from "@/components/site-notification";
+import { consultationTopics } from "@/lib/consultation-topics";
+import { groupTherapySessions } from "@/lib/group-therapy";
+import { institutionProfiles } from "@/lib/institutions";
+import { therapistProfiles } from "@/lib/therapists";
 
 const consultationLinks = [
   ["مشاوره فردی", "/consultations/individual"],
@@ -47,16 +51,32 @@ function getBreadcrumbLabel(pathname: string) {
   if (breadcrumbLabels[pathname]) return breadcrumbLabels[pathname];
   if (pathname.startsWith("/consultations/")) {
     const category = pathname.split("/")[2];
+    if (category === "individual" && pathname.split("/")[3]) {
+      const slug = pathname.split("/")[3];
+      return consultationTopics.find((topic) => topic.slug === slug)?.title ?? "جزئیات مشاوره فردی";
+    }
     return category === "couples" ? "زوج و رابطه" : category === "teenagers" ? "کودک و نوجوان" : "مشاوره فردی";
   }
   if (pathname.startsWith("/courses/")) return "جزئیات دوره";
+  if (pathname.startsWith("/group-therapy/")) {
+    const slug = pathname.split("/")[2];
+    return groupTherapySessions.find((session) => session.slug === slug)?.title ?? "جزئیات جلسه گروه‌درمانی";
+  }
+  if (pathname.startsWith("/therapists/")) {
+    const slug = pathname.split("/")[2];
+    return therapistProfiles.find((profile) => profile.slug === slug)?.name ?? "جزئیات مشاور";
+  }
+  if (pathname.startsWith("/institutes/")) {
+    const slug = pathname.split("/")[2];
+    return institutionProfiles.find((profile) => profile.slug === slug)?.name ?? "جزئیات موسسه";
+  }
   if (pathname.startsWith("/checkout/")) return "تکمیل سفارش";
   if (pathname.startsWith("/dashboard/")) return "داشبورد";
   if (pathname.startsWith("/admin/")) return "مدیریت اُزون";
   return "صفحه";
 }
 
-export function SiteHeader({ initialAuthenticated = false }: { initialAuthenticated?: boolean }) {
+export function SiteHeader({ initialAuthenticated = false, showBreadcrumb = true }: { initialAuthenticated?: boolean; showBreadcrumb?: boolean }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [consultationsOpen, setConsultationsOpen] = useState(false);
@@ -185,12 +205,36 @@ export function SiteHeader({ initialAuthenticated = false }: { initialAuthentica
         </div>
       </div>
       </header>
-      {pathname !== "/" && (
+      {showBreadcrumb && pathname !== "/" && (
         <nav className="page-breadcrumb" aria-label="مسیر صفحه">
           <div className="page-breadcrumb-inner container-oz">
             <Link href="/">خانه</Link>
             <span aria-hidden="true">›</span>
-            <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+            {pathname.startsWith("/group-therapy/") ? (
+              <>
+                <Link href="/group-therapy">گروه درمانی</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : pathname.startsWith("/therapists/") ? (
+              <>
+                <Link href="/partners">مشاوران اُزون</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : pathname.startsWith("/institutes/") ? (
+              <>
+                <Link href="/partners">همکاران اُزون</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : pathname.startsWith("/consultations/individual/") ? (
+              <>
+                <Link href="/consultations/individual">مشاوره فردی</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>}
           </div>
         </nav>
       )}

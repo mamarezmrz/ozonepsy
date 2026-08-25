@@ -35,8 +35,10 @@ export function PageLoader() {
   return (
     <div className="site-preloader" role="status" aria-label="در حال بارگذاری">
       <div className="site-preloader-mark">
-        <Image src="/ozone-logo.svg" alt="اُزون" width={64} height={64} priority />
-        <span className="site-preloader-spinner" aria-hidden="true" />
+        <span className="site-preloader-halo site-preloader-halo-outer" aria-hidden="true" />
+        <span className="site-preloader-halo site-preloader-halo-middle" aria-hidden="true" />
+        <span className="site-preloader-halo site-preloader-halo-inner" aria-hidden="true" />
+        <Image src="/ozone-logo.svg" alt="اُزون" width={104} height={104} priority />
       </div>
     </div>
   );

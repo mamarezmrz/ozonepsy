@@ -2,6 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { HomeFaq, HomeSocialCarousel, HomeTestimonials } from "@/components/home-interactive";
 import { SiteFooter, SiteHeader } from "@/components/site-header-server";
+import type { Metadata } from "next";
+import { homeTitle, defaultDescription } from "@/lib/seo";
+
+export const metadata: Metadata = { title: { absolute: homeTitle }, description: defaultDescription };
 
 const asset = (name: string) => `/figma-home/${name}`;
 
@@ -54,7 +58,7 @@ export default function Home() {
 
       <section className="home-courses"><div className="home-courses-head"><h2>دوره‌های روانشناسی</h2><Link href="/courses" className="home-text-link"><span>همه‌ی دوره‌ها</span><svg className="home-text-link-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link></div><div className="home-course-list">{courseRows.map(([title, tag, image, price]) => <article key={image} className="home-course-card"><div className="home-course-info"><div><h3>{title}</h3><div className="home-course-tags"><span className="home-course-tag">گروه درمانی</span><span className="home-course-tag">مشاوره فردی</span></div><p className="mt-4 text-sm leading-7 text-[#676b6b]">فرصتی عالی برای یادگیری تکنیک‌های مؤثر در مدیریت احساسات و روابط.</p></div><div className="home-course-footer"><div className="home-course-actions"><Link href="/checkout/life-skills" className="home-course-action home-course-action-primary">خرید</Link><Link href="/courses/life-skills-course" className="home-course-action home-course-action-secondary">جزئیات دوره</Link></div><span className="home-course-price"><span className="home-course-currency-symbol">$</span>{price} <small className="text-xs font-normal">(USD)</small></span></div></div><div className="home-course-image"><Image src={asset(image)} alt={tag} fill sizes="(max-width: 560px) 304px, 288px" /></div></article>)}</div></section>
 
-      <section className="home-service-steps" aria-label="مراحل دریافت خدمات"><div className="home-service-steps-inner"><div className="home-service-steps-head"><h2>مراحل دریافت خدمات</h2><Link href="/free-session" className="home-service-steps-link"><span>پیش مشاوره رایگان</span><span className="home-service-steps-chevron" aria-hidden="true" /></Link></div><div className="home-service-steps-list">{serviceSteps.map(([number, title, description]) => <article key={number} className="home-service-step"><div className="home-service-step-marker">{number}</div><h3>{title}</h3><p>{description}</p></article>)}</div></div></section>
+      <section className="home-service-steps" aria-label="مراحل دریافت خدمات"><div className="home-service-steps-inner"><div className="home-service-steps-head"><h2>مراحل دریافت خدمات</h2></div><div className="home-service-steps-list">{serviceSteps.map(([number, title, description]) => <article key={number} className="home-service-step"><div className="home-service-step-marker">{number}</div><h3>{title}</h3><p>{description}</p></article>)}</div><Link href="/free-session" className="home-service-steps-link">پیش مشاوره رایگان</Link></div></section>
 
       <section className="home-testimonials"><div className="home-testimonial-heading"><h2>نظرات شما</h2><p>تجربه همراهان اُزون از مسیر مشاوره و گفت‌وگو.</p></div><HomeTestimonials /></section>
 
