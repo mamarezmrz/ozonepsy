@@ -147,7 +147,7 @@
   .home-courses-head .home-text-link,.home-therapists-head .home-text-link{display:none}
   .home-text-link{font-size:12px;white-space:nowrap}
   .home-course-list{display:flex;gap:16px;margin-top:16px;overflow:hidden}
-  .home-course-card{display:grid;flex:0 0 304px;grid-template-columns:1fr;height:350px;min-height:350px}
+.home-course-card{display:grid;flex:0 0 304px;grid-template-columns:1fr;height:350px;min-height:350px}
   .home-course-image{grid-row:1;min-height:132px;height:132px}
   .home-course-info{grid-row:2;min-height:218px;padding:16px}
   .home-course-info h3{font-size:20px}
@@ -223,9 +223,6 @@
 .site-header-actions{display:flex;flex:0 0 auto;align-items:center;gap:18px;direction:rtl}
 .site-header-login{display:inline-flex;min-height:44px;align-items:center;gap:8px;color:#355859;font-size:14px;font-weight:400;white-space:nowrap;direction:rtl}
 .site-header-login:hover{color:#0f8b8d}
-.site-header-logout{display:inline-flex;width:36px;height:36px;align-items:center;justify-content:center;border:0;border-radius:10px;background:transparent;color:#8f3436;transition:background-color .2s ease,color .2s ease,opacity .2s ease}
-.site-header-logout:hover{background:#fff5f5;color:#db4244}
-.site-header-logout:disabled{cursor:wait;opacity:.55}
 .site-header-user-icon{display:block;width:20px;height:20px;flex:0 0 auto;background:currentColor;transition:background-color .2s ease;mask:url("/icons/header-user.svg") center/contain no-repeat;-webkit-mask:url("/icons/header-user.svg") center/contain no-repeat}
 .site-header-menu-toggle{display:none;min-height:44px;min-width:44px;align-items:center;justify-content:center;border:1px solid #d8e5e5;border-radius:12px;background:#fff;color:#355859;font-size:20px}
 @media (max-width:1279px) and (min-width:901px){.site-header-nav{margin-inline:16px}.site-header-nav-links{gap:16px}.site-header-nav-link,.site-header-dropdown-trigger{font-size:13px}}
@@ -1519,4 +1516,547 @@
   .therapist-related-photo{width:min(38vw,150px);height:min(38vw,150px)}
   .therapist-related-name{font-size:15px}
   .therapist-related-specialty{font-size:12px}
+}
+
+/* User dashboard */
+.user-dashboard{min-height:100vh;background:#fafcfc;padding:24px 24px 40px;color:#3b4040}
+.user-dashboard-layout{display:grid;grid-template-areas:"main sidebar";grid-template-columns:minmax(0,1fr) 248px;gap:36px;width:min(100%,1920px);margin:0 auto;direction:ltr}
+.user-dashboard-main{grid-area:main;min-width:0;direction:rtl}
+.user-dashboard-sidebar{grid-area:sidebar;position:sticky;top:24px;display:flex;height:calc(100dvh - 64px);min-height:0;flex-direction:column;direction:rtl;overflow:visible}
+.user-dashboard-topbar{display:flex;height:56px;align-items:center;justify-content:space-between;border-bottom:1px solid #e9eded;direction:rtl}
+.user-dashboard-breadcrumb{display:flex;align-items:center;gap:8px;color:#3b4040;font-size:14px}
+.user-dashboard-breadcrumb span:nth-child(2){color:#9b9e9e;font-size:18px}
+.user-dashboard-return{display:flex;align-items:center;gap:10px;direction:rtl;color:#3b4040;font-size:14px;transition:color .2s ease}
+.user-dashboard-return span{direction:rtl}
+.user-dashboard-return:hover,.user-dashboard-return:focus-visible{color:#0f8b8d}
+.user-dashboard-return img{width:38px;height:38px;object-fit:contain}
+.user-dashboard-profile-card{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:12px;min-height:68px;border-radius:24px;background:#e8eded;padding:8px 10px 8px 14px}
+.user-dashboard-profile-card>img{width:52px;height:52px;border-radius:50%;object-fit:cover}
+.user-dashboard-profile-avatar-placeholder{display:block;width:52px;height:52px;border-radius:50%;background:#d8e5e5}
+.user-dashboard-profile-copy{display:flex;min-width:0;width:100%;flex-direction:column;align-items:flex-start;gap:2px}
+.user-dashboard-profile-copy strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px}
+.user-dashboard-profile-meta-row{display:flex;width:100%;align-items:center;justify-content:space-between;gap:16px;direction:rtl}
+.user-dashboard-profile-meta{display:flex;max-width:100%;align-items:center;gap:16px;direction:rtl}
+.user-dashboard-profile-copy span,.user-dashboard-local-time{color:#676b6b;font-size:11px}
+.user-dashboard-local-time{display:flex;align-items:center;gap:6px;white-space:nowrap;direction:rtl}
+.user-dashboard-local-time time{color:#676b6b;font-size:11px}
+.user-dashboard-nav{display:grid;min-height:0;flex:1;align-content:start;gap:0;margin-top:40px;overflow:visible}
+.user-dashboard-nav-link{display:flex;min-height:44px;align-items:center;gap:14px;border-radius:16px;padding:0 16px;color:#3b4040;font-size:16px;transition:background-color .2s ease,color .2s ease}
+.user-dashboard-nav-icon{display:block;flex:0 0 24px;color:currentColor}
+.user-dashboard-nav-link:hover,.user-dashboard-nav-link:focus-visible{background:#ebf7f7;color:#0f8b8d}
+.user-dashboard-nav-link.is-active{background:#ebf7f7;color:#0f8b8d;font-weight:700}
+.user-dashboard-logout{display:flex;width:100%;margin-top:auto;align-items:center;justify-content:flex-end;gap:10px;padding:12px 16px;border:0;background:transparent;color:#db4244;font:inherit;font-size:16px;text-align:right;direction:ltr;cursor:pointer;transition:opacity .2s ease}
+.user-dashboard-logout:hover,.user-dashboard-logout:focus-visible{opacity:.7}
+.user-dashboard-logout:disabled{cursor:wait;opacity:.55}
+.user-dashboard-mobile-menu{display:none}
+.user-dashboard-content{display:grid;gap:24px;padding-top:24px}
+.user-dashboard-panel{min-width:0;border-radius:36px;background:#e8eded;padding:32px;direction:rtl}
+.user-dashboard-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.user-dashboard-panel-heading h2{margin:0;color:#3b4040;font-size:24px;font-weight:700;line-height:1.5}
+.user-dashboard-panel-heading a,.user-dashboard-card-link{display:inline-flex;align-items:center;gap:8px;color:#0f8b8d;font-size:14px;white-space:nowrap;transition:color .2s ease}
+.user-dashboard-panel-heading a:hover,.user-dashboard-panel-heading a:focus-visible,.user-dashboard-card-link:hover,.user-dashboard-card-link:focus-visible{color:#355859}
+.user-dashboard-arrow{display:block;width:16px;height:16px;flex:0 0 16px;background:currentColor;mask:url("/icons/chevron-down.svg") center/contain no-repeat;-webkit-mask:url("/icons/chevron-down.svg") center/contain no-repeat;transform:rotate(90deg)}
+.user-dashboard-sessions-panel{min-height:190px}
+.user-dashboard-session-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+.user-dashboard-session-card,.user-dashboard-usage-card{display:flex;min-height:72px;align-items:center;justify-content:space-between;gap:20px;border-radius:24px;background:#fff;padding:16px 24px}
+.user-dashboard-session-main{display:flex;min-width:0;flex-direction:column;gap:5px;text-align:right}
+.user-dashboard-session-main strong{font-size:17px}
+.user-dashboard-session-main small{color:#676b6b;font-size:11px}
+.user-dashboard-usage-card>div{display:flex;align-items:center;gap:32px}
+.user-dashboard-usage-card strong{font-size:15px;font-weight:400}
+.user-dashboard-usage-card b{font-size:20px}
+.user-dashboard-middle-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;direction:ltr}
+.user-dashboard-products-panel{display:flex;min-height:402px;flex-direction:column;direction:rtl}
+.user-dashboard-products-panel>*{direction:rtl}
+.user-dashboard-course-list{display:grid;max-height:300px;gap:16px;margin-top:24px;overflow-y:auto;padding-left:4px}
+.user-dashboard-group-list{display:flex;gap:16px;margin-top:24px;overflow-x:auto;padding-bottom:6px}
+.user-dashboard-course-list::-webkit-scrollbar,.user-dashboard-group-list::-webkit-scrollbar{width:6px;height:6px}
+.user-dashboard-course-list::-webkit-scrollbar-thumb,.user-dashboard-group-list::-webkit-scrollbar-thumb{border-radius:99px;background:#9b9e9e}
+.user-dashboard-course-list::-webkit-scrollbar-track,.user-dashboard-group-list::-webkit-scrollbar-track{background:#d8e5e5}
+.user-dashboard-product-card{display:flex;min-width:0;flex:1;gap:16px;overflow:hidden;border-radius:24px;background:#fff;padding:12px}
+.user-dashboard-group-list .user-dashboard-product-card{min-width:160px;max-width:180px;flex-direction:column;padding:10px}
+.user-dashboard-product-image{position:relative;width:150px;min-width:150px;height:128px;overflow:hidden;border-radius:18px;background:#d8e5e5}
+.user-dashboard-product-image img{object-fit:cover}
+.user-dashboard-group-list .user-dashboard-product-image{width:100%;min-width:0;height:128px}
+.user-dashboard-product-copy{display:flex;min-width:0;flex:1;flex-direction:column;text-align:right}
+.user-dashboard-product-copy h3{margin:4px 0 0;font-size:16px;line-height:1.6}
+.user-dashboard-product-copy p{display:-webkit-box;margin:7px 0 0;overflow:hidden;color:#676b6b;font-size:11px;line-height:1.8;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+.user-dashboard-product-copy .user-dashboard-card-link{margin-top:auto;padding-top:8px;font-size:12px}
+.user-dashboard-inline-empty{display:flex;flex:1;align-items:center;justify-content:center;color:#9b9e9e;font-size:18px;text-align:center}
+.user-dashboard-payments-panel{min-height:390px}
+.user-dashboard-payment-table{display:grid;gap:16px;margin-top:24px;overflow-x:auto}
+.user-dashboard-payment-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr;align-items:center;min-width:720px;gap:16px;border-radius:18px;background:#fff;padding:14px 20px;font-size:14px;direction:rtl}
+.user-dashboard-payment-row.is-header{padding:0 20px;background:transparent;font-size:14px}
+.user-dashboard-payment-row span{text-align:right}
+.user-dashboard-payment-row span:first-child{direction:ltr;text-align:right}
+.user-dashboard-empty-content{grid-template-areas:"sessions" "columns" "payments"}
+.user-dashboard-empty-sessions{grid-area:sessions;min-height:190px}
+.user-dashboard-empty-columns{display:grid;grid-area:columns;grid-template-columns:1fr 1fr;gap:24px;direction:ltr}
+.user-dashboard-empty-columns .user-dashboard-panel{min-height:520px;direction:rtl}
+.user-dashboard-empty-payments{grid-area:payments;min-height:290px}
+.user-dashboard-empty-panel{display:flex;flex-direction:column}
+.user-dashboard-empty-panel>p{display:flex;flex:1;align-items:center;justify-content:center;margin:0;color:#9b9e9e;font-size:18px;text-align:center}
+.user-dashboard-empty-sessions>p{min-height:90px}
+
+@media (max-width:1200px){
+  .user-dashboard{padding-right:24px;padding-left:24px}
+  .user-dashboard-layout{grid-template-columns:minmax(0,1fr) 240px;gap:28px}
+  .user-dashboard-panel{padding:24px}
+  .user-dashboard-usage-card>div{gap:16px}
+  .user-dashboard-usage-card strong{font-size:13px}
+}
+
+@media (max-width:980px){
+  .user-dashboard{padding:16px}
+  .user-dashboard-layout{grid-template-areas:"sidebar" "main";grid-template-columns:1fr;gap:16px}
+  .user-dashboard-sidebar{position:static;height:auto;min-height:0}
+  .user-dashboard-profile-card{width:100%;max-width:none;margin:0}
+  .user-dashboard-nav{display:none}
+  .user-dashboard-mobile-menu{display:block;margin-top:12px}
+  .user-dashboard-mobile-menu-toggle{display:flex;width:100%;min-height:46px;align-items:center;justify-content:space-between;gap:16px;border:1px solid #d8e5e5;border-radius:16px;background:#fff;padding:0 16px;color:#3b4040;font:inherit;font-size:14px;text-align:right}
+  .user-dashboard-hamburger{display:flex;width:22px;height:18px;flex:0 0 22px;flex-direction:column;justify-content:space-between}
+  .user-dashboard-hamburger i{display:block;width:100%;height:2px;border-radius:99px;background:#355859;transition:transform .2s ease,opacity .2s ease}
+  .user-dashboard-hamburger.is-open i:nth-child(1){transform:translateY(8px) rotate(45deg)}
+  .user-dashboard-hamburger.is-open i:nth-child(2){opacity:0}
+  .user-dashboard-hamburger.is-open i:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+  .user-dashboard-mobile-nav{display:grid;max-height:0;gap:4px;margin-top:0;overflow:hidden;opacity:0;transition:max-height .28s ease,margin-top .28s ease,opacity .2s ease}
+  .user-dashboard-mobile-nav.is-open{max-height:440px;margin-top:8px;opacity:1}
+  .user-dashboard-mobile-nav .user-dashboard-nav-link{min-height:42px;padding:0 14px;font-size:14px}
+  .user-dashboard-mobile-logout{margin-top:4px}
+  .user-dashboard-mobile-logout .user-dashboard-logout{display:flex;margin-top:0;min-height:42px;justify-content:flex-start;padding:0 14px}
+  .user-dashboard-sidebar>.user-dashboard-logout{display:none}
+  .user-dashboard-logout{margin-top:8px;padding:6px 0;text-align:right}
+  .user-dashboard-middle-grid,.user-dashboard-empty-columns{grid-template-columns:1fr}
+  .user-dashboard-empty-columns .user-dashboard-panel{min-height:300px}
+}
+
+@media (max-width:600px){
+  .user-dashboard{padding:12px}
+  .user-dashboard-topbar{height:auto;min-height:56px;align-items:flex-start;padding:8px 0}
+  .user-dashboard-breadcrumb{font-size:12px}
+  .user-dashboard-return{font-size:12px}
+  .user-dashboard-return img{width:30px;height:30px}
+  .user-dashboard-profile-card{grid-template-columns:44px minmax(0,1fr);min-height:60px;padding:8px}
+  .user-dashboard-profile-card>img{width:44px;height:44px}
+  .user-dashboard-profile-copy strong{font-size:14px}
+  .user-dashboard-panel{border-radius:26px;padding:18px}
+  .user-dashboard-panel-heading h2{font-size:20px}
+  .user-dashboard-panel-heading a,.user-dashboard-card-link{font-size:12px}
+  .user-dashboard-session-grid{grid-template-columns:1fr;gap:12px}
+  .user-dashboard-session-card,.user-dashboard-usage-card{padding:14px 16px}
+  .user-dashboard-usage-card>div{gap:14px}
+  .user-dashboard-session-main strong{font-size:14px}
+  .user-dashboard-inline-empty,.user-dashboard-empty-panel>p{font-size:15px}
+  .user-dashboard-products-panel{min-height:330px}
+  .user-dashboard-product-card{gap:10px}
+  .user-dashboard-product-image{width:112px;min-width:112px;height:100px}
+  .user-dashboard-group-list .user-dashboard-product-card{min-width:146px}
+  .user-dashboard-group-list .user-dashboard-product-image{height:100px}
+  .user-dashboard-payment-row{grid-template-columns:repeat(5,minmax(120px,1fr));font-size:12px}
+  .user-dashboard-payment-row.is-header{font-size:12px}
+}
+
+.dashboard-logout-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:250;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:rgba(59,64,64,.48);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .22s ease,visibility 0s linear .22s;
+}
+.dashboard-logout-modal-backdrop.is-open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transition-delay:0s;
+}
+.dashboard-logout-modal{
+  position:relative;
+  width:min(100%,540px);
+  min-height:220px;
+  box-sizing:border-box;
+  border-radius:32px;
+  background:#fff;
+  padding:32px 28px 28px;
+  direction:rtl;
+  box-shadow:0 24px 64px rgba(53,88,89,.18);
+  opacity:0;
+  transform:translateY(12px) scale(.98);
+  transition:opacity .2s ease,transform .24s cubic-bezier(.22,1,.36,1);
+}
+.dashboard-logout-modal-backdrop.is-open .dashboard-logout-modal{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+.dashboard-logout-modal h2{
+  margin:0;
+  color:#676b6b;
+  font-size:22px;
+  font-weight:700;
+  line-height:1.6;
+  text-align:right;
+}
+.dashboard-logout-modal p{
+  margin:24px 0 0;
+  color:#3b4040;
+  font-size:15px;
+  line-height:1.8;
+  text-align:right;
+}
+.dashboard-logout-modal-close{
+  position:absolute;
+  top:22px;
+  left:24px;
+  display:grid;
+  width:32px;
+  height:32px;
+  place-items:center;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#3b4040;
+  font:inherit;
+  font-size:32px;
+  font-weight:300;
+  line-height:1;
+  cursor:pointer;
+  transition:background-color .2s ease,color .2s ease;
+}
+.dashboard-logout-modal-close:hover,.dashboard-logout-modal-close:focus-visible{
+  background:#f5f7f7;
+  color:#0f8b8d;
+}
+.dashboard-logout-modal-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:28px;
+  direction:ltr;
+}
+.dashboard-logout-confirm,.dashboard-logout-cancel{
+  min-width:72px;
+  height:42px;
+  border-radius:15px;
+  padding:0 18px;
+  font:inherit;
+  font-size:14px;
+  line-height:1;
+  cursor:pointer;
+  transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;
+}
+.dashboard-logout-confirm{
+  border:1px solid #eba983;
+  background:#eba983;
+  color:#3b4040;
+}
+.dashboard-logout-cancel{
+  border:1px solid #cc6f39;
+  background:#fff;
+  color:#cc6f39;
+}
+.dashboard-logout-confirm:hover,.dashboard-logout-confirm:focus-visible{
+  border-color:#d88d62;
+  background:#d88d62;
+  transform:translateY(-1px);
+}
+.dashboard-logout-cancel:hover,.dashboard-logout-cancel:focus-visible{
+  background:#fdf4f0;
+  transform:translateY(-1px);
+}
+.dashboard-logout-confirm:disabled,.dashboard-logout-cancel:disabled,.dashboard-logout-modal-close:disabled{
+  cursor:wait;
+  opacity:.6;
+  transform:none;
+}
+.dashboard-logout-modal-error{
+  margin-top:12px!important;
+  color:#db4244!important;
+  font-size:13px!important;
+}
+
+@media (max-width:600px){
+  .dashboard-logout-modal-backdrop{padding:16px}
+  .dashboard-logout-modal{min-height:0;border-radius:28px;padding:28px 20px 24px}
+  .dashboard-logout-modal h2{font-size:20px}
+  .dashboard-logout-modal p{margin-top:26px;font-size:14px}
+  .dashboard-logout-modal-close{top:20px;left:16px;width:32px;height:32px;font-size:32px}
+  .dashboard-logout-modal-actions{gap:12px;margin-top:28px}
+  .dashboard-logout-confirm,.dashboard-logout-cancel{height:44px;border-radius:16px;padding:0 18px;font-size:14px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .dashboard-logout-modal-backdrop,.dashboard-logout-modal,.dashboard-logout-confirm,.dashboard-logout-cancel,.dashboard-logout-modal-close{transition:none}
+}
+
+/* Individual sessions page */
+.individual-sessions-page-content{padding-top:24px}
+.individual-sessions-panel{padding:32px;overflow:hidden}
+.individual-sessions-page-heading h1{margin:0;color:#3b4040;font-size:28px;font-weight:700;line-height:1.5;text-align:right}
+.individual-sessions-layout{display:grid;grid-template-columns:minmax(250px,310px) minmax(0,1fr);gap:40px;margin-top:28px;direction:ltr}
+.individual-sessions-layout.is-empty{display:block}
+.individual-sessions-panel.is-empty-panel{display:flex;flex-direction:column;box-sizing:border-box;min-height:calc(100dvh - 144px)}
+.individual-sessions-panel.is-empty-panel .individual-sessions-layout.is-empty{display:flex;min-height:0;flex:1;flex-direction:column}
+.individual-sessions-panel.is-empty-panel .individual-sessions-main{display:flex;min-height:0;flex:1;flex-direction:column}
+.individual-sessions-credit-card{display:flex;min-height:640px;box-sizing:border-box;flex-direction:column;border-radius:28px;background:#fff;padding:28px 24px;direction:rtl;text-align:right}
+.individual-sessions-credit-card h2{margin:0;color:#3b4040;font-size:20px;font-weight:400;line-height:1.6}
+.individual-sessions-credit-card dl{display:grid;gap:18px;margin:28px 0 0}
+.individual-sessions-credit-card dl div{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.individual-sessions-credit-card dt{color:#676b6b;font-size:14px;line-height:1.8}
+.individual-sessions-credit-card dd{margin:0;color:#3b4040;font-size:16px;line-height:1.5}
+.individual-sessions-credit-card p{margin:26px 0 0;border-radius:18px;background:#ebf7f7;padding:16px 14px;color:#3b4040;font-size:14px;line-height:2.1;text-align:right}
+.individual-sessions-credit-card p.is-insufficient{background:#fff5f5}
+.individual-sessions-buy-button{display:flex;min-height:48px;align-items:center;justify-content:center;margin-top:auto;border-radius:16px;background:#eba983;color:#3b4040;font-size:15px;transition:background-color .2s ease,transform .2s ease}
+.individual-sessions-buy-button:hover,.individual-sessions-buy-button:focus-visible{background:#e69a70;transform:translateY(-1px)}
+.individual-sessions-main{min-width:0;direction:rtl}
+.individual-sessions-tabs{display:flex;align-items:stretch;gap:34px;border-bottom:1px solid #cdd1d1}
+.individual-sessions-tabs button{position:relative;min-height:48px;border:0;background:transparent;padding:0 16px;color:#676b6b;font:inherit;font-size:16px;cursor:pointer}
+.individual-sessions-tabs button::after{position:absolute;right:0;bottom:-1px;left:0;height:2px;background:#0f8b8d;content:"";opacity:0;transition:opacity .2s ease}
+.individual-sessions-tabs button.is-active{color:#0f8b8d}
+.individual-sessions-tabs button.is-active::after{opacity:1}
+.individual-sessions-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:24px}
+.individual-session-card{display:flex;min-height:108px;box-sizing:border-box;flex-direction:column;justify-content:space-between;border:1px solid transparent;border-radius:24px;background:#fff;padding:22px 24px;direction:rtl;transition:border-color .2s ease,box-shadow .2s ease}
+.individual-session-card.is-selected{border-color:#73bebf;box-shadow:0 4px 14px rgba(15,139,141,.08)}
+.individual-session-card-topline{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#3b4040;font-size:15px;line-height:1.7;direction:rtl}
+.individual-session-card-topline time:first-child{white-space:nowrap}
+.individual-session-card p{margin:18px 0 0;color:#676b6b;font-size:14px;line-height:1.7}
+.individual-sessions-empty-state{display:flex;min-height:350px;align-items:center;justify-content:center;flex-direction:column;padding:24px 20px;text-align:center}
+.individual-sessions-panel.is-empty-panel .individual-sessions-empty-state{min-height:0;flex:1}
+.individual-sessions-empty-state img{width:180px;height:auto}
+.individual-sessions-empty-state h2{margin:18px 0 0;color:#3b4040;font-size:20px;line-height:1.6}
+.individual-sessions-empty-state p{max-width:420px;margin:6px 0 0;color:#676b6b;font-size:14px;line-height:2}
+.individual-sessions-empty-actions{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:24px}
+.individual-sessions-primary-button,.individual-sessions-secondary-button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;border-radius:14px;padding:0 18px;font:inherit;font-size:14px;transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.individual-sessions-primary-button{border:1px solid #eba983;background:#eba983;color:#3b4040}
+.individual-sessions-secondary-button{border:1px solid #cc6f39;background:transparent;color:#cc6f39}
+.individual-sessions-primary-button:hover,.individual-sessions-primary-button:focus-visible{background:#e69a70;transform:translateY(-1px)}
+.individual-sessions-secondary-button:hover,.individual-sessions-secondary-button:focus-visible{background:#fdf4f0;transform:translateY(-1px)}
+
+/* Empty group-therapy dashboard page. */
+.group-therapy-dashboard-page-content{padding-top:24px}
+.group-therapy-dashboard-panel{display:flex;min-height:calc(100dvh - 144px);box-sizing:border-box;flex-direction:column;overflow:hidden;padding:32px}
+.group-therapy-dashboard-heading h1{margin:0;color:#3b4040;font-size:28px;font-weight:700;line-height:1.5;text-align:right}
+.group-therapy-dashboard-empty-state{display:flex;min-height:0;flex:1;align-items:center;justify-content:center;flex-direction:column;padding:24px 20px;text-align:center}
+.group-therapy-dashboard-empty-state img{width:180px;height:auto}
+.group-therapy-dashboard-empty-state h2{margin:18px 0 0;color:#3b4040;font-size:20px;line-height:1.6}
+.group-therapy-dashboard-empty-state p{max-width:420px;margin:6px 0 0;color:#676b6b;font-size:14px;line-height:2}
+.group-therapy-dashboard-empty-actions{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:24px}
+.group-therapy-dashboard-primary-button,.group-therapy-dashboard-secondary-button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;border-radius:14px;padding:0 18px;font:inherit;font-size:14px;transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.group-therapy-dashboard-primary-button{border:1px solid #eba983;background:#eba983;color:#3b4040}
+.group-therapy-dashboard-secondary-button{border:1px solid #cc6f39;background:transparent;color:#cc6f39}
+.group-therapy-dashboard-primary-button:hover,.group-therapy-dashboard-primary-button:focus-visible{background:#e69a70;transform:translateY(-1px)}
+.group-therapy-dashboard-secondary-button:hover,.group-therapy-dashboard-secondary-button:focus-visible{background:#fdf4f0;transform:translateY(-1px)}
+
+/* Populated group-therapy dashboard page. */
+.group-therapy-dashboard-panel.is-populated{min-height:calc(100dvh - 144px)}
+.group-therapy-dashboard-card-list{display:grid;gap:18px;margin-top:28px}
+.group-therapy-dashboard-card{min-width:0;border-radius:24px;background:#fff;padding:24px;box-shadow:0 8px 20px rgba(53,88,89,.08)}
+.group-therapy-dashboard-card-main{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:150px;align-items:start;column-gap:22px;direction:rtl}
+.group-therapy-dashboard-card-image{position:relative;aspect-ratio:1;overflow:hidden;border-radius:18px;background:#e8eded}
+.group-therapy-dashboard-card-main>.group-therapy-dashboard-card-image{grid-column:1;grid-row:1 / -1;align-self:start}
+.group-therapy-dashboard-card-image img{object-fit:cover}
+.group-therapy-dashboard-card-copy{grid-column:2;grid-row:1;min-width:0;padding-top:2px;text-align:right;direction:rtl}
+.group-therapy-dashboard-card-copy h2{margin:0;color:#3b4040;font-size:22px;font-weight:400;line-height:1.6}
+.group-therapy-dashboard-card-copy p{display:-webkit-box;margin:12px 0 0;overflow:hidden;color:#676b6b;font-size:14px;line-height:2;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.group-therapy-dashboard-card-actions{grid-column:2;grid-row:2;display:flex;align-items:center;gap:24px;margin-top:12px;direction:ltr}
+.group-therapy-dashboard-session-link,.group-therapy-dashboard-expand-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border-radius:14px;padding:0 18px;font:inherit;font-size:14px;line-height:1.5;white-space:nowrap;cursor:pointer;transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.group-therapy-dashboard-session-link{border:1px solid #eba983;background:#eba983;color:#3b4040}
+.group-therapy-dashboard-session-link:hover,.group-therapy-dashboard-session-link:focus-visible{border-color:#e69a70;background:#e69a70;transform:translateY(-1px)}
+.group-therapy-dashboard-expand-button{gap:7px;border:0;background:transparent;color:#cc6f39;padding-right:0;padding-left:0}
+.group-therapy-dashboard-expand-button:hover,.group-therapy-dashboard-expand-button:focus-visible{color:#a75a31;transform:translateY(-1px)}
+.group-therapy-dashboard-expand-icon{display:block;width:14px;height:14px;flex:0 0 14px;background:currentColor;mask:url("/icons/chevron-down.svg") center/contain no-repeat;-webkit-mask:url("/icons/chevron-down.svg") center/contain no-repeat;transition:transform .3s ease}
+.group-therapy-dashboard-expand-icon.is-open{transform:rotate(180deg)}
+.group-therapy-dashboard-expander{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows .35s ease,opacity .25s ease,visibility .35s ease}
+.group-therapy-dashboard-expander.is-open{grid-template-rows:1fr;opacity:1;visibility:visible}
+.group-therapy-dashboard-expander-inner{min-height:0;overflow:hidden}
+.group-therapy-dashboard-session-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:22px;border-radius:18px;background:#fafcfc;padding:16px;direction:rtl}
+.group-therapy-dashboard-session{display:flex;min-width:0;min-height:44px;align-items:center;justify-content:space-between;gap:12px;border:1px solid #d8e5e5;border-radius:12px;background:#fff;padding:0 14px;color:#676b6b;font-size:12px;line-height:1.6;direction:rtl;transition:opacity .2s ease}
+.group-therapy-dashboard-session.is-completed{opacity:.48}
+.group-therapy-dashboard-session-title{display:flex;min-width:0;align-items:center;gap:7px;color:#3b4040;white-space:nowrap}
+.group-therapy-dashboard-session-title:not(:has(.group-therapy-dashboard-session-check)){padding-right:23px}
+.group-therapy-dashboard-session-check{display:block;width:16px;height:16px;flex:0 0 16px;background:#73bebf;mask:url("/icons/check-teal.svg") center/contain no-repeat;-webkit-mask:url("/icons/check-teal.svg") center/contain no-repeat}
+.group-therapy-dashboard-session time,.group-therapy-dashboard-session>span:last-child{white-space:nowrap}
+.group-therapy-dashboard-no-sessions{margin:22px 0 0;border-radius:16px;background:#fafcfc;padding:20px;color:#9b9e9e;font-size:13px;line-height:1.8;text-align:center}
+
+@media (max-width:980px){
+  .individual-sessions-layout{grid-template-columns:1fr;gap:20px}
+  .individual-sessions-main{order:1}
+  .individual-sessions-credit-card{order:2;min-height:360px}
+}
+
+@media (max-width:600px){
+  .individual-sessions-panel{padding:18px}
+  .individual-sessions-page-heading h1{font-size:22px}
+  .individual-sessions-tabs{gap:4px}
+  .individual-sessions-tabs button{padding:0 8px;font-size:13px}
+  .individual-sessions-card-grid{grid-template-columns:1fr;gap:12px}
+  .individual-session-card{min-height:96px;padding:18px}
+  .individual-session-card-topline{font-size:13px}
+  .individual-session-card p{margin-top:12px;font-size:13px}
+  .individual-sessions-credit-card{min-height:330px;padding:22px 18px}
+  .individual-sessions-credit-card dt{font-size:13px}
+  .individual-sessions-empty-state{min-height:300px;padding-right:0;padding-left:0}
+  .individual-sessions-empty-state img{width:145px}
+  .individual-sessions-empty-state h2{margin-top:14px;font-size:18px}
+  .individual-sessions-empty-state p{font-size:13px}
+  .individual-sessions-empty-actions{width:100%;flex-direction:column}
+       .individual-sessions-primary-button,.individual-sessions-secondary-button{width:100%}
+
+       .group-therapy-dashboard-panel{padding:18px}
+       .group-therapy-dashboard-heading h1{font-size:22px}
+       .group-therapy-dashboard-empty-state{padding-right:0;padding-left:0}
+       .group-therapy-dashboard-empty-state img{width:145px}
+       .group-therapy-dashboard-empty-state h2{margin-top:14px;font-size:18px}
+       .group-therapy-dashboard-empty-state p{font-size:13px}
+       .group-therapy-dashboard-empty-actions{width:100%;flex-direction:column}
+       .group-therapy-dashboard-primary-button,.group-therapy-dashboard-secondary-button{width:100%}
+}
+
+@media (max-width:600px){
+  .group-therapy-dashboard-card-list{gap:14px;margin-top:20px}
+  .group-therapy-dashboard-card{border-radius:20px;padding:14px}
+  .group-therapy-dashboard-card-main{grid-template-columns:112px minmax(0,1fr);min-height:112px;column-gap:12px}
+  .group-therapy-dashboard-card-image{border-radius:15px}
+  .group-therapy-dashboard-card-copy h2{font-size:16px;line-height:1.55}
+  .group-therapy-dashboard-card-copy p{margin-top:6px;font-size:11px;line-height:1.7;-webkit-line-clamp:3}
+  .group-therapy-dashboard-card-actions{gap:16px;margin-top:10px}
+  .group-therapy-dashboard-session-link,.group-therapy-dashboard-expand-button{min-height:36px;font-size:12px}
+  .group-therapy-dashboard-session-link{padding-right:14px;padding-left:14px}
+  .group-therapy-dashboard-session-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:14px;padding:10px}
+  .group-therapy-dashboard-session{min-height:40px;padding:0 10px;font-size:10px}
+  .group-therapy-dashboard-session-title{gap:5px}
+  .group-therapy-dashboard-session-check{width:14px;height:14px;flex-basis:14px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .group-therapy-dashboard-session-link,.group-therapy-dashboard-expand-button,.group-therapy-dashboard-expand-icon,.group-therapy-dashboard-expander{transition:none}
+}
+
+/* Dashboard product cards reuse the visual language of their public sections. */
+.user-dashboard-course-list{grid-template-columns:minmax(0,1fr);direction:rtl}
+.user-dashboard-course-card{
+  grid-template-columns:minmax(0,1fr) 132px;
+  grid-template-rows:132px;
+  gap:16px;
+  height:164px;
+  min-height:164px;
+  border-radius:24px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(53,88,89,.08);
+}
+.user-dashboard-course-card .home-course-info{height:132px;min-height:132px}
+.user-dashboard-course-card .home-course-info h3{font-size:18px;line-height:1.5}
+.user-dashboard-course-card .home-course-tags{gap:6px;margin-top:6px}
+.user-dashboard-course-card .home-course-tag{padding:3px 7px;font-size:10px}
+.user-dashboard-course-card .home-course-info p{display:-webkit-box;margin-top:6px!important;overflow:hidden;font-size:11px;line-height:1.7;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.user-dashboard-course-card .home-course-footer{margin-top:0}
+.user-dashboard-course-card .home-course-action-secondary{height:32px;border:0;border-radius:10px;padding:6px 12px;color:#cc6f39;font-size:12px}
+.user-dashboard-course-card .home-course-image{width:132px;height:132px;min-height:132px;border-radius:18px}
+
+.user-dashboard-group-list{direction:rtl}
+.user-dashboard-group-list .group-therapy-session-card{flex:0 0 180px;min-width:180px;max-width:180px}
+.user-dashboard-group-list .group-therapy-session-card-body{min-height:142px;padding:12px 14px}
+.user-dashboard-group-list .group-therapy-session-card-body h3{font-size:14px;line-height:1.55}
+.user-dashboard-group-list .group-therapy-session-card-body p{font-size:11px;line-height:1.75}
+.user-dashboard-group-list .group-therapy-session-link{display:inline-flex;align-items:center;gap:5px;padding-top:10px;font-size:11px;line-height:1.2}
+.user-dashboard-group-list .group-therapy-session-link span{width:12px;height:12px;flex:0 0 12px;align-self:center}
+
+@media (max-width:600px){
+  .user-dashboard-course-card{
+    grid-template-columns:minmax(0,1fr) 112px;
+    grid-template-rows:112px;
+    gap:10px;
+    height:140px;
+    min-height:140px;
+    padding:12px;
+  }
+  .user-dashboard-course-card .home-course-info{height:112px;min-height:112px}
+  .user-dashboard-course-card .home-course-info h3{font-size:15px;line-height:1.45}
+  .user-dashboard-course-card .home-course-tags{margin-top:4px}
+  .user-dashboard-course-card .home-course-tag{padding:2px 5px;font-size:9px}
+  .user-dashboard-course-card .home-course-info p{margin-top:4px!important;font-size:10px;line-height:1.55;-webkit-line-clamp:1}
+  .user-dashboard-course-card .home-course-action-secondary{height:28px;padding:5px 9px;font-size:11px}
+  .user-dashboard-course-card .home-course-image{width:112px;height:112px;min-height:112px;border-radius:16px}
+  .user-dashboard-group-list .group-therapy-session-card{flex-basis:146px;min-width:146px;max-width:146px}
+  .user-dashboard-group-list .group-therapy-session-card-body{min-height:132px;padding:10px 12px}
+  .user-dashboard-group-list .group-therapy-session-card-body h3{font-size:13px}
+  .user-dashboard-group-list .group-therapy-session-card-body p{font-size:10px}
+}
+
+/* Individual sessions: the upcoming appointment gets visual priority. */
+.user-dashboard-session-grid{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.user-dashboard-upcoming-main{flex-direction:row;align-items:center;gap:24px;white-space:nowrap}
+.user-dashboard-upcoming-main time{color:#676b6b;font-size:13px;line-height:1.5}
+
+.user-dashboard-placeholder-panel{min-height:260px}
+.user-dashboard-placeholder-panel h1{margin:0;font-size:28px;line-height:1.6}
+
+.user-dashboard-profile-panel{position:relative;display:flex;min-height:calc(100dvh - 144px);box-sizing:border-box;flex-direction:column;padding:24px}
+.user-dashboard-profile-panel>h1{margin:0;color:#3b4040;font-size:24px;line-height:1.5;text-align:right}
+.user-profile-form{display:grid;width:min(100%,940px);flex:1;align-self:flex-start;align-content:start;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px;row-gap:14px;margin-top:20px;direction:rtl}
+.user-profile-avatar-block,.user-profile-actions{grid-column:1 / -1}
+.user-profile-name-field,.user-profile-email-row{grid-column:1}
+.user-profile-name-field{grid-row:2}
+.user-profile-email-row{grid-row:3}
+.user-profile-phone-field,.user-profile-country-field{grid-column:2}
+.user-profile-phone-field{grid-row:2}
+.user-profile-country-field{grid-row:3}
+.user-profile-avatar-block{display:flex;align-items:center;gap:20px}
+.user-profile-avatar,.user-profile-avatar-placeholder{display:block;width:104px;height:104px;border-radius:50%;object-fit:cover}
+.user-profile-avatar-placeholder{background:#d8e5e5}
+.user-profile-avatar-actions{display:flex;align-items:center;gap:26px;font-size:16px}
+.user-profile-avatar-actions button,.user-profile-recovery-link{border:0;background:transparent;padding:0;color:#0f8b8d;font:inherit;cursor:pointer;text-decoration:none;transition:color .2s ease}
+.user-profile-avatar-actions button:hover,.user-profile-avatar-actions button:focus-visible,.user-profile-recovery-link:hover,.user-profile-recovery-link:focus-visible{color:#355859}
+.user-profile-avatar-actions button.is-danger{color:#db4244}
+.user-profile-avatar-actions button.is-danger:hover,.user-profile-avatar-actions button.is-danger:focus-visible{color:#a5262c}
+.user-profile-field{display:flex;flex-direction:column;gap:6px;color:#3b4040;font-size:15px;text-align:right}
+.user-profile-field>input{width:100%;height:48px;border:0;border-radius:14px;background:#fff;padding:0 16px;color:#3b4040;font:inherit;outline:0;transition:box-shadow .2s ease}
+.user-profile-field>input:focus{box-shadow:0 0 0 3px rgba(15,139,141,.14)}
+.user-profile-field>input[readonly]{color:#676b6b;cursor:not-allowed}
+.user-profile-field .auth-custom-select{height:48px;min-height:48px}
+.user-profile-field .auth-custom-select-trigger{height:48px;min-height:48px;border-radius:14px;background:#fff;padding-inline:16px}
+.user-profile-field .auth-custom-select-trigger:hover{background:#fff}
+.user-profile-email-field{display:flex;min-width:0;flex-direction:column;gap:8px}
+.user-profile-recovery-link{align-self:flex-start;font-size:15px;text-align:right}
+.user-profile-actions{position:absolute;bottom:24px;left:24px;display:flex;align-items:center;gap:16px;margin:0;direction:ltr}
+.user-profile-actions button{height:46px;border-radius:14px;padding:0 22px;font:inherit;font-size:15px;cursor:pointer;transition:background-color .2s ease,color .2s ease,opacity .2s ease}
+.user-profile-actions button:disabled{cursor:wait;opacity:.6}
+.user-profile-save-button{border:1px solid #eba983;background:#eba983;color:#3b4040}
+.user-profile-save-button:hover,.user-profile-save-button:focus-visible{background:#e69a70}
+.user-profile-cancel-button{border:1px solid #cc6f39;background:transparent;color:#cc6f39}
+.user-profile-cancel-button:hover,.user-profile-cancel-button:focus-visible{background:#fdf4f0}
+.user-dashboard.is-profile-page{height:100dvh;min-height:0;overflow:hidden}
+.user-dashboard.is-profile-page .user-dashboard-layout{height:100%;min-height:0}
+.user-dashboard.is-profile-page .user-dashboard-main{min-height:0}
+.user-dashboard.is-profile-page .user-dashboard-content{min-height:0}
+.user-dashboard.is-profile-page .user-dashboard-profile-panel{height:calc(100dvh - 144px);min-height:0;overflow:hidden}
+
+@media (max-width:980px){
+  .user-dashboard.is-profile-page{height:auto;min-height:100vh;overflow:visible}
+  .user-dashboard.is-profile-page .user-dashboard-layout{height:auto}
+  .user-dashboard.is-profile-page .user-dashboard-profile-panel{height:auto;min-height:0;overflow:visible}
+  .user-dashboard-profile-panel{min-height:0}
+  .user-profile-form{width:100%;max-width:940px}
+  .user-profile-actions{position:static;width:100%;margin-top:4px}
+}
+
+@media (max-width:640px){
+  .user-dashboard-profile-panel>h1{font-size:22px}
+  .user-profile-form{grid-template-columns:1fr;gap:18px;margin-top:24px}
+  .user-profile-name-field,.user-profile-email-row,.user-profile-phone-field,.user-profile-country-field{grid-column:auto;grid-row:auto}
+  .user-profile-avatar,.user-profile-avatar-placeholder{width:104px;height:104px}
+  .user-profile-avatar-actions,.user-profile-field,.user-profile-recovery-link{font-size:14px}
+  .user-profile-actions{width:100%;gap:10px}
+  .user-profile-actions button{flex:1;height:46px;padding:0 12px;font-size:14px}
+}
+
+@media (max-width:600px){
+  .user-dashboard-session-grid{grid-template-columns:1fr}
+  .user-dashboard-upcoming-main{gap:10px;white-space:normal}
+  .user-dashboard-upcoming-main time{font-size:11px}
 }

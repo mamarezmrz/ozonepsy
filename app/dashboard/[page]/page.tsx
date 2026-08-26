@@ -1,7 +1,73 @@
-import { DashboardShell } from "@/components/dashboard-shell";
-import { SessionAction } from "@/components/interactive";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { GroupTherapyDashboardPage } from "@/components/group-therapy-dashboard-page";
+import { IndividualSessionsPage } from "@/components/individual-sessions-page";
+import { UserProfilePage } from "@/components/user-profile-page";
+import { UserDashboardShell } from "@/components/user-dashboard";
+import { getCurrentUser } from "@/lib/auth/service";
+import { getDashboardData } from "@/lib/dashboard";
+import { getUserProfile } from "@/lib/profile";
 import { createPageMetadata } from "@/lib/seo";
-const titles: Record<string,string>={profile:"اطلاعات شخصی",sessions:"جلسات من",courses:"دوره‌های من",payments:"پرداخت‌ها","group-therapy":"گروه‌درمانی",comments:"نظرات من",orders:"سفارش‌ها",appointments:"قرارهای من"};
-export async function generateMetadata({params}:{params:Promise<{page:string}>}):Promise<Metadata>{const {page}=await params;return createPageMetadata(titles[page]??"حساب کاربری");}
-export default async function DashboardSection({params}:{params:Promise<{page:string}>}){const {page}=await params;const title=titles[page]??"حساب کاربری";return <DashboardShell><h1 className="text-3xl font-black">{title}</h1>{page==="sessions"?<div className="mt-8 grid gap-5 lg:grid-cols-2"><div className="rounded-[24px] bg-white p-6 shadow-sm"><div className="flex justify-between"><h2 className="text-xl font-black">جلسه اول</h2><SessionAction/></div><p className="mt-3 text-sm text-[#676b6b]">بسته ۶ جلسه‌ای مشاوره · ۲۵ مرداد ۱۴۰۵</p><div className="mt-6 flex gap-8 text-sm"><span>وضعیت: <b className="text-[#0f8b8d]">تکمیل‌شده</b></span><span>ثبت توسط ادمین</span></div></div><div className="rounded-[24px] border border-dashed border-[#d8e5e5] p-8 text-center text-[#676b6b]">برای جلسه بعدی هنوز زمانی تعیین نشده است.</div></div>:<div className="mt-8 rounded-[24px] bg-white p-8 shadow-sm"><p className="leading-8 text-[#676b6b]">این بخش در نسخه پایه آماده است و داده‌های شما پس از اتصال به پایگاه داده در اینجا نمایش داده می‌شود.</p></div>}</DashboardShell>}
+
+const titles: Record<string, string> = {
+  profile: "مشخصات من",
+  sessions: "جلسات فردی",
+  courses: "دوره‌های من",
+  payments: "پرداخت‌ها",
+  "group-therapy": "گروه درمانی",
+  comments: "نظرات من",
+  "support-fund": "صندوق حمایت",
+  orders: "سفارش‌ها",
+  appointments: "قرارهای من",
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ page: string }> }): Promise<Metadata> {
+  const { page } = await params;
+  return createPageMetadata(titles[page] ?? "حساب کاربری");
+}
+
+export default async function DashboardSection({ params }: { params: Promise<{ page: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const { page } = await params;
+  const title = titles[page] ?? "حساب کاربری";
+  const data = await getDashboardData(user.id);
+
+  if (page === "profile") {
+    const profile = await getUserProfile(user.id);
+    if (!profile) redirect("/login");
+
+    return (
+      <UserDashboardShell data={data} activeHref="/dashboard/profile" title={title} className="is-profile-page">
+        <UserProfilePage profile={profile} />
+      </UserDashboardShell>
+    );
+  }
+
+  if (page === "sessions") {
+    return (
+      <UserDashboardShell data={data} activeHref="/dashboard/sessions" title={title}>
+        <IndividualSessionsPage />
+      </UserDashboardShell>
+    );
+  }
+
+  if (page === "group-therapy") {
+    return (
+      <UserDashboardShell data={data} activeHref="/dashboard/group-therapy" title={title}>
+        <GroupTherapyDashboardPage groups={data.groupTherapy} />
+      </UserDashboardShell>
+    );
+  }
+
+  return (
+    <UserDashboardShell data={data} activeHref={`/dashboard/${page}`} title={title}>
+      <div className="user-dashboard-content">
+        <section className="user-dashboard-panel user-dashboard-placeholder-panel">
+          <h1>{title}</h1>
+        </section>
+      </div>
+    </UserDashboardShell>
+  );
+}

@@ -1,16 +1,24 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function ScrollToTopButton() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
+  const isDashboardPage = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+
   useEffect(() => {
+    if (isDashboardPage) return;
+
     const handleScroll = () => setVisible(window.scrollY > 320);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isDashboardPage]);
+
+  if (isDashboardPage) return null;
 
   return (
     <button

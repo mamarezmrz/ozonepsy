@@ -107,28 +107,28 @@ enum PreconsultationRequestStatus {
 }
 
 model User {
-  id                   String                @id @default(uuid()) @db.Uuid
-  email                String                @unique @db.VarChar(320)
-  passwordHash         String?               @db.VarChar(255)
-  status               UserStatus            @default(ACTIVE)
-  emailVerifiedAt      DateTime?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  profile              Profile?
-  roles                UserRole[]
-  sessions             AuthSession[]
-  authTokens           AuthToken[]
-  orders               Order[]
-  purchases            Purchase[]
-  entitlements         Entitlement[]
-  appointments         Appointment[]         @relation("UserAppointments")
-  reviews              Review[]
-  supportContributions SupportContribution[]
+  id                      String                   @id @default(uuid()) @db.Uuid
+  email                   String                   @unique @db.VarChar(320)
+  passwordHash            String?                  @db.VarChar(255)
+  status                  UserStatus               @default(ACTIVE)
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  profile                 Profile?
+  roles                   UserRole[]
+  sessions                AuthSession[]
+  authTokens              AuthToken[]
+  orders                  Order[]
+  purchases               Purchase[]
+  entitlements            Entitlement[]
+  appointments            Appointment[]            @relation("UserAppointments")
+  reviews                 Review[]
+  supportContributions    SupportContribution[]
   preconsultationRequests PreconsultationRequest[]
-  auditLogs            AdminAuditLog[]       @relation("AuditActor")
-  recordedUsages       SessionUsage[]        @relation("UsageRecordedBy")
-  reversedUsages       SessionUsage[]        @relation("UsageReversedBy")
-  enrollments          Enrollment[]
+  auditLogs               AdminAuditLog[]          @relation("AuditActor")
+  recordedUsages          SessionUsage[]           @relation("UsageRecordedBy")
+  reversedUsages          SessionUsage[]           @relation("UsageReversedBy")
+  enrollments             Enrollment[]
 }
 
 model Profile {
@@ -139,6 +139,7 @@ model Profile {
   displayName String?  @db.VarChar(200)
   phone       String?  @db.VarChar(40)
   country     String?  @db.VarChar(120)
+  avatarUrl   String?  @db.VarChar(500)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -473,15 +474,15 @@ model SupportContribution {
 }
 
 model PreconsultationRequest {
-  id        String                      @id @default(uuid()) @db.Uuid
-  userId    String?                     @db.Uuid
-  country   String                      @db.VarChar(120)
-  phone     String                      @db.VarChar(40)
-  message   String?                     @db.Text
+  id        String                       @id @default(uuid()) @db.Uuid
+  userId    String?                      @db.Uuid
+  country   String                       @db.VarChar(120)
+  phone     String                       @db.VarChar(40)
+  message   String?                      @db.Text
   status    PreconsultationRequestStatus @default(PENDING)
-  createdAt DateTime                    @default(now())
-  updatedAt DateTime                    @updatedAt
-  user      User?                       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime                     @updatedAt
+  user      User?                        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([userId, createdAt])
