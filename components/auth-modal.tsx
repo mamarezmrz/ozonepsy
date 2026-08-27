@@ -4,6 +4,7 @@ import Image from "next/image";
 import { type FormEvent, useEffect, useState } from "react";
 import { CustomSelect } from "@/components/custom-select";
 import { countries } from "@/lib/countries";
+import type { SiteHeaderUser } from "@/types/site-header";
 
 export type AuthModalMode = "login" | "signup";
 
@@ -12,7 +13,7 @@ type AuthModalProps = {
   mode: AuthModalMode;
   onClose: () => void;
   onModeChange: (mode: AuthModalMode) => void;
-  onNotification: (message: string, tone?: "success" | "error") => void;
+  onNotification: (message: string, tone?: "success" | "error", user?: SiteHeaderUser) => void;
 };
 
 const countryOptions = countries.map((label) => ({ value: label, label }));
@@ -80,7 +81,7 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries())),
       });
-      const result = (await response.json()) as { message?: string; error?: string };
+      const result = (await response.json()) as { message?: string; error?: string; user?: SiteHeaderUser };
 
       if (!response.ok) {
         const message = result.error ?? "اطلاعات واردشده را بررسی کنید.";
@@ -94,7 +95,7 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
       }
 
       onClose();
-      onNotification(result.message ?? (isLogin ? "ورود شما با موفقیت انجام شد." : "ثبت‌نام شما با موفقیت انجام شد."));
+      onNotification(result.message ?? (isLogin ? "ورود شما با موفقیت انجام شد." : "ثبت‌نام شما با موفقیت انجام شد."), "success", result.user);
     } catch {
       setErrorMessage("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
     } finally {
@@ -108,7 +109,7 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
         <button type="button" className="auth-modal-close focus-ring" aria-label="بستن مدال" onClick={onClose}>
           <span className="auth-modal-close-icon" aria-hidden="true" />
         </button>
-        <Image className="auth-modal-logo" src="/ozone-logo.svg" alt="اُزون" width={96} height={96} />
+        <Image className="auth-modal-logo" src="/ozone-logo.svg" alt="اُزون" width={96} height={96} loading="eager" />
         <div className="auth-modal-heading">
           <h2 id="auth-modal-title">{isLogin ? "ورود" : "ثبت نام"}</h2>
         </div>

@@ -2,6 +2,7 @@ import { RoleName, UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { clearSessionCookie, createSessionToken, getSessionToken, hashSessionToken } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { getSiteHeaderUser } from "@/lib/auth/user-display";
 
 type AuthMetadata = {
   userAgent?: string;
@@ -38,7 +39,7 @@ export async function registerUser(input: RegisterInput, metadata: AuthMetadata)
   const token = createSessionToken();
 
   try {
-    await prisma.$transaction(async (tx) => {
+    const registeredUser = await prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({ where: { email: input.email } });
 
       if (existingUser) throw new AuthConflictError("این ایمیل قبلاً ثبت شده است.");
@@ -65,11 +66,22 @@ export async function registerUser(input: RegisterInput, metadata: AuthMetadata)
             },
           },
         },
-        select: { id: true },
+        select: {
+          id: true,
+          email: true,
+          profile: { select: { displayName: true, avatarUrl: true } },
+        },
       });
 
       await tx.authSession.create({ data: sessionData(user.id, token, metadata) });
+
+      return user;
     });
+
+    return {
+      token,
+      headerUser: getSiteHeaderUser(registeredUser.email, registeredUser.profile?.displayName, registeredUser.profile?.avatarUrl),
+    };
   } catch (error) {
     if (error instanceof AuthConflictError || isUniqueConstraintError(error)) {
       throw new AuthConflictError("این ایمیل قبلاً ثبت شده است.");
@@ -77,16 +89,21 @@ export async function registerUser(input: RegisterInput, metadata: AuthMetadata)
     throw error;
   }
 
-  return { token };
 }
 
 export async function loginUser(email: string, password: string, metadata: AuthMetadata) {
   const token = createSessionToken();
 
-  await prisma.$transaction(async (tx) => {
+  const authenticatedUser = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({
       where: { email },
-      select: { id: true, passwordHash: true, status: true },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        status: true,
+        profile: { select: { displayName: true, avatarUrl: true } },
+      },
     });
 
     if (!user?.passwordHash || user.status !== UserStatus.ACTIVE || !(await verifyPassword(password, user.passwordHash))) {
@@ -94,9 +111,14 @@ export async function loginUser(email: string, password: string, metadata: AuthM
     }
 
     await tx.authSession.create({ data: sessionData(user.id, token, metadata) });
+
+    return user;
   });
 
-  return { token };
+  return {
+    token,
+    headerUser: getSiteHeaderUser(authenticatedUser.email, authenticatedUser.profile?.displayName, authenticatedUser.profile?.avatarUrl),
+  };
 }
 
 export async function getCurrentUser() {
@@ -115,7 +137,7 @@ export async function getCurrentUser() {
         select: {
           id: true,
           email: true,
-          profile: { select: { displayName: true } },
+          profile: { select: { displayName: true, avatarUrl: true } },
         },
       },
     },

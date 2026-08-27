@@ -14,7 +14,7 @@ export default function NotFound() {
             <span className="not-found-halo not-found-halo-outer" />
             <span className="not-found-halo not-found-halo-middle" />
             <span className="not-found-halo not-found-halo-inner" />
-            <Image src="/ozone-logo.svg" alt="اُزون" width={112} height={112} priority />
+            <Image src="/ozone-logo.svg" alt="اُزون" width={112} height={112} priority loading="eager" />
           </div>
 
           <div className="not-found-copy">

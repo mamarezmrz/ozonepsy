@@ -10,6 +10,7 @@ import { consultationTopics } from "@/lib/consultation-topics";
 import { groupTherapySessions } from "@/lib/group-therapy";
 import { institutionProfiles } from "@/lib/institutions";
 import { therapistProfiles } from "@/lib/therapists";
+import type { SiteHeaderUser } from "@/types/site-header";
 
 const consultationLinks = [
   ["مشاوره فردی", "/consultations/individual"],
@@ -76,15 +77,22 @@ function getBreadcrumbLabel(pathname: string) {
   return "صفحه";
 }
 
-export function SiteHeader({ initialAuthenticated = false, showBreadcrumb = true }: { initialAuthenticated?: boolean; showBreadcrumb?: boolean }) {
+export function SiteHeader({
+  initialUser = null,
+  showBreadcrumb = true,
+}: {
+  initialUser?: SiteHeaderUser | null;
+  showBreadcrumb?: boolean;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [consultationsOpen, setConsultationsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>("login");
-  const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
+  const [headerUser, setHeaderUser] = useState<SiteHeaderUser | null>(initialUser);
   const [notification, setNotification] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const consultationsRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = Boolean(headerUser);
 
   useEffect(() => {
     if (!consultationsOpen) return;
@@ -115,7 +123,7 @@ export function SiteHeader({ initialAuthenticated = false, showBreadcrumb = true
       <header className="site-header sticky top-0 z-40 bg-[#fafcfc]/95 backdrop-blur">
       <div className="site-header-inner container-oz">
         <Link href="/" aria-label="اُزون" className="site-header-logo" onClick={closeMenu}>
-          <Image src="/ozone-logo.svg" alt="اُزون" width={48} height={48} priority />
+          <Image src="/ozone-logo.svg" alt="اُزون" width={48} height={48} priority loading="eager" />
         </Link>
 
         <nav className={`site-header-nav${menuOpen ? " is-open" : ""}`} aria-label="منوی اصلی">
@@ -153,8 +161,12 @@ export function SiteHeader({ initialAuthenticated = false, showBreadcrumb = true
         <div className="site-header-actions">
           {isAuthenticated ? (
             <Link href="/dashboard" className="site-header-login focus-ring" onClick={closeMenu}>
-                <span className="site-header-user-icon" aria-hidden="true" />
-                <span dir="rtl">حساب کاربری</span>
+                {headerUser?.avatarUrl ? (
+        <Image className="site-header-user-avatar" src={headerUser.avatarUrl} alt="" aria-hidden="true" width={32} height={32} loading="eager" />
+                ) : (
+                  <span className="site-header-user-icon" aria-hidden="true" />
+                )}
+                <span dir="rtl">{headerUser?.label ?? "حساب کاربری"}</span>
             </Link>
           ) : (
             <button type="button" className="site-header-login focus-ring" onClick={openAuthModal} aria-haspopup="dialog" aria-expanded={authModalOpen}>
@@ -213,9 +225,11 @@ export function SiteHeader({ initialAuthenticated = false, showBreadcrumb = true
         mode={authModalMode}
         onClose={() => setAuthModalOpen(false)}
         onModeChange={setAuthModalMode}
-        onNotification={(message, tone = "success") => {
+        onNotification={(message, tone = "success", user) => {
           setNotification({ message, tone });
-          if (tone === "success") setIsAuthenticated(true);
+          if (tone === "success") {
+            setHeaderUser(user ?? { label: "حساب کاربری", avatarUrl: null });
+          }
         }}
       />
       {notification && <SiteNotification message={notification.message} tone={notification.tone} onDismiss={() => setNotification(null)} />}

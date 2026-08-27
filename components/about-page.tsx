@@ -40,7 +40,7 @@ export function AboutPage() {
       <div className="about-page-inner">
         <figure className="about-hero-image">
           <Image className="about-hero-media about-hero-media-grayscale" src={asset("499e86f0c53b300cccf38fd0b75a1187caae08d9.png")} alt="گفت‌وگوی گروهی و همراهی انسان‌ها" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
-          <Image className="about-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="about-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <AboutText title="درباره ما" paragraphs={[aboutParagraph, aboutParagraph]} primary />

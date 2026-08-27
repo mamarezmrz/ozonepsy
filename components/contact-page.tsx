@@ -27,7 +27,7 @@ export function ContactPage() {
       <div className="contact-page-inner">
         <figure className="contact-hero-image">
           <Image className="contact-hero-media" src={asset("27b6de804ab70c53e8528b81270e5add64484aab.jpg")} alt="همکاران اُزون آماده پاسخ‌گویی هستند" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
-          <Image className="contact-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="contact-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="contact-details" aria-labelledby="contact-title">

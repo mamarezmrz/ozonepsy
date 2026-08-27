@@ -24,7 +24,7 @@ export function FreeSessionPage() {
             quality={100}
             sizes="(max-width: 900px) 100vw, 960px"
           />
-          <Image className="free-session-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="free-session-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="free-session-reservation" aria-labelledby="free-session-title">

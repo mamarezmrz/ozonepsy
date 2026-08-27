@@ -21,7 +21,7 @@ export function ConsultationCategoryPage({ content }: { content: ConsultationCat
       <div className="consultation-page-inner">
         <figure className="consultation-hero-image">
           <Image className="consultation-hero-media" src={asset("76e3e1af9940b43bd5e8f2804cf3de35eec93210.jpg")} alt={content.heroAlt} fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
-          <Image className="consultation-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="consultation-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="consultation-intro" aria-labelledby="consultation-title">

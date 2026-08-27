@@ -66,7 +66,7 @@ export function CoursesPage() {
       <div className="courses-page-inner">
         <figure className="courses-hero-image">
           <Image className="courses-hero-media" src={asset("image-7.png")} alt="جلسه گروهی روانشناسی" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
-          <Image className="courses-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="courses-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="courses-intro" aria-labelledby="courses-title">

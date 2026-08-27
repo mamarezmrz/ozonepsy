@@ -14,10 +14,10 @@ function requestMetadata(request: Request) {
 export async function POST(request: Request) {
   try {
     const input = parseRegisterInput(await request.json());
-    const { token } = await registerUser(input, requestMetadata(request));
+    const { token, headerUser } = await registerUser(input, requestMetadata(request));
     await setSessionCookie(token);
 
-    return Response.json({ ok: true, message: "ثبت‌نام شما با موفقیت انجام شد." });
+    return Response.json({ ok: true, message: "ثبت‌نام شما با موفقیت انجام شد.", user: headerUser });
   } catch (error) {
     if (error instanceof AuthInputError) {
       return Response.json({ ok: false, error: error.message }, { status: 400 });

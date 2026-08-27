@@ -90,7 +90,7 @@ function UsageCard({ session }: { session: DashboardSession }) {
   );
 }
 
-function DashboardCourseCard({ card }: { card: DashboardCard }) {
+export function DashboardCourseCard({ card }: { card: DashboardCard }) {
   return (
     <article className="home-course-card user-dashboard-course-card">
       <div className="home-course-info">
@@ -206,7 +206,7 @@ export function UserDashboardShell({
         <section className="user-dashboard-main">
           <header className="user-dashboard-topbar">
             <div className="user-dashboard-breadcrumb"><span>پنل کاربری</span><span aria-hidden="true">›</span><span>{title}</span></div>
-            <Link href="/" className="user-dashboard-return"><Image src="/ozone-logo.svg" alt="اُزون" width={42} height={42} /><span>بازگشت به وب‌سایت</span></Link>
+            <Link href="/" className="user-dashboard-return"><Image src="/ozone-logo.svg" alt="اُزون" width={42} height={42} loading="eager" /><span>بازگشت به وب‌سایت</span></Link>
           </header>
           {children}
         </section>

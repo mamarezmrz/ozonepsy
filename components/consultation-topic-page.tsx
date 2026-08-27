@@ -22,7 +22,7 @@ export function ConsultationTopicPage({ topic }: { topic: ConsultationTopic }) {
 
         <figure className="consultation-topic-hero" aria-label={topic.title}>
           <div className="consultation-topic-circles" aria-hidden="true" />
-          <Image className="consultation-topic-logo" src="/ozone-logo.svg" alt="اُزون" width={124} height={124} />
+          <Image className="consultation-topic-logo" src="/ozone-logo.svg" alt="اُزون" width={124} height={124} loading="eager" />
           <Image className={`consultation-topic-person consultation-topic-person-${topic.imageMode ?? "normal"}`} src={`/figma-home/${topic.image}`} alt="" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
         </figure>
 

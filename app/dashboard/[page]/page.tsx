@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { GroupTherapyDashboardPage } from "@/components/group-therapy-dashboard-page";
 import { IndividualSessionsPage } from "@/components/individual-sessions-page";
+import { MyCoursesPage } from "@/components/my-courses-page";
+import { PaymentsPage } from "@/components/payments-page";
+import { CommentsPage } from "@/components/comments-page";
+import { DashboardSupportFundPage } from "@/components/dashboard-support-fund-page";
 import { UserProfilePage } from "@/components/user-profile-page";
 import { UserDashboardShell } from "@/components/user-dashboard";
 import { getCurrentUser } from "@/lib/auth/service";
@@ -57,6 +61,43 @@ export default async function DashboardSection({ params }: { params: Promise<{ p
     return (
       <UserDashboardShell data={data} activeHref="/dashboard/group-therapy" title={title}>
         <GroupTherapyDashboardPage groups={data.groupTherapy} />
+      </UserDashboardShell>
+    );
+  }
+
+  if (page === "courses") {
+    return (
+      <UserDashboardShell data={data} activeHref="/dashboard/courses" title={title}>
+        <MyCoursesPage courses={data.courses} />
+      </UserDashboardShell>
+    );
+  }
+
+  if (page === "payments") {
+    return (
+      <UserDashboardShell data={data} activeHref="/dashboard/payments" title={title} className="is-payments-page">
+        <PaymentsPage payments={data.payments} />
+      </UserDashboardShell>
+    );
+  }
+
+  if (page === "comments") {
+    return (
+      <UserDashboardShell data={data} activeHref="/dashboard/comments" title={title} className="is-comments-page">
+        <CommentsPage />
+      </UserDashboardShell>
+    );
+  }
+
+  if (page === "support-fund") {
+    return (
+      <UserDashboardShell
+        data={data}
+        activeHref="/dashboard/support-fund"
+        title={title}
+        className="is-support-fund-page"
+      >
+        <DashboardSupportFundPage totalMinor={data.supportFundTotalMinor} />
       </UserDashboardShell>
     );
   }

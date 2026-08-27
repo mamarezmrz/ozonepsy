@@ -5,46 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import type { DashboardGroupTherapyCard } from "@/lib/dashboard";
 
-const mockGroupTherapyCards: DashboardGroupTherapyCard[] = [
-  {
-    id: "mock-group-therapy-1",
-    title: "آشنایی با طرحواره ۱",
-    description: "در این جلسات با مفاهیم پایه طرحواره‌ها آشنا می‌شوید و برای شناخت الگوهای فکری خود قدم برمی‌دارید.",
-    image: "/figma-home/image-21.png",
-    href: "/group-therapy/schema-therapy-1",
-    sessions: [
-      { id: "mock-group-therapy-1-session-1", title: "جلسه ۱", date: "۲۳ ژانویه ۲۰۲۶", time: "ساعت ۱۴:۳۰", completed: true },
-      { id: "mock-group-therapy-1-session-2", title: "جلسه ۲", date: "۳۰ ژانویه ۲۰۲۶", time: "ساعت ۱۴:۳۰", completed: true },
-      { id: "mock-group-therapy-1-session-3", title: "جلسه ۳", date: "۶ فوریه ۲۰۲۶", time: "ساعت ۱۴:۳۰", completed: false },
-      { id: "mock-group-therapy-1-session-4", title: "جلسه ۴", date: "۱۳ فوریه ۲۰۲۶", time: "ساعت ۱۴:۳۰", completed: false },
-    ],
-  },
-  {
-    id: "mock-group-therapy-2",
-    title: "آشنایی با طرحواره ۲",
-    description: "با همراهی گروه و درمانگر، مهارت‌های ارتباطی و راهکارهای کاربردی برای تغییر الگوهای رفتاری را تمرین می‌کنید.",
-    image: "/figma-home/image-21.png",
-    href: "/group-therapy/communication-skills",
-    sessions: [
-      { id: "mock-group-therapy-2-session-1", title: "جلسه ۱", date: "۲۵ فوریه ۲۰۲۶", time: "ساعت ۱۶:۰۰", completed: true },
-      { id: "mock-group-therapy-2-session-2", title: "جلسه ۲", date: "۴ مارس ۲۰۲۶", time: "ساعت ۱۶:۰۰", completed: false },
-      { id: "mock-group-therapy-2-session-3", title: "جلسه ۳", date: "۱۱ مارس ۲۰۲۶", time: "ساعت ۱۶:۰۰", completed: false },
-    ],
-  },
-  {
-    id: "mock-group-therapy-3",
-    title: "گروه رشد و خودشناسی",
-    description: "در فضایی امن و همراهانه، تجربه‌های خود را به اشتراک بگذارید و مسیر رشد فردی‌تان را با آگاهی بیشتری دنبال کنید.",
-    image: "/figma-home/image-21.png",
-    href: "/group-therapy/personal-growth",
-    sessions: [
-      { id: "mock-group-therapy-3-session-1", title: "جلسه ۱", date: "۱۸ مارس ۲۰۲۶", time: "ساعت ۱۸:۳۰", completed: false },
-      { id: "mock-group-therapy-3-session-2", title: "جلسه ۲", date: "۲۵ مارس ۲۰۲۶", time: "ساعت ۱۸:۳۰", completed: false },
-      { id: "mock-group-therapy-3-session-3", title: "جلسه ۳", date: "۱ آوریل ۲۰۲۶", time: "ساعت ۱۸:۳۰", completed: false },
-    ],
-  },
-];
-
 function EmptyGroupTherapyState() {
   return (
     <div className="group-therapy-dashboard-empty-state">
@@ -109,9 +69,7 @@ function GroupTherapyCard({ card, expanded, onToggle }: { card: DashboardGroupTh
 }
 
 export function GroupTherapyDashboardPage({ groups }: { groups: DashboardGroupTherapyCard[] }) {
-  const visibleGroups = process.env.NODE_ENV === "development" && !groups.length
-    ? mockGroupTherapyCards
-    : groups;
+  const visibleGroups = groups;
   const [expandedId, setExpandedId] = useState<string | null>(visibleGroups[0]?.id ?? null);
 
   return (

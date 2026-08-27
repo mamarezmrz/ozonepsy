@@ -1,4 +1,10 @@
-import { AppointmentStatus, EntitlementStatus, OrderStatus, SessionUsageStatus } from "@/lib/generated/prisma/enums";
+import {
+  AppointmentStatus,
+  EntitlementStatus,
+  OrderStatus,
+  SessionUsageStatus,
+  SupportContributionStatus,
+} from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { toPersianDigits } from "@/lib/format";
 
@@ -59,6 +65,7 @@ export type DashboardData = {
   groupTherapy: DashboardGroupTherapyCard[];
   courses: DashboardCard[];
   payments: DashboardPayment[];
+  supportFundTotalMinor: number;
 };
 
 function productImage(slug: string) {
@@ -177,8 +184,18 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       groupTherapy: [],
       courses: [],
       payments: [],
+      supportFundTotalMinor: 0,
     };
   }
+
+  const supportFundTotal = await prisma.supportContribution.aggregate({
+    where: {
+      userId,
+      status: SupportContributionStatus.PAID,
+      currency: "USD",
+    },
+    _sum: { amountMinor: true },
+  });
 
   const groupEntitlementIds = user.entitlements
     .filter((entitlement) => entitlement.product.kind === "GROUP")
@@ -271,5 +288,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       amount: formatMoney(order.totalMinor, order.currency),
       date: formatDate(order.createdAt),
     })),
+    supportFundTotalMinor: supportFundTotal._sum.amountMinor ?? 0,
   };
 }

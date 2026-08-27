@@ -37,7 +37,7 @@ export function SupportFundPage() {
             quality={100}
             sizes="(max-width: 900px) 100vw, 960px"
           />
-          <Image className="support-fund-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="support-fund-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="support-fund-intro" aria-labelledby="support-fund-title">
