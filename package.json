@@ -7,7 +7,9 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs",
+    "admin:bootstrap": "prisma db seed"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -16,7 +18,8 @@
     "pg": "^8.23.0",
     "prisma": "^7.9.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

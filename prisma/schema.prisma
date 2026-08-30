@@ -17,6 +17,10 @@ enum UserStatus {
 enum RoleName {
   USER
   ADMIN
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  SUPPORT
+  INSTRUCTOR
 }
 
 enum AuthTokenType {
@@ -117,6 +121,7 @@ model User {
   profile                 Profile?
   roles                   UserRole[]
   sessions                AuthSession[]
+  adminSessions           AdminSession[]
   authTokens              AuthToken[]
   orders                  Order[]
   purchases               Purchase[]
@@ -145,9 +150,32 @@ model Profile {
 }
 
 model Role {
-  id        String     @id @default(uuid()) @db.Uuid
-  name      RoleName   @unique
-  userRoles UserRole[]
+  id              String           @id @default(uuid()) @db.Uuid
+  name            RoleName         @unique
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id              String           @id @default(uuid()) @db.Uuid
+  key             String           @unique @db.VarChar(120)
+  description     String?          @db.VarChar(240)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
+
+  @@index([key])
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
 }
 
 model UserRole {
@@ -173,6 +201,34 @@ model AuthSession {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+}
+
+model AdminSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.VarChar(255)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ipAddress  String?   @db.VarChar(64)
+  userAgent  String?   @db.VarChar(500)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, revokedAt])
+}
+
+model AdminLoginRateLimit {
+  id              String    @id @default(uuid()) @db.Uuid
+  keyHash         String    @unique @db.VarChar(64)
+  attempts        Int       @default(0)
+  windowStartedAt DateTime
+  blockedUntil    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([blockedUntil])
 }
 
 model AuthToken {
@@ -441,17 +497,20 @@ model Review {
 }
 
 model AdminAuditLog {
-  id          String   @id @default(uuid()) @db.Uuid
-  actorId     String?  @db.Uuid
-  action      String   @db.VarChar(120)
-  targetType  String   @db.VarChar(80)
-  targetId    String   @db.VarChar(80)
-  beforeState Json?
-  afterState  Json?
-  reason      String?
-  requestId   String?  @db.VarChar(120)
-  createdAt   DateTime @default(now())
-  actor       User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  id            String   @id @default(uuid()) @db.Uuid
+  actorId       String?  @db.Uuid
+  action        String   @db.VarChar(120)
+  targetType    String   @db.VarChar(80)
+  targetId      String   @db.VarChar(80)
+  beforeState   Json?
+  afterState    Json?
+  reason        String?
+  requestId     String?  @db.VarChar(120)
+  correlationId String?  @db.VarChar(120)
+  ipAddress     String?  @db.VarChar(64)
+  userAgent     String?  @db.VarChar(500)
+  createdAt     DateTime @default(now())
+  actor         User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([targetType, targetId, createdAt])
   @@index([actorId, createdAt])

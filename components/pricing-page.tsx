@@ -7,7 +7,7 @@ const asset = (name: string) => `/figma-home/${name}`;
 
 const individualOffers = [
   { title: "یک جلسه مشاوره", price: "49.9", unitPrice: "9.99", oldPrice: "", discount: "", productId: "individual-1" },
-  { title: "۳ جلسه مشاوره", price: "104.8", unitPrice: "9.99", oldPrice: "149.9", discount: "۴۰٪ تخفیف", productId: "package-6" },
+  { title: "۳ جلسه مشاوره", price: "104.8", unitPrice: "9.99", oldPrice: "149.9", discount: "۴۰٪ تخفیف", productId: "package-3" },
   { title: "۶ جلسه مشاوره", price: "179.9", unitPrice: "9.99", oldPrice: "247.8", discount: "۴۰٪ تخفیف", productId: "package-6" },
 ] as const;
 
