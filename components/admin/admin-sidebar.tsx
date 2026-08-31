@@ -1,15 +1,21 @@
 "use client";
 
+/* Avatar URLs may come from local or future object storage. */
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
+import { ADMIN_ROLE_LABELS } from "@/lib/admin/constants";
 import type { AdminSessionView } from "@/lib/admin/session";
 
 const links = [
   { href: "/", label: "نمای کلی", permission: "dashboard.view" },
   { href: "/users", label: "کاربران", permission: "users.read" },
-  { href: "/products", label: "محصولات", permission: "products.read" },
+  { href: "/courses", label: "دوره‌ها", permission: "courses.read" },
+  { href: "/specialists", label: "متخصصان", permission: "instructors.read" },
   { href: "/sessions", label: "جلسات", permission: "sessions.read" },
+  { href: "/reviews", label: "نظرات", permission: "reviews.read" },
+  { href: "/categories", label: "دسته‌بندی‌ها", permission: "categories.read" },
   { href: "/audit-logs", label: "گزارش فعالیت", permission: "audit.read" },
 ] as const;
 
@@ -20,14 +26,18 @@ function isActive(pathname: string, href: string) {
 export function AdminSidebar({ session }: { session: AdminSessionView }) {
   const pathname = usePathname();
   const visibleLinks = links.filter((link) => session.permissions.includes(link.permission));
+  const identity = session.displayName?.trim() || session.email;
 
   return (
     <aside className="admin-sidebar" aria-label="منوی پنل مدیریت">
-      <div className="admin-sidebar-brand">
-        <Link href="/" className="admin-brand-mark" aria-label="اُزون">
-          اُزون<span>.</span>
-        </Link>
-        <span className="admin-brand-caption">پنل مدیریت</span>
+      <div className="admin-sidebar-profile admin-identity" title={identity}>
+        <span className="admin-identity-avatar" aria-hidden="true">
+          {session.avatarUrl ? <img src={session.avatarUrl} alt="" /> : identity.slice(0, 1).toUpperCase()}
+        </span>
+        <span>
+          <strong>{identity}</strong>
+          <small>{session.roles.map((role) => ADMIN_ROLE_LABELS[role] ?? "ادمین").join("، ")}</small>
+        </span>
       </div>
 
       <nav className="admin-sidebar-nav">
@@ -39,15 +49,12 @@ export function AdminSidebar({ session }: { session: AdminSessionView }) {
             aria-current={isActive(pathname, link.href) ? "page" : undefined}
           >
             <span>{link.label}</span>
-            <span aria-hidden="true" className="admin-sidebar-arrow">←</span>
+            <span aria-hidden="true" className="admin-sidebar-arrow" />
           </Link>
         ))}
       </nav>
 
       <div className="admin-sidebar-footer">
-        <div className="admin-sidebar-role-list" aria-label="نقش‌های شما">
-          {session.roles.map((role) => <span key={role}>{role}</span>)}
-        </div>
         <AdminLogoutButton />
       </div>
     </aside>

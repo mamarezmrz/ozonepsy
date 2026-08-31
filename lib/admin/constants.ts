@@ -14,6 +14,14 @@ export const ADMIN_ROLES = [
 
 export type AdminRole = (typeof ADMIN_ROLES)[number];
 
+export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
+  SUPER_ADMIN: "ادمین",
+  ADMIN: "مدیر",
+  CONTENT_MANAGER: "مدیر محتوا",
+  SUPPORT: "پشتیبانی",
+  INSTRUCTOR: "مدرس",
+};
+
 export const ADMIN_PERMISSION_KEYS = [
   "dashboard.view",
   "users.read",
@@ -21,11 +29,15 @@ export const ADMIN_PERMISSION_KEYS = [
   "users.suspend",
   "products.read",
   "products.write",
+  "categories.read",
+  "categories.write",
   "courses.read",
   "courses.write",
   "courses.publish",
   "lessons.read",
   "lessons.write",
+  "instructors.read",
+  "instructors.write",
   "sessions.read",
   "sessions.manage",
   "reviews.read",

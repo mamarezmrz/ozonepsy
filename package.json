@@ -8,10 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs",
+    "test": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs tests/admin-security.test.mjs tests/admin-query.test.mjs",
     "admin:bootstrap": "prisma db seed"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1121.0",
+    "@aws-sdk/s3-request-presigner": "^3.1121.0",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "next": "16.3.2",

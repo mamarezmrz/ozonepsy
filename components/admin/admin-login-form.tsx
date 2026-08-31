@@ -36,7 +36,7 @@ export function AdminLoginForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5" noValidate>
+    <form onSubmit={submit} className="admin-login-form space-y-5" noValidate>
       <label className="block text-sm text-[#3b4040]">
         ایمیل
         <input name="email" type="email" autoComplete="username" required dir="ltr" className="mt-2 h-12 w-full rounded-[16px] bg-[#e8eded] px-4 outline-none transition focus:ring-2 focus:ring-[#73bebf]" />

@@ -6,8 +6,17 @@ import {
 } from "@/lib/admin/constants";
 
 export function isAdminLoginRateLimitEnabled() {
-  // Keep development logins easy to retry while production remains protected.
-  return process.env.NODE_ENV !== "development";
+  const configured = process.env.ADMIN_LOGIN_RATE_LIMIT_ENABLED?.trim().toLowerCase();
+
+  // Production must remain protected even if a development convenience flag
+  // accidentally leaks into the deployment environment.
+  if (process.env.NODE_ENV === "production") return true;
+  if (configured === "true" || configured === "1") return true;
+  if (configured === "false" || configured === "0") return false;
+
+  // Keep local development usable by default; developers can opt in through
+  // ADMIN_LOGIN_RATE_LIMIT_ENABLED=true when testing the production behavior.
+  return false;
 }
 
 function numberFromEnv(name: string, fallback: number) {

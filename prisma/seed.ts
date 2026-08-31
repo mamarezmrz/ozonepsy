@@ -21,11 +21,15 @@ const permissionDescriptions: Record<string, string> = {
   "users.suspend": "تعلیق کاربران",
   "products.read": "مشاهده محصولات",
   "products.write": "مدیریت محصولات",
+  "categories.read": "مشاهده دسته‌بندی‌ها",
+  "categories.write": "مدیریت دسته‌بندی‌ها",
   "courses.read": "مشاهده دوره‌ها",
   "courses.write": "مدیریت دوره‌ها",
   "courses.publish": "انتشار دوره‌ها",
   "lessons.read": "مشاهده سرفصل‌ها",
   "lessons.write": "مدیریت سرفصل‌ها",
+  "instructors.read": "مشاهده متخصصان",
+  "instructors.write": "مدیریت متخصصان",
   "sessions.read": "مشاهده جلسات",
   "sessions.manage": "مدیریت جلسات",
   "reviews.read": "مشاهده نظرات",
@@ -49,11 +53,15 @@ const rolePermissions: Record<string, string[]> = {
     "dashboard.view",
     "products.read",
     "products.write",
+    "categories.read",
+    "categories.write",
     "courses.read",
     "courses.write",
     "courses.publish",
     "lessons.read",
     "lessons.write",
+    "instructors.read",
+    "instructors.write",
     "reviews.read",
     "reviews.moderate",
     "content.read",
@@ -61,8 +69,8 @@ const rolePermissions: Record<string, string[]> = {
     "media.read",
     "media.write",
   ],
-  SUPPORT: ["dashboard.view", "users.read", "users.update", "reviews.read"],
-  INSTRUCTOR: ["dashboard.view", "courses.read", "lessons.read", "sessions.read"],
+  SUPPORT: ["dashboard.view", "users.read", "users.update", "reviews.read", "sessions.read"],
+  INSTRUCTOR: ["courses.read", "lessons.read", "sessions.read", "instructors.read"],
   USER: [],
 };
 
@@ -89,6 +97,17 @@ async function seedRolesAndPermissions() {
       update: {},
       create: { name: RoleName[roleName as keyof typeof RoleName] },
       select: { id: true },
+    });
+
+    const desiredPermissionIds = rolePermissions[roleName]
+      .map((permissionKey) => permissions.get(permissionKey)?.id)
+      .filter((permissionId): permissionId is string => Boolean(permissionId));
+
+    await prisma.rolePermission.deleteMany({
+      where: {
+        roleId: role.id,
+        ...(desiredPermissionIds.length ? { permissionId: { notIn: desiredPermissionIds } } : {}),
+      },
     });
 
     for (const permissionKey of rolePermissions[roleName]) {
@@ -146,7 +165,8 @@ async function bootstrapFirstSuperAdmin() {
       ? await tx.user.update({
           where: { id: existingUser.id },
           data: {
-            passwordHash: existingUser.passwordHash ?? (await hashPassword(password)),
+            passwordHash: await hashPassword(password),
+            status: UserStatus.ACTIVE,
             profile: {
               upsert: {
                 create: { firstName, lastName },

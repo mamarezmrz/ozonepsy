@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { loginAdmin, AdminAuthenticationError } from "@/lib/admin/service";
 import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin, getRequestMetadata } from "@/lib/admin/security";
-import { parseAdminLoginInput } from "@/lib/admin/validation";
+import { AdminValidationError, parseAdminLoginInput } from "@/lib/admin/validation";
 
 function requestIsForAdminHost(request: Request) {
   return isAdminHost(request.headers.get("host"));
@@ -18,7 +18,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const input = parseAdminLoginInput(await request.json());
+    let payload: unknown;
+    try {
+      payload = await request.json();
+    } catch {
+      return NextResponse.json({ code: "VALIDATION_ERROR", message: "اطلاعات ورود معتبر نیست." }, { status: 400 });
+    }
+
+    const input = parseAdminLoginInput(payload);
     const result = await loginAdmin(input.email, input.password, getRequestMetadata(request));
 
     return NextResponse.json({
@@ -32,6 +39,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ code: error.code, message: error.message }, { status });
     }
 
-    return NextResponse.json({ code: "VALIDATION_ERROR", message: "اطلاعات ورود معتبر نیست." }, { status: 400 });
+    if (error instanceof AdminValidationError) {
+      return NextResponse.json({ code: "VALIDATION_ERROR", message: error.message }, { status: 400 });
+    }
+
+    console.error("[admin.auth.login] unexpected error", error);
+    return NextResponse.json({ code: "INTERNAL_ERROR", message: "خطای داخلی رخ داد. دوباره تلاش کنید." }, { status: 500 });
   }
 }

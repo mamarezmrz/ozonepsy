@@ -5,11 +5,11 @@ function normalizeHost(host: string | null | undefined) {
 }
 
 export function getAdminHosts() {
-  return new Set(
-    [process.env.ADMIN_HOST, process.env.ADMIN_DEV_HOST || DEFAULT_DEV_ADMIN_HOST]
-      .map(normalizeHost)
-      .filter(Boolean),
-  );
+  const hosts = process.env.NODE_ENV === "production"
+    ? [process.env.ADMIN_HOST]
+    : [process.env.ADMIN_DEV_HOST || DEFAULT_DEV_ADMIN_HOST, process.env.ADMIN_HOST];
+
+  return new Set(hosts.map(normalizeHost).filter(Boolean));
 }
 
 export function isAdminHost(host: string | null | undefined) {

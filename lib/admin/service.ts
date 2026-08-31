@@ -1,7 +1,7 @@
 import { RoleName, UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
-import { recordAdminAudit } from "@/lib/admin/audit";
+import { recordAdminAuditWithClient } from "@/lib/admin/audit";
 import {
   ADMIN_ROLES,
   type AdminRole,
@@ -12,9 +12,11 @@ import {
   recordAdminLoginFailure,
 } from "@/lib/admin/rate-limit";
 import {
-  createAdminSession,
+  adminSessionConfig,
   revokeCurrentAdminSession,
+  setAdminSessionCookie,
 } from "@/lib/admin/session";
+import { createSessionToken, hashSessionToken } from "@/lib/auth/session";
 
 const adminRoleNames = ADMIN_ROLES as unknown as RoleName[];
 
@@ -73,22 +75,37 @@ export async function loginAdmin(email: string, password: string, metadata: Admi
   }
 
   await clearAdminLoginFailures(normalizedEmail, metadata.ipAddress);
-  const session = await createAdminSession(user.id, metadata);
-
-  await recordAdminAudit({
-    actorId: user.id,
-    action: "admin.session.login",
-    targetType: "ADMIN_SESSION",
-    targetId: session.id,
-    afterState: { userId: user.id, expiresAt: session.expiresAt.toISOString() },
-    requestId: metadata.requestId,
-    ipAddress: metadata.ipAddress,
-    userAgent: metadata.userAgent,
+  const token = createSessionToken();
+  const expiresAt = new Date(Date.now() + adminSessionConfig.ttlSeconds * 1000);
+  const session = await prisma.$transaction(async (tx) => {
+    const created = await tx.adminSession.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashSessionToken(token),
+        expiresAt,
+        lastSeenAt: new Date(),
+        ipAddress: metadata.ipAddress?.slice(0, 64),
+        userAgent: metadata.userAgent?.slice(0, 500),
+      },
+      select: { id: true, expiresAt: true },
+    });
+    await recordAdminAuditWithClient(tx, {
+      actorId: user.id,
+      action: "admin.session.login",
+      targetType: "ADMIN_SESSION",
+      targetId: created.id,
+      afterState: { userId: user.id, expiresAt: created.expiresAt.toISOString() },
+      requestId: metadata.requestId,
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    });
+    return created;
   });
+  await setAdminSessionCookie(token);
 
   return {
     user: { id: user.id, email: user.email, displayName: user.profile?.displayName ?? null },
-    expiresAt: session.expiresAt,
+      expiresAt: session.expiresAt,
   };
 }
 

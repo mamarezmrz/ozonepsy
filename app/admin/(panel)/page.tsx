@@ -1,47 +1,65 @@
 import type { Metadata } from "next";
-import { requireAdminSession } from "@/lib/admin/session";
+import { AdminButton, AdminDataTable, AdminStatusBadge } from "@/components/admin/admin-ui";
+import { requireAdminPagePermission } from "@/lib/admin/page";
+import { getAdminDashboardData } from "@/lib/admin/dashboard";
+import { formatPersianNumber, toPersianDigits } from "@/lib/format";
+import { AppointmentStatus, OrderStatus, UserStatus } from "@/lib/generated/prisma/enums";
 
 export const metadata: Metadata = { title: "نمای کلی" };
 
-const foundationItems = [
-  ["احراز هویت مستقل", "AdminSession و کوکی جداگانه فعال است."],
-  ["کنترل دسترسی", "مجوزها در سمت سرور بررسی می‌شوند."],
-  ["ثبت رویداد امنیتی", "ورود و خروج ادمین قابل پیگیری است."],
-] as const;
-
 export default async function AdminOverviewPage() {
-  const session = await requireAdminSession();
+  const session = await requireAdminPagePermission("dashboard.view");
+  const data = await getAdminDashboardData(session);
 
   return (
     <div className="admin-page-stack">
-      <section className="admin-page-heading">
-        <div>
-          <p className="admin-eyebrow">فضای عملیاتی اُزون</p>
-          <h2>نمای کلی</h2>
-          <p>سلام {session.displayName?.trim() || session.email}؛ پنل مدیریت آماده است.</p>
-        </div>
-        <span className="admin-secure-badge">دسترسی تأیید شد</span>
+      <section className="admin-metric-grid admin-overview-metrics" aria-label="شاخص‌های اصلی سیستم">
+        {data.metrics.map((metric) => (
+          <article key={metric.label} className="admin-metric-card">
+            <span>{metric.label}</span>
+            <strong>{formatPersianNumber(metric.value)}</strong>
+          </article>
+        ))}
       </section>
 
-      <section className="admin-foundation-card" aria-labelledby="foundation-title">
-        <div className="admin-section-heading">
-          <h3 id="foundation-title">پایه‌های پنل مدیریت</h3>
-          <span>فاز ۱ و ۲</span>
-        </div>
-        <div className="admin-foundation-grid">
-          {foundationItems.map(([title, description]) => (
-            <article key={title} className="admin-foundation-item">
-              <span className="admin-status-dot" aria-hidden="true" />
-              <div><h4>{title}</h4><p>{description}</p></div>
-            </article>
-          ))}
-        </div>
+      <section className="admin-dashboard-grid">
+        <article className="admin-panel-card">
+          <div className="admin-section-heading"><h3>ثبت‌نام‌های اخیر</h3>{session.permissions.includes("users.read") ? <AdminButton href="/users" variant="secondary">همه کاربران</AdminButton> : null}</div>
+          <AdminDataTable
+            rows={data.recentUsers}
+            getRowKey={(row) => row.id}
+            columns={[
+              { key: "name", label: "نام", render: (row) => <span>{row.name}</span> },
+              { key: "email", label: "ایمیل", render: (row) => <span dir="ltr">{row.email}</span> },
+              { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === UserStatus.ACTIVE ? "success" : row.status === UserStatus.SUSPENDED ? "warning" : "neutral"}>{row.status === UserStatus.ACTIVE ? "فعال" : row.status === UserStatus.SUSPENDED ? "تعلیق‌شده" : "بایگانی"}</AdminStatusBadge> },
+              { key: "createdAt", label: "تاریخ", render: (row) => <span>{row.createdAt.toLocaleDateString("fa-IR")}</span> },
+            ]}
+            empty={<p className="admin-table-empty">هنوز کاربر عمومی ثبت نشده است.</p>}
+          />
+        </article>
+
+        <article className="admin-panel-card">
+          <div className="admin-section-heading"><h3>جلسات آینده</h3>{session.permissions.includes("sessions.read") ? <AdminButton href="/sessions" variant="secondary">همه جلسات</AdminButton> : null}</div>
+          <AdminDataTable
+            rows={data.upcomingSessions}
+            getRowKey={(row) => row.id}
+            columns={[
+              { key: "title", label: "جلسه", render: (row) => <span>{row.title}</span> },
+              { key: "email", label: "کاربر", render: (row) => <span dir="ltr">{row.email}</span> },
+              { key: "startsAt", label: "زمان", render: (row) => <span>{row.startsAt.toLocaleString("fa-IR")}</span> },
+              { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === AppointmentStatus.RESCHEDULED ? "warning" : "info"}>{row.status === AppointmentStatus.RESCHEDULED ? "تغییرزمان‌یافته" : "برنامه‌ریزی‌شده"}</AdminStatusBadge> },
+            ]}
+            empty={<p className="admin-table-empty">جلسه آینده‌ای ثبت نشده است.</p>}
+          />
+        </article>
       </section>
 
-      <section className="admin-empty-card">
-        <h3>ماژول‌های عملیاتی</h3>
-        <p>ماژول‌های مدیریت کاربران، دوره‌ها، جلسات و محتوا در فازهای بعدی به همین زیرساخت متصل می‌شوند.</p>
-      </section>
+      {data.recentOrders.length > 0 ? <section className="admin-panel-card"><div className="admin-section-heading"><h3>سفارش‌های اخیر</h3></div><AdminDataTable rows={data.recentOrders} getRowKey={(row) => row.id} columns={[
+        { key: "orderNumber", label: "شماره سفارش", render: (row) => <span dir="ltr">{row.orderNumber}</span> },
+        { key: "title", label: "محصول", render: (row) => <span>{row.title}</span> },
+        { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === OrderStatus.PAID ? "success" : "neutral"}>{row.status}</AdminStatusBadge> },
+        { key: "total", label: "مبلغ", render: (row) => <span dir="ltr">{toPersianDigits(`${(row.totalMinor / 100).toFixed(2)} ${row.currency}`)}</span> },
+      ]} /></section> : null}
     </div>
   );
 }

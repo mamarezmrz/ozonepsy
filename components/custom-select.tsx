@@ -16,6 +16,8 @@ type CustomSelectProps = {
   searchPlaceholder?: string;
   ariaLabel: string;
   invalid?: boolean;
+  className?: string;
+  searchable?: boolean;
 };
 
 export function CustomSelect({
@@ -26,6 +28,8 @@ export function CustomSelect({
   searchPlaceholder = "جست‌وجو",
   ariaLabel,
   invalid = false,
+  className,
+  searchable = true,
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -58,8 +62,8 @@ export function CustomSelect({
   }, [open]);
 
   useEffect(() => {
-    if (open) window.requestAnimationFrame(() => searchRef.current?.focus());
-  }, [open]);
+    if (open && searchable) window.requestAnimationFrame(() => searchRef.current?.focus());
+  }, [open, searchable]);
 
   const choose = (option: CustomSelectOption) => {
     onChange(option.value);
@@ -75,7 +79,7 @@ export function CustomSelect({
   };
 
   return (
-    <div ref={rootRef} className="auth-custom-select">
+    <div ref={rootRef} className={`auth-custom-select${className ? ` ${className}` : ""}`}>
       <button
         type="button"
         className={`auth-custom-select-trigger${invalid ? " is-invalid" : ""}`}
@@ -93,7 +97,7 @@ export function CustomSelect({
 
       {open && (
         <div className="auth-custom-select-menu">
-          <div className="auth-custom-select-search-wrap">
+          {searchable ? <div className="auth-custom-select-search-wrap">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
               <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -106,7 +110,7 @@ export function CustomSelect({
               aria-label={searchPlaceholder}
               onChange={(event) => setQuery(event.target.value)}
             />
-          </div>
+          </div> : null}
           <div id={listboxId} className="auth-custom-select-options" role="listbox" aria-label={ariaLabel}>
             {filteredOptions.length > 0 ? filteredOptions.map((option) => (
               <button

@@ -8,10 +8,19 @@ export function getRequestMetadata(request: Request) {
 
 export function hasSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  if (!origin) {
+    const referer = request.headers.get("referer");
+    if (!referer) return false;
+    return hasSameHost(request, referer);
+  }
+
+  return hasSameHost(request, origin);
+}
+
+function hasSameHost(request: Request, candidate: string) {
 
   try {
-    const originHost = new URL(origin).host.toLowerCase().replace(/\.$/, "");
+    const originHost = new URL(candidate).host.toLowerCase().replace(/\.$/, "");
     const requestHost = (request.headers.get("host") ?? new URL(request.url).host)
       .split(",")[0]
       .trim()

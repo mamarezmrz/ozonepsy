@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin } from "@/lib/admin/security";
 import { logoutAdmin } from "@/lib/admin/service";
+import { adminErrorResponse } from "@/lib/admin/errors";
 
 export async function POST(request: Request) {
   if (!isAdminHost(request.headers.get("host"))) {
@@ -12,6 +13,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });
   }
 
-  await logoutAdmin();
-  return NextResponse.json({ ok: true });
+  try {
+    await logoutAdmin();
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
 }
