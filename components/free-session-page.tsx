@@ -6,11 +6,12 @@ import { CustomSelect } from "@/components/custom-select";
 import { HomeFaq, HomeTestimonials } from "@/components/home-interactive";
 import { SiteNotification } from "@/components/site-notification";
 import { countries } from "@/lib/countries";
+import type { PublicContent } from "@/lib/public/content";
 
 const asset = (name: string) => `/figma-home/${name}`;
 const countryOptions = countries.map((label) => ({ value: label, label }));
 
-export function FreeSessionPage() {
+export function FreeSessionPage({ content }: { content?: PublicContent }) {
   return (
     <main className="free-session-page">
       <div className="free-session-page-inner">
@@ -45,13 +46,13 @@ export function FreeSessionPage() {
           <h2 id="free-session-testimonials-title">تجربیات دیگران از این جلسه</h2>
           <p>شما می‌توانید با مشاوری که خودتون انتخاب کردید جلسه‌تون رو برگزار کنید و یا بر اساس پیشنهادات همکاران ما یکی از مشاوران پیشنهاد شده رو انتخاب کنید.</p>
         </div>
-        <HomeTestimonials />
+        <HomeTestimonials items={content?.testimonials} />
       </section>
 
       <section className="free-session-faq home-faq" aria-labelledby="free-session-faq-title">
         <div className="home-faq-inner">
           <h2 id="free-session-faq-title">سوالات متداول پیش مشاوره رایگان</h2>
-          <HomeFaq />
+          <HomeFaq items={content?.faqs} />
         </div>
       </section>
     </main>

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/service";
 import { createDemoPurchase, DemoPaymentError } from "@/lib/demo-payment";
+import { hasSameOrigin } from "@/lib/security/request";
+import { isDemoPaymentEnabled } from "@/lib/payments/demo-gate";
 
 export const runtime = "nodejs";
 
@@ -15,6 +17,13 @@ const paymentInputSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  if (!isDemoPaymentEnabled()) {
+    return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
+  }
+  if (!hasSameOrigin(request)) {
+    return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ message: "برای تکمیل خرید ابتدا وارد حساب کاربری شوید." }, { status: 401 });

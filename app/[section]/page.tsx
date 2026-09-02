@@ -12,6 +12,8 @@ import { SiteFooter, SiteHeader } from "@/components/site-header-server";
 import { products } from "@/lib/data";
 import { ProductCard, SectionTitle } from "@/components/ui";
 import { createPageMetadata } from "@/lib/seo";
+import { getPublicContent } from "@/lib/public/content";
+import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 
 const content: Record<string, { title: string; description: string }> = {
   consultations: { title: "حوزه‌های مشاوره", description: "از میان مسیرهای مختلف مشاوره، گزینه‌ای را پیدا کنید که به نیاز امروزتان نزدیک است." },
@@ -19,7 +21,7 @@ const content: Record<string, { title: string; description: string }> = {
   "group-therapy": { title: "گروه‌درمانی آنلاین", description: "در یک فضای امن و همراه با آدم‌های هم‌مسیر رشد کنید." },
   therapists: { title: "مشاوران اُزون", description: "با متخصصانی آشنا شوید که برای شنیدن و همراهی آموزش دیده‌اند." },
   pricing: { title: "قیمت‌گذاری و خرید", description: "هر محصول مستقل خریداری می‌شود؛ بدون سبد خرید و پیچیدگی اضافه." },
-  about: { title: "درباره اُزون", description: "اُزون جایی است برای گفت‌وگوی امن، رشد آگاهانه و دسترسی ساده به حمایت روانشناختی." },
+  about: { title: "درباره ما", description: "اُزون جایی است برای گفت‌وگوی امن، رشد آگاهانه و دسترسی ساده به حمایت روانشناختی." },
   contact: { title: "تماس با ما", description: "برای پرسش‌های شما اینجا هستیم." },
   "support-fund": { title: "صندوق حمایت", description: "با همراهی شما، دسترسی به حمایت روانشناختی برای افراد بیشتری ممکن می‌شود." },
   partners: { title: "همکاران اُزون", description: "با موسسات و مشاوران حرفه‌ای همکار اُزون آشنا شوید." },
@@ -36,27 +38,29 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
   const { section } = await params;
   const page = content[section];
   if (!page) notFound();
+  const publicContent = await getPublicContent();
 
   if (section === "about") {
     return <><SiteHeader /><AboutPage /><SiteFooter /></>;
   }
   if (section === "contact") {
-    return <><SiteHeader /><ContactPage /><SiteFooter /></>;
+    return <><SiteHeader /><ContactPage content={publicContent} /><SiteFooter /></>;
   }
   if (section === "support-fund") {
     return <><SiteHeader /><SupportFundPage /><SiteFooter /></>;
   }
   if (section === "free-session") {
-    return <><SiteHeader /><FreeSessionPage /><SiteFooter /></>;
+    return <><SiteHeader /><FreeSessionPage content={publicContent} /><SiteFooter /></>;
   }
   if (section === "pricing") {
-    return <><SiteHeader /><PricingPage /><SiteFooter /></>;
+    return <><SiteHeader /><PricingPage content={publicContent} /><SiteFooter /></>;
   }
   if (section === "courses") {
-    return <><SiteHeader /><CoursesPage /><SiteFooter /></>;
+    return <><SiteHeader /><CoursesPage content={publicContent} /><SiteFooter /></>;
   }
   if (section === "group-therapy") {
-    return <><SiteHeader /><GroupTherapyPage /><SiteFooter /></>;
+    const reviews = await getPublishedReviewsForProductSlug("group-therapy");
+    return <><SiteHeader /><GroupTherapyPage reviews={reviews} /><SiteFooter /></>;
   }
   if (section === "partners") {
     return <><SiteHeader /><PartnersPage /><SiteFooter /></>;

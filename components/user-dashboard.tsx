@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DashboardLogout } from "@/components/dashboard-logout";
 import { DashboardIcon, type DashboardIconName } from "@/components/dashboard-icons";
 import { DashboardMobileMenu } from "@/components/dashboard-mobile-menu";
+import { DashboardProductsScroll } from "@/components/dashboard-products-scroll";
 import { LocalTime } from "@/components/local-time";
 import { toPersianDigits } from "@/lib/format";
 import type { DashboardCard, DashboardData, DashboardSession } from "@/lib/dashboard";
@@ -168,11 +169,11 @@ function PopulatedDashboard({ data }: { data: DashboardData }) {
       <div className="user-dashboard-middle-grid">
         <section className="user-dashboard-panel user-dashboard-products-panel">
           <PanelHeading title="دوره‌های من" href="/dashboard/courses" linkLabel="جزئیات بیشتر" />
-          {data.courses.length ? <div className="user-dashboard-course-list">{data.courses.map((card) => <DashboardCourseCard key={card.id} card={card} />)}</div> : <div className="user-dashboard-inline-empty">تا کنون دوره‌ای خریداری نکرده‌اید</div>}
+          {data.courses.length ? <DashboardProductsScroll listId="user-dashboard-courses-list" ariaLabel="پیمایش دوره‌های من" className="user-dashboard-course-list">{data.courses.map((card) => <DashboardCourseCard key={card.id} card={card} />)}</DashboardProductsScroll> : <div className="user-dashboard-inline-empty">تا کنون دوره‌ای خریداری نکرده‌اید</div>}
         </section>
         <section className="user-dashboard-panel user-dashboard-products-panel">
           <PanelHeading title="گروه درمانی" href="/dashboard/group-therapy" linkLabel="گروه درمانی" />
-          {data.groupTherapy.length ? <div className="user-dashboard-group-list">{data.groupTherapy.map((card) => <DashboardGroupCard key={card.id} card={card} />)}</div> : <div className="user-dashboard-inline-empty">تا کنون جلسه‌ی گروه درمانی نداشته‌اید</div>}
+          {data.groupTherapy.length ? <DashboardProductsScroll listId="user-dashboard-group-therapy-list" ariaLabel="پیمایش گروه درمانی" className="user-dashboard-group-list" orientation="horizontal">{data.groupTherapy.map((card) => <DashboardGroupCard key={card.id} card={card} />)}</DashboardProductsScroll> : <div className="user-dashboard-inline-empty">تا کنون جلسه‌ی گروه درمانی نداشته‌اید</div>}
         </section>
       </div>
 

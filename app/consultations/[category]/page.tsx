@@ -4,6 +4,7 @@ import { ConsultationCategoryPage } from "@/components/individual-consultation-p
 import { SiteFooter, SiteHeader } from "@/components/site-header-server";
 import { getConsultationCategoryContent } from "@/lib/consultation-categories";
 import { createPageMetadata } from "@/lib/seo";
+import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 
 const categoryDescriptions: Record<string, string> = {
   individual: "مشاوره فردی آنلاین و محرمانه برای شناخت بهتر خود و عبور از چالش‌ها.",
@@ -21,6 +22,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   const { category } = await params;
   const content = getConsultationCategoryContent(category);
   if (!content) notFound();
+  const reviewProductSlug = content.slug === "individual" ? "individual-consultation" : content.slug === "teenagers" ? "teenagers" : content.slug === "couples" ? "couples" : null;
+  const reviews = reviewProductSlug ? await getPublishedReviewsForProductSlug(reviewProductSlug) : [];
 
-  return <><SiteHeader /><ConsultationCategoryPage content={content} /><SiteFooter /></>;
+  return <><SiteHeader /><ConsultationCategoryPage content={content} reviews={reviews} reviewProductSlug={reviewProductSlug} /><SiteFooter /></>;
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const positiveInt = z.coerce.number().int().positive();
+const positiveInt = z.coerce.number().int().positive().max(100_000);
 
 export const adminListQuerySchema = z.object({
   page: positiveInt.default(1),
@@ -35,4 +35,3 @@ export function pageMeta(total: number, query: AdminListQuery) {
 export function paginationOffset(query: AdminListQuery) {
   return (query.page - 1) * query.pageSize;
 }
-

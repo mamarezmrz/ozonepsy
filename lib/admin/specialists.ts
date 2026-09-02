@@ -61,8 +61,8 @@ export async function createAdminSpecialist(actorId: string, input: { slug: stri
   });
 }
 
-export async function updateAdminSpecialist(actorId: string, id: string, input: { slug: string; displayName: string; specialty?: string; bio?: string; imageUrl?: string | null; userId?: string | null }) {
-  const before = await prisma.specialist.findUnique({ where: { id }, select: { id: true } });
+export async function updateAdminSpecialist(actorId: string, id: string, input: { slug: string; displayName: string; specialty?: string; bio?: string; imageUrl?: string | null; userId?: string | null }, session?: AdminSessionView) {
+  const before = await prisma.specialist.findFirst({ where: { id, ...scopedWhere(session) }, select: { id: true } });
   if (!before) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
   const data = { slug: input.slug.trim().toLowerCase(), displayName: input.displayName.trim(), specialty: input.specialty?.trim() || null, bio: input.bio?.trim() || null, imageUrl: input.imageUrl?.trim() || null, userId: input.userId || null };
   if (!data.slug || !data.displayName) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات متخصص کامل نیست.");
@@ -77,11 +77,11 @@ export async function updateAdminSpecialist(actorId: string, id: string, input: 
   });
 }
 
-export async function setAdminSpecialistStatus(actorId: string, id: string, status: SpecialistStatus, reason: string) {
+export async function setAdminSpecialistStatus(actorId: string, id: string, status: SpecialistStatus, reason: string, session?: AdminSessionView) {
   const trimmedReason = reason.trim();
   if (!trimmedReason) throw new AdminServiceError("VALIDATION_ERROR", "دلیل تغییر وضعیت متخصص را وارد کنید.");
   return prisma.$transaction(async (tx) => {
-    const before = await tx.specialist.findUnique({ where: { id }, select: { id: true, status: true } });
+    const before = await tx.specialist.findFirst({ where: { id, ...scopedWhere(session) }, select: { id: true, status: true } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
     if (before.status === status) throw new AdminServiceError("CONFLICT", "متخصص از قبل همین وضعیت را دارد.");
     const updated = await tx.specialist.update({ where: { id }, data: { status }, select: { id: true, status: true } });
@@ -90,9 +90,9 @@ export async function setAdminSpecialistStatus(actorId: string, id: string, stat
   });
 }
 
-export async function assignAdminSpecialistCourses(actorId: string, id: string, courseIds: string[]) {
+export async function assignAdminSpecialistCourses(actorId: string, id: string, courseIds: string[], session?: AdminSessionView) {
   return prisma.$transaction(async (tx) => {
-    const specialist = await tx.specialist.findUnique({ where: { id }, select: { id: true } });
+    const specialist = await tx.specialist.findFirst({ where: { id, ...scopedWhere(session) }, select: { id: true } });
     if (!specialist) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
     const courses = await tx.courseProduct.findMany({ where: { productId: { in: courseIds } }, select: { productId: true } });
     if (courses.length !== new Set(courseIds).size) throw new AdminServiceError("VALIDATION_ERROR", "یکی از دوره‌های انتخاب‌شده معتبر نیست.");

@@ -16,13 +16,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
-  try { const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "instructors.write"); return NextResponse.json({ ok: true, data: await updateAdminSpecialist(session.userId, (await params).id, adminSpecialistSchema.parse(await request.json())) }); }
+  try { const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "instructors.write"); return NextResponse.json({ ok: true, data: await updateAdminSpecialist(session.userId, (await params).id, adminSpecialistSchema.parse(await request.json()), session) }); }
   catch (error) { return adminErrorResponse(error); }
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
-  try { const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "instructors.write"); return NextResponse.json({ ok: true, data: await assignAdminSpecialistCourses(session.userId, (await params).id, adminSpecialistCoursesSchema.parse(await request.json()).courseIds) }); }
+  try { const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "instructors.write"); return NextResponse.json({ ok: true, data: await assignAdminSpecialistCourses(session.userId, (await params).id, adminSpecialistCoursesSchema.parse(await request.json()).courseIds, session) }); }
   catch (error) { return adminErrorResponse(error); }
 }

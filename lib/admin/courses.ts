@@ -104,8 +104,8 @@ export async function createAdminCourse(actorId: string, input: { title: string;
   });
 }
 
-export async function updateAdminCourse(actorId: string, productId: string, input: { title: string; slug: string; description: string; priceMinor: number; currency: string; categoryId?: string | null; deliveryMode: CourseDeliveryMode; accessDays?: number | null }) {
-  await ensureCourse(productId);
+export async function updateAdminCourse(actorId: string, productId: string, input: { title: string; slug: string; description: string; priceMinor: number; currency: string; categoryId?: string | null; deliveryMode: CourseDeliveryMode; accessDays?: number | null }, session?: AdminSessionView) {
+  await ensureCourse(productId, session);
   const data = productData(input);
   if (!data.title || !data.slug || !data.description || data.priceMinor < 0) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات دوره کامل یا معتبر نیست.");
   return prisma.$transaction(async (tx) => {
@@ -117,12 +117,12 @@ export async function updateAdminCourse(actorId: string, productId: string, inpu
   });
 }
 
-export async function setAdminCourseStatus(actorId: string, productId: string, status: ProductStatus, reason: string) {
+export async function setAdminCourseStatus(actorId: string, productId: string, status: ProductStatus, reason: string, session?: AdminSessionView) {
   const trimmedReason = reason.trim();
   if (!trimmedReason) throw new AdminServiceError("VALIDATION_ERROR", "دلیل تغییر وضعیت دوره را وارد کنید.");
-  await ensureCourse(productId);
+  await ensureCourse(productId, session);
   return prisma.$transaction(async (tx) => {
-    const before = await tx.product.findFirst({ where: { id: productId, ...courseWhere }, select: { id: true, status: true } });
+    const before = await tx.product.findFirst({ where: { id: productId, ...courseWhere, ...courseScope(session) }, select: { id: true, status: true } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "دوره پیدا نشد.");
     if (before.status === status) throw new AdminServiceError("CONFLICT", "دوره از قبل همین وضعیت را دارد.");
     const updated = await tx.product.update({ where: { id: productId }, data: { status }, select: { id: true, status: true } });
@@ -131,8 +131,8 @@ export async function setAdminCourseStatus(actorId: string, productId: string, s
   });
 }
 
-export async function duplicateAdminCourse(actorId: string, productId: string) {
-  const source = await getAdminCourse(productId);
+export async function duplicateAdminCourse(actorId: string, productId: string, session?: AdminSessionView) {
+  const source = await getAdminCourse(productId, session);
   const slug = `${source.slug}-copy-${Date.now().toString(36)}`.slice(0, 160);
   return prisma.$transaction(async (tx) => {
     const created = await tx.product.create({ data: { title: `${source.title} - کپی`, slug, description: source.description, priceMinor: source.priceMinor, currency: source.currency, categoryId: source.categoryId, kind: ProductKind.COURSE, status: ProductStatus.DRAFT, course: { create: { deliveryMode: source.course.deliveryMode, accessDays: source.course.accessDays, curriculum: source.course.curriculum ?? undefined } } }, select: { id: true, slug: true, title: true, status: true } });
@@ -163,15 +163,15 @@ export async function duplicateAdminCourse(actorId: string, productId: string) {
   });
 }
 
-async function ensureModule(moduleId: string) {
+async function ensureModule(moduleId: string, session?: AdminSessionView) {
   const courseModule = await prisma.courseModule.findUnique({ where: { id: moduleId }, select: { id: true, courseProductId: true, title: true, order: true } });
   if (!courseModule) throw new AdminServiceError("NOT_FOUND", "ماژول پیدا نشد.");
-  await ensureCourse(courseModule.courseProductId);
+  await ensureCourse(courseModule.courseProductId, session);
   return courseModule;
 }
 
-export async function createAdminModule(actorId: string, courseId: string, title: string, description?: string) {
-  await ensureCourse(courseId);
+export async function createAdminModule(actorId: string, courseId: string, title: string, description?: string, session?: AdminSessionView) {
+  await ensureCourse(courseId, session);
   const trimmedTitle = title.trim();
   if (!trimmedTitle) throw new AdminServiceError("VALIDATION_ERROR", "عنوان ماژول را وارد کنید.");
   return prisma.$transaction(async (tx) => {
@@ -182,8 +182,8 @@ export async function createAdminModule(actorId: string, courseId: string, title
   });
 }
 
-export async function updateAdminModule(actorId: string, moduleId: string, title: string, description?: string) {
-  await ensureModule(moduleId);
+export async function updateAdminModule(actorId: string, moduleId: string, title: string, description?: string, session?: AdminSessionView) {
+  await ensureModule(moduleId, session);
   if (!title.trim()) throw new AdminServiceError("VALIDATION_ERROR", "عنوان ماژول را وارد کنید.");
   return prisma.$transaction(async (tx) => {
     const before = await tx.courseModule.findUnique({ where: { id: moduleId }, select: { title: true, description: true } });
@@ -193,8 +193,8 @@ export async function updateAdminModule(actorId: string, moduleId: string, title
   });
 }
 
-export async function setAdminModuleStatus(actorId: string, moduleId: string, status: ProductStatus, reason: string) {
-  await ensureModule(moduleId);
+export async function setAdminModuleStatus(actorId: string, moduleId: string, status: ProductStatus, reason: string, session?: AdminSessionView) {
+  await ensureModule(moduleId, session);
   if (!reason.trim()) throw new AdminServiceError("VALIDATION_ERROR", "دلیل تغییر وضعیت ماژول را وارد کنید.");
   return prisma.$transaction(async (tx) => {
     const before = await tx.courseModule.findUnique({ where: { id: moduleId }, select: { status: true } });
@@ -204,8 +204,8 @@ export async function setAdminModuleStatus(actorId: string, moduleId: string, st
   });
 }
 
-export async function reorderAdminModules(actorId: string, courseId: string, moduleIds: string[]) {
-  await ensureCourse(courseId);
+export async function reorderAdminModules(actorId: string, courseId: string, moduleIds: string[], session?: AdminSessionView) {
+  await ensureCourse(courseId, session);
   return prisma.$transaction(async (tx) => {
     const modules = await tx.courseModule.findMany({ where: { courseProductId: courseId }, select: { id: true } });
     if (modules.length !== moduleIds.length || modules.some(({ id }) => !moduleIds.includes(id))) throw new AdminServiceError("VALIDATION_ERROR", "ترتیب ماژول‌ها معتبر نیست.");
@@ -216,8 +216,8 @@ export async function reorderAdminModules(actorId: string, courseId: string, mod
   });
 }
 
-export async function createAdminLesson(actorId: string, moduleId: string, input: { title: string; description?: string; duration?: number | null; isPreview?: boolean }) {
-  await ensureModule(moduleId);
+export async function createAdminLesson(actorId: string, moduleId: string, input: { title: string; description?: string; duration?: number | null; isPreview?: boolean }, session?: AdminSessionView) {
+  await ensureModule(moduleId, session);
   if (!input.title.trim()) throw new AdminServiceError("VALIDATION_ERROR", "عنوان جلسه را وارد کنید.");
   return prisma.$transaction(async (tx) => {
     const last = await tx.courseLesson.findFirst({ where: { moduleId }, orderBy: { order: "desc" }, select: { order: true } });
@@ -227,10 +227,10 @@ export async function createAdminLesson(actorId: string, moduleId: string, input
   });
 }
 
-export async function updateAdminLesson(actorId: string, lessonId: string, input: { title: string; description?: string; duration?: number | null; isPreview?: boolean }) {
+export async function updateAdminLesson(actorId: string, lessonId: string, input: { title: string; description?: string; duration?: number | null; isPreview?: boolean }, session?: AdminSessionView) {
   const lesson = await prisma.courseLesson.findUnique({ where: { id: lessonId }, select: { id: true, moduleId: true } });
   if (!lesson) throw new AdminServiceError("NOT_FOUND", "جلسه پیدا نشد.");
-  await ensureModule(lesson.moduleId);
+  await ensureModule(lesson.moduleId, session);
   if (!input.title.trim()) throw new AdminServiceError("VALIDATION_ERROR", "عنوان جلسه را وارد کنید.");
   return prisma.$transaction(async (tx) => {
     const before = await tx.courseLesson.findUnique({ where: { id: lessonId }, select: { title: true, description: true, duration: true, isPreview: true } });
@@ -240,10 +240,10 @@ export async function updateAdminLesson(actorId: string, lessonId: string, input
   });
 }
 
-export async function setAdminLessonStatus(actorId: string, lessonId: string, status: ProductStatus, reason: string) {
+export async function setAdminLessonStatus(actorId: string, lessonId: string, status: ProductStatus, reason: string, session?: AdminSessionView) {
   const lesson = await prisma.courseLesson.findUnique({ where: { id: lessonId }, select: { moduleId: true } });
   if (!lesson) throw new AdminServiceError("NOT_FOUND", "جلسه پیدا نشد.");
-  await ensureModule(lesson.moduleId);
+  await ensureModule(lesson.moduleId, session);
   if (!reason.trim()) throw new AdminServiceError("VALIDATION_ERROR", "دلیل تغییر وضعیت جلسه را وارد کنید.");
   return prisma.$transaction(async (tx) => {
     const before = await tx.courseLesson.findUnique({ where: { id: lessonId }, select: { status: true } });
@@ -253,8 +253,8 @@ export async function setAdminLessonStatus(actorId: string, lessonId: string, st
   });
 }
 
-export async function reorderAdminLessons(actorId: string, moduleId: string, lessonIds: string[]) {
-  await ensureModule(moduleId);
+export async function reorderAdminLessons(actorId: string, moduleId: string, lessonIds: string[], session?: AdminSessionView) {
+  await ensureModule(moduleId, session);
   return prisma.$transaction(async (tx) => {
     const lessons = await tx.courseLesson.findMany({ where: { moduleId }, select: { id: true } });
     if (lessons.length !== lessonIds.length || lessons.some(({ id }) => !lessonIds.includes(id))) throw new AdminServiceError("VALIDATION_ERROR", "ترتیب جلسات معتبر نیست.");

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AboutPreconsultation } from "@/components/about-page";
 import { HomeFaq } from "@/components/home-interactive";
 import { type ConsultationTopic } from "@/lib/consultation-topics";
+import type { PublicContent } from "@/lib/public/content";
 
 const serviceSteps = [
   ["۱", "درخواست مشاوره رایگان", "برای شروع کافیه توی سایت ثبت نام کنید و درخواست مشاوره خودتون رو ثبت کنید."],
@@ -11,13 +12,16 @@ const serviceSteps = [
   ["۴", "برگزاری جلسه", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
-export function ConsultationTopicPage({ topic }: { topic: ConsultationTopic }) {
+export function ConsultationTopicPage({ topic, content }: { topic: ConsultationTopic; content?: PublicContent }) {
+  const faqTopicTitle = topic.title.replace(/\s*\([^()]*\)\s*$/, "");
+
   return (
     <main className="consultation-topic-page">
       <div className="consultation-topic-inner">
         <section className="consultation-topic-heading" aria-labelledby="consultation-topic-title">
           <h1 id="consultation-topic-title">{topic.title}</h1>
           <p>{topic.description}</p>
+          {topic.introList ? <ul className="consultation-topic-intro-list">{topic.introList.map((item, index) => <li key={`intro-${index}`}>{item}</li>)}</ul> : null}
         </section>
 
         <figure className="consultation-topic-hero" aria-label={topic.title}>
@@ -27,15 +31,19 @@ export function ConsultationTopicPage({ topic }: { topic: ConsultationTopic }) {
         </figure>
 
         <div className="consultation-topic-content">
-          <TopicSection title="نشانه‌های رایج (چند علامت کافی است)">
+          <TopicSection title={topic.signsTitle ?? "نشانه‌های رایج (چند علامت کافی است)"}>
             <ul>{topic.signs.map((item, index) => <li key={`sign-${index}`}>{item}</li>)}</ul>
             {topic.signsNote ? <p className="consultation-topic-note">{topic.signsNote}</p> : null}
           </TopicSection>
           <TopicSection title="چرا پیش می‌آید؟"><p>{topic.why}</p></TopicSection>
-          <TopicSection title="چه زمانی لازم است کمک بگیریم؟"><ul>{topic.whenToGetHelp.map((item, index) => <li key={`help-${index}`}>{item}</li>)}</ul></TopicSection>
+          <TopicSection title={topic.whenToGetHelpTitle ?? "چه زمانی لازم است کمک بگیریم؟"}><ul>{topic.whenToGetHelp.map((item, index) => <li key={`help-${index}`}>{item}</li>)}</ul></TopicSection>
           <TopicSection title="چه کارهایی معمولاً کمک می‌کند؟"><TopicParagraphs content={topic.whatHelps} /></TopicSection>
-          <TopicSection title="اُزون: چطور کنار شما می‌ایستیم"><ul>{topic.approach.map((item, index) => <li key={`approach-${index}`}>{item}</li>)}</ul></TopicSection>
-          <TopicSection title="پرسش‌های کوتاه"><TopicParagraphs content={topic.shortQuestions} /></TopicSection>
+          {topic.approachParagraphs ? (
+            <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><TopicParagraphs content={topic.approachParagraphs} /></TopicSection>
+          ) : (
+            <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><ul>{topic.approach.map((item, index) => <li key={`approach-${index}`}>{item}</li>)}</ul></TopicSection>
+          )}
+          {topic.hideShortQuestions ? null : <TopicSection title="پرسش‌های کوتاه"><TopicParagraphs content={topic.shortQuestions} /></TopicSection>}
         </div>
       </div>
 
@@ -48,7 +56,7 @@ export function ConsultationTopicPage({ topic }: { topic: ConsultationTopic }) {
       </section>
 
       <section className="consultation-topic-faq home-faq" aria-labelledby="consultation-topic-faq-title">
-        <div className="home-faq-inner"><h2 id="consultation-topic-faq-title">سوالات متداول مربوط به {topic.title}</h2><HomeFaq /></div>
+        <div className="home-faq-inner"><h2 id="consultation-topic-faq-title">سوالات متداول مربوط به {faqTopicTitle}</h2><HomeFaq items={content?.faqs} /></div>
       </section>
 
       <AboutPreconsultation />

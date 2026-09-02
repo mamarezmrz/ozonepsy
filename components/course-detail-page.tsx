@@ -6,6 +6,7 @@ import { type ChangeEvent, type CSSProperties, useEffect, useRef, useState } fro
 import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
 import type { Product } from "@/lib/data";
+import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
 const collapsedLessonListHeight = 384;
@@ -26,7 +27,7 @@ const lessons = [
   { title: "جلسه ۱۰: جمع‌بندی و ارزیابی نهایی", duration: "۰۰:۱۴:۴۶", free: false },
 ] as const;
 
-export function CourseDetailPage({ product, userEmail, hasCourseAccess }: { product: Product; userEmail: string; hasCourseAccess: boolean }) {
+export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews = [], reviewProductSlug = null }: { product: Product; userEmail: string; hasCourseAccess: boolean; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const [lessonListHeight, setLessonListHeight] = useState(collapsedLessonListHeight);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -328,7 +329,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess }: { prod
         </section>
       </div>
 
-      <ConsultationTestimonials />
+      <ConsultationTestimonials productSlug={reviewProductSlug ?? product.slug} reviews={reviews} />
       <AboutPreconsultation />
 
       {videoOpen ? (

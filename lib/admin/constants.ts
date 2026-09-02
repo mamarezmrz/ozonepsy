@@ -29,6 +29,7 @@ export const ADMIN_PERMISSION_KEYS = [
   "users.suspend",
   "products.read",
   "products.write",
+  "orders.read",
   "categories.read",
   "categories.write",
   "courses.read",

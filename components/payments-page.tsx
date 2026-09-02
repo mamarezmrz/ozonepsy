@@ -17,10 +17,12 @@ export function PaymentsScrollbar({
   scrollRef,
   ariaLabel = "پیمایش پرداخت‌ها",
   ariaControls = "dashboard-payments-table",
+  orientation = "vertical",
 }: {
   scrollRef: RefObject<HTMLDivElement | null>;
   ariaLabel?: string;
   ariaControls?: string;
+  orientation?: "vertical" | "horizontal";
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ startY: number; startScrollTop: number; pointerId: number } | null>(null);
@@ -36,25 +38,29 @@ export function PaymentsScrollbar({
       return;
     }
 
-    const visibleHeight = element.clientHeight;
-    const contentHeight = element.scrollHeight;
-    const scrollRange = Math.max(0, contentHeight - visibleHeight);
+    const visibleSize = orientation === "vertical" ? element.clientHeight : element.clientWidth;
+    const contentSize = orientation === "vertical" ? element.scrollHeight : element.scrollWidth;
+    const scrollRange = Math.max(0, contentSize - visibleSize);
     const canScroll = scrollRange > 1;
+    const trackSize = orientation === "vertical" ? track.clientHeight : track.clientWidth;
+    const scrollPosition = orientation === "vertical" ? element.scrollTop : Math.abs(element.scrollLeft);
 
     setIsScrollable(canScroll);
-    setScrollMetrics({ max: scrollRange, top: element.scrollTop });
+    setScrollMetrics({ max: scrollRange, top: scrollPosition });
 
     if (!canScroll) {
-      setThumb({ height: track.clientHeight, offset: 0 });
+      setThumb({ height: trackSize, offset: 0 });
       return;
     }
 
-    const thumbHeight = Math.max(36, Math.round((visibleHeight / contentHeight) * track.clientHeight));
-    const thumbRange = Math.max(0, track.clientHeight - thumbHeight);
-    const offset = Math.round((element.scrollTop / scrollRange) * thumbRange);
+    const thumbHeight = Math.max(36, Math.round((visibleSize / contentSize) * trackSize));
+    const thumbRange = Math.max(0, trackSize - thumbHeight);
+    const offset = orientation === "horizontal"
+      ? Math.round((1 - scrollPosition / scrollRange) * thumbRange)
+      : Math.round((scrollPosition / scrollRange) * thumbRange);
 
     setThumb({ height: thumbHeight, offset });
-  }, [scrollRef]);
+  }, [orientation, scrollRef]);
 
   useEffect(() => {
     const element = scrollRef.current;
@@ -87,8 +93,15 @@ export function PaymentsScrollbar({
     }
 
     const bounds = track.getBoundingClientRect();
-    const clickRatio = (event.clientY - bounds.top) / bounds.height;
-    element.scrollTop = Math.max(0, Math.min(element.scrollHeight - element.clientHeight, clickRatio * element.scrollHeight));
+    const clickPosition = orientation === "vertical" ? event.clientY - bounds.top : event.clientX - bounds.left;
+    const trackLength = orientation === "vertical" ? bounds.height : bounds.width;
+    const scrollRange = orientation === "vertical" ? element.scrollHeight - element.clientHeight : element.scrollWidth - element.clientWidth;
+    const nextPosition = Math.max(0, Math.min(scrollRange, orientation === "horizontal" ? (1 - clickPosition / trackLength) * scrollRange : (clickPosition / trackLength) * scrollRange));
+    if (orientation === "vertical") {
+      element.scrollTop = nextPosition;
+    } else {
+      element.scrollLeft = -nextPosition;
+    }
   };
 
   const startDragging = (event: PointerEvent<HTMLDivElement>) => {
@@ -101,8 +114,8 @@ export function PaymentsScrollbar({
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       pointerId: event.pointerId,
-      startY: event.clientY,
-      startScrollTop: element.scrollTop,
+      startY: orientation === "vertical" ? event.clientY : event.clientX,
+      startScrollTop: orientation === "vertical" ? element.scrollTop : Math.abs(element.scrollLeft),
     };
   };
 
@@ -115,11 +128,18 @@ export function PaymentsScrollbar({
       return;
     }
 
-    const scrollRange = element.scrollHeight - element.clientHeight;
-    const thumbRange = Math.max(1, track.clientHeight - thumb.height);
-    const scrollDelta = ((event.clientY - dragState.startY) / thumbRange) * scrollRange;
+    const scrollRange = orientation === "vertical" ? element.scrollHeight - element.clientHeight : element.scrollWidth - element.clientWidth;
+    const trackLength = orientation === "vertical" ? track.clientHeight : track.clientWidth;
+    const pointerPosition = orientation === "vertical" ? event.clientY : event.clientX;
+    const thumbRange = Math.max(1, trackLength - thumb.height);
+    const scrollDelta = ((pointerPosition - dragState.startY) / thumbRange) * scrollRange;
+    const nextPosition = Math.max(0, Math.min(scrollRange, orientation === "horizontal" ? dragState.startScrollTop - scrollDelta : dragState.startScrollTop + scrollDelta));
 
-    element.scrollTop = Math.max(0, Math.min(scrollRange, dragState.startScrollTop + scrollDelta));
+    if (orientation === "vertical") {
+      element.scrollTop = nextPosition;
+    } else {
+      element.scrollLeft = -nextPosition;
+    }
   };
 
   const stopDragging = (event: PointerEvent<HTMLDivElement>) => {
@@ -135,21 +155,34 @@ export function PaymentsScrollbar({
       return;
     }
 
-    const amount = event.key === "PageUp" || event.key === "PageDown" ? element.clientHeight : 80;
-    if (event.key === "ArrowUp" || event.key === "PageUp") {
-      element.scrollTop -= amount;
+    const amount = event.key === "PageUp" || event.key === "PageDown" ? (orientation === "vertical" ? element.clientHeight : element.clientWidth) : 80;
+    const scrollPosition = orientation === "vertical" ? element.scrollTop : Math.abs(element.scrollLeft);
+    const setPosition = (position: number) => {
+      if (orientation === "vertical") element.scrollTop = position;
+      else element.scrollLeft = -position;
+    };
+    if (orientation === "vertical" && (event.key === "ArrowUp" || event.key === "PageUp")) {
+      setPosition(scrollPosition - amount);
       event.preventDefault();
     }
-    if (event.key === "ArrowDown" || event.key === "PageDown") {
-      element.scrollTop += amount;
+    if (orientation === "vertical" && (event.key === "ArrowDown" || event.key === "PageDown")) {
+      setPosition(scrollPosition + amount);
+      event.preventDefault();
+    }
+    if (orientation === "horizontal" && (event.key === "ArrowLeft" || event.key === "PageUp")) {
+      setPosition(scrollPosition + amount);
+      event.preventDefault();
+    }
+    if (orientation === "horizontal" && (event.key === "ArrowRight" || event.key === "PageDown")) {
+      setPosition(scrollPosition - amount);
       event.preventDefault();
     }
     if (event.key === "Home") {
-      element.scrollTop = 0;
+      setPosition(orientation === "horizontal" ? element.scrollWidth - element.clientWidth : 0);
       event.preventDefault();
     }
     if (event.key === "End") {
-      element.scrollTop = element.scrollHeight;
+      setPosition(orientation === "vertical" ? element.scrollHeight : 0);
       event.preventDefault();
     }
   };
@@ -157,11 +190,11 @@ export function PaymentsScrollbar({
   return (
     <div
       ref={trackRef}
-      className="dashboard-payments-page-scrollbar"
+      className={`dashboard-payments-page-scrollbar${orientation === "horizontal" ? " is-horizontal" : ""}`}
       role="scrollbar"
       aria-label={ariaLabel}
       aria-controls={ariaControls}
-      aria-orientation="vertical"
+      aria-orientation={orientation}
       aria-valuemin={0}
       aria-valuemax={scrollMetrics.max}
       aria-valuenow={scrollMetrics.top}
@@ -172,7 +205,7 @@ export function PaymentsScrollbar({
       {isScrollable ? (
         <span
           className="dashboard-payments-page-scrollbar-thumb"
-          style={{ height: `${thumb.height}px`, transform: `translateY(${thumb.offset}px)` }}
+          style={orientation === "vertical" ? { height: `${thumb.height}px`, transform: `translateY(${thumb.offset}px)` } : { width: `${thumb.height}px`, transform: `translateX(${thumb.offset}px)` }}
           onPointerDown={startDragging}
           onPointerMove={drag}
           onPointerUp={stopDragging}

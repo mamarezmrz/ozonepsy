@@ -3,22 +3,16 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PaymentsScrollbar } from "@/components/payments-page";
+import { SiteNotification } from "@/components/site-notification";
+import type { DashboardComment, DashboardCommentStatus } from "@/lib/dashboard";
 
-type CommentStatus = "PENDING" | "PUBLISHED" | "REJECTED";
-
-type UserComment = {
-  id: string;
-  body: string;
-  status: CommentStatus;
-  pageTitle: string;
-  pageHref: string;
-  date: string;
-};
+type UserComment = DashboardComment;
+type CommentStatus = DashboardCommentStatus;
 
 const MODAL_TRANSITION_MS = 220;
 
 function CommentStatus({ status }: { status: CommentStatus }) {
-  if (status === "REJECTED") {
+  if (status === "HIDDEN") {
     return (
       <span className="dashboard-comments-status is-rejected">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
@@ -45,11 +39,14 @@ function DeleteIcon() {
   );
 }
 
-export function CommentsPage() {
-  const [comments, setComments] = useState<UserComment[]>([]);
+export function CommentsPage({ initialComments }: { initialComments: DashboardComment[] }) {
+  const [comments, setComments] = useState<UserComment[]>(initialComments);
   const [isModalRendered, setIsModalRendered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<UserComment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -83,6 +80,7 @@ export function CommentsPage() {
     clearCloseTimer();
     triggerRef.current = trigger;
     setCommentToDelete(comment);
+    setDeleteError(null);
     setIsModalRendered(true);
     animationFrameRef.current = window.requestAnimationFrame(() => {
       setIsModalOpen(true);
@@ -115,14 +113,34 @@ export function CommentsPage() {
     };
   }, [clearCloseTimer]);
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!commentToDelete) return;
-    setComments((current) => current.filter((comment) => comment.id !== commentToDelete.id));
-    closeDeleteModal(false);
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const response = await fetch(`/api/reviews/${commentToDelete.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const result = await response.json() as { ok?: boolean; error?: string };
+      if (!response.ok || !result.ok) {
+        setDeleteError(result.error ?? "حذف نظر انجام نشد.");
+        return;
+      }
+
+      setComments((current) => current.filter((comment) => comment.id !== commentToDelete.id));
+      closeDeleteModal(false);
+      setNotification({ message: "نظر از فهرست شما حذف شد.", tone: "success" });
+    } catch {
+      setDeleteError("ارتباط با سرور برقرار نشد.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
     <>
+      {notification ? <SiteNotification message={notification.message} tone={notification.tone} onDismiss={() => setNotification(null)} /> : null}
       <div className="user-dashboard-content dashboard-payments-page-content dashboard-comments-page-content">
         <section className="user-dashboard-panel dashboard-payments-page-panel dashboard-comments-page-panel">
           <header className="user-dashboard-panel-heading">
@@ -191,9 +209,10 @@ export function CommentsPage() {
             </button>
             <h2 id="comment-delete-title">حذف نظر</h2>
             <p id="comment-delete-description">آیا از حذف این نظر مطمئن هستید؟</p>
+            {deleteError ? <p className="dashboard-comments-modal-error" role="alert">{deleteError}</p> : null}
             <div className="dashboard-logout-modal-actions">
-              <button type="button" className="dashboard-logout-confirm" onClick={confirmDelete}>حذف</button>
-              <button ref={cancelRef} type="button" className="dashboard-logout-cancel" onClick={() => closeDeleteModal()}>لغو</button>
+              <button type="button" className="dashboard-logout-confirm" onClick={() => void confirmDelete()} disabled={isDeleting}>{isDeleting ? "در حال حذف…" : "حذف"}</button>
+              <button ref={cancelRef} type="button" className="dashboard-logout-cancel" onClick={() => closeDeleteModal()} disabled={isDeleting}>لغو</button>
             </div>
           </section>
         </div>

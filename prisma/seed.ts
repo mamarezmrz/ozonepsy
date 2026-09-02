@@ -21,6 +21,7 @@ const permissionDescriptions: Record<string, string> = {
   "users.suspend": "تعلیق کاربران",
   "products.read": "مشاهده محصولات",
   "products.write": "مدیریت محصولات",
+  "orders.read": "مشاهده سفارش‌ها و پرداخت‌ها",
   "categories.read": "مشاهده دسته‌بندی‌ها",
   "categories.write": "مدیریت دسته‌بندی‌ها",
   "courses.read": "مشاهده دوره‌ها",

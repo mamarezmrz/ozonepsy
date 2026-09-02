@@ -13,7 +13,7 @@ export type AdminErrorCode =
 
 export class AdminServiceError extends Error {
   constructor(
-    public readonly code: Exclude<AdminErrorCode, "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_ERROR">,
+    public readonly code: Exclude<AdminErrorCode, "UNAUTHORIZED" | "INTERNAL_ERROR">,
     message: string,
     public readonly fieldErrors?: Record<string, string>,
   ) {
@@ -34,7 +34,7 @@ export function adminErrorResponse(error: unknown) {
   }
 
   if (error instanceof AdminServiceError) {
-    const status = error.code === "NOT_FOUND" ? 404 : error.code === "CONFLICT" ? 409 : error.code === "RATE_LIMITED" ? 429 : 400;
+    const status = error.code === "FORBIDDEN" ? 403 : error.code === "NOT_FOUND" ? 404 : error.code === "CONFLICT" ? 409 : error.code === "RATE_LIMITED" ? 429 : 400;
     return NextResponse.json({ code: error.code, message: error.message, fieldErrors: error.fieldErrors }, { status });
   }
 

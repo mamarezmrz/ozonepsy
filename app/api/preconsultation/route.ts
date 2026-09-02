@@ -1,6 +1,8 @@
 import { getCurrentUser } from "@/lib/auth/service";
 import { countries } from "@/lib/countries";
 import { prisma } from "@/lib/prisma";
+import { AuthRateLimitError, assertAuthRateLimit, recordAuthFailure } from "@/lib/auth/rate-limit";
+import { getRequestMetadata, hasSameOrigin } from "@/lib/security/request";
 
 export const runtime = "nodejs";
 
@@ -11,7 +13,10 @@ function normalizeDigits(value: string) {
 }
 
 export async function POST(request: Request) {
+  if (!hasSameOrigin(request)) return Response.json({ ok: false, error: "درخواست معتبر نیست." }, { status: 403 });
   try {
+    const identifier = getRequestMetadata(request).ipAddress ?? "unknown";
+    await assertAuthRateLimit("preconsultation", identifier);
     const payload = await request.json() as { country?: unknown; phone?: unknown; message?: unknown };
     const country = typeof payload.country === "string" ? payload.country.trim() : "";
     const phone = typeof payload.phone === "string" ? normalizeDigits(payload.phone).trim() : "";
@@ -27,6 +32,7 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: "توضیحات واردشده بیش از حد طولانی است." }, { status: 400 });
     }
 
+    await recordAuthFailure("preconsultation", identifier);
     const user = await getCurrentUser();
     await prisma.preconsultationRequest.create({
       data: {
@@ -36,9 +42,9 @@ export async function POST(request: Request) {
         message: message || undefined,
       },
     });
-
     return Response.json({ ok: true, status: "PENDING", message: "درخواست پیش‌مشاوره شما با موفقیت ثبت شد." });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthRateLimitError) return Response.json({ ok: false, error: error.message }, { status: 429 });
     return Response.json({ ok: false, error: "در حال حاضر ثبت درخواست امکان‌پذیر نیست." }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { consultationTopics } from "@/lib/consultation-topics";
 import { institutionProfiles } from "@/lib/institutions";
 import { groupTherapySessions } from "@/lib/group-therapy";
 import { therapistProfiles } from "@/lib/therapists";
+import { getPublicSiteUrl } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
@@ -22,5 +23,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...consultationTopics.map((topic) => `/consultations/individual/${topic.slug}`),
   ];
 
-  return paths.map((path) => ({ url: `https://ozonepsy.example${path}`, lastModified: new Date() }));
+  return paths.map((path) => ({ url: `${getPublicSiteUrl()}${path}`, lastModified: new Date() }));
 }

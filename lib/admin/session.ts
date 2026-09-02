@@ -10,6 +10,7 @@ import {
   type AdminRole,
 } from "@/lib/admin/constants";
 import { AdminAuthorizationError, isAdminRole } from "@/lib/admin/authorization";
+import { recordAdminAuditWithClient } from "@/lib/admin/audit";
 
 const adminRoleNames = ADMIN_ROLES as unknown as RoleName[];
 
@@ -205,13 +206,11 @@ export async function revokeCurrentAdminSession() {
         where: { id: current.id, revokedAt: null },
         data: { revokedAt: new Date() },
       });
-      await tx.adminAuditLog.create({
-        data: {
-          actorId: current.userId,
-          action: "admin.session.logout",
-          targetType: "ADMIN_SESSION",
-          targetId: current.id,
-        },
+      await recordAdminAuditWithClient(tx, {
+        actorId: current.userId,
+        action: "ADMIN_SESSION_LOGOUT",
+        targetType: "ADMIN_SESSION",
+        targetId: current.id,
       });
     });
   }

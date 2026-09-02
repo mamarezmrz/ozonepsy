@@ -1,4 +1,4 @@
-import { CategoryStatus } from "@/lib/generated/prisma/enums";
+import { CategoryStatus, ProductStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { AdminServiceError } from "@/lib/admin/errors";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
@@ -46,7 +46,13 @@ export async function setAdminCategoryStatus(actorId: string, categoryId: string
     const before = await tx.category.findUnique({ where: { id: categoryId }, select: { status: true } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "دسته‌بندی پیدا نشد.");
     if (before.status === status) throw new AdminServiceError("CONFLICT", "دسته‌بندی از قبل همین وضعیت را دارد.");
-    const updated = await tx.category.update({ where: { id: categoryId }, data: { status }, select: { id: true, status: true } });
+    if (status === CategoryStatus.ARCHIVED) {
+      const activeProductCount = await tx.product.count({ where: { categoryId, status: { not: ProductStatus.ARCHIVED } } });
+      if (activeProductCount > 0) throw new AdminServiceError("CONFLICT", "دسته‌بندی دارای محصول فعال است و نمی‌تواند بایگانی شود.");
+    }
+    const changed = await tx.category.updateMany({ where: { id: categoryId, status: before.status }, data: { status } });
+    if (changed.count !== 1) throw new AdminServiceError("CONFLICT", "وضعیت دسته‌بندی هم‌زمان توسط کاربر دیگری تغییر کرده است.");
+    const updated = await tx.category.findUniqueOrThrow({ where: { id: categoryId }, select: { id: true, status: true } });
     await recordAdminAuditWithClient(tx, { actorId, action: status === CategoryStatus.ARCHIVED ? "CATEGORY_ARCHIVED" : "CATEGORY_RESTORED", targetType: "CATEGORY", targetId: categoryId, beforeState: before, afterState: updated, reason: reason.trim() });
     return updated;
   });

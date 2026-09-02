@@ -97,7 +97,11 @@ export const adminAppointmentRescheduleSchema = z.object({
 
 export const adminReviewStatusSchema = z.object({
   status: z.enum(["PENDING", "PUBLISHED", "HIDDEN"]),
-  reason: z.string().trim().min(1).max(1000),
+  reason: z.string().trim().max(1000).optional(),
+}).superRefine((value, context) => {
+  if (value.status === "PENDING" && !value.reason) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["reason"], message: "دلیل تغییر وضعیت نظر را وارد کنید." });
+  }
 });
 
 export const adminFaqSchema = z.object({

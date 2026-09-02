@@ -11,6 +11,6 @@ import { hasSameOrigin } from "@/lib/admin/security";
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
-  try { const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "instructors.write"); const input = adminSpecialistStatusSchema.parse(await request.json()); return NextResponse.json({ ok: true, data: await setAdminSpecialistStatus(session.userId, (await params).id, input.status as SpecialistStatus, input.reason) }); }
+  try { const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "instructors.write"); const input = adminSpecialistStatusSchema.parse(await request.json()); return NextResponse.json({ ok: true, data: await setAdminSpecialistStatus(session.userId, (await params).id, input.status as SpecialistStatus, input.reason, session) }); }
   catch (error) { return adminErrorResponse(error); }
 }

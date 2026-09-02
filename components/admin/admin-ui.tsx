@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-export function AdminPageHeader({ action }: { eyebrow?: string; title: string; description?: string; action?: ReactNode }) {
-  if (!action) return null;
-  return <div className="admin-page-heading"><div className="admin-page-heading-action">{action}</div></div>;
+export function AdminPageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: ReactNode }) {
+  return <div className="admin-page-heading"><div className="admin-page-heading-copy">{eyebrow ? <span className="admin-page-heading-eyebrow">{eyebrow}</span> : null}<h1>{title}</h1>{description ? <p>{description}</p> : null}</div>{action ? <div className="admin-page-heading-action">{action}</div> : null}</div>;
 }
 
 export function AdminButton({ children, href, variant = "primary", type = "button", disabled = false, onClick }: { children: ReactNode; href?: string; variant?: "primary" | "secondary" | "danger"; type?: "button" | "submit"; disabled?: boolean; onClick?: () => void }) {
@@ -39,6 +38,7 @@ export function AdminDataTable<Row>({ columns, rows, getRowKey, empty }: { colum
   return (
     <div className="admin-table-wrap">
       <table className="admin-data-table">
+        <caption className="sr-only">جدول داده‌های پنل مدیریت</caption>
         <thead><tr>{columns.map((column) => <th key={column.key} className={column.className}>{column.label}</th>)}</tr></thead>
         <tbody>{rows.map((row) => <tr key={getRowKey(row)}>{columns.map((column) => <td key={column.key} className={column.className} data-label={column.label}>{column.render(row)}</td>)}</tr>)}</tbody>
       </table>

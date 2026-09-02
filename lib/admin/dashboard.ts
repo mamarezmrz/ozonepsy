@@ -18,7 +18,7 @@ export async function getAdminDashboardData(session?: AdminSessionView): Promise
   const canReadSessions = session?.permissions.includes("sessions.read") ?? false;
   const canReadCourses = session?.permissions.includes("courses.read") ?? false;
   const canReadReviews = session?.permissions.includes("reviews.read") ?? false;
-  const canReadOrders = session?.permissions.includes("products.read") ?? false;
+  const canReadOrders = session?.permissions.includes("orders.read") ?? false;
 
   const [userCount, courseCount, sessionCount, reviewCount, recentUsers, upcomingSessions, recentOrders] = await Promise.all([
     canReadUsers ? prisma.user.count({ where: publicUserWhere }) : Promise.resolve(0),

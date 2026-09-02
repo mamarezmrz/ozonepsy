@@ -6,6 +6,7 @@ import { products } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth/service";
 import { userHasCourseAccess } from "@/lib/course-access";
 import { createPageMetadata } from "@/lib/seo";
+import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -24,11 +25,12 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
   const currentUser = await getCurrentUser();
   const hasCourseAccess = currentUser ? await userHasCourseAccess(currentUser.id, product.slug) : false;
+  const reviews = await getPublishedReviewsForProductSlug(product.slug);
 
   return (
     <>
       <SiteHeader />
-      <CourseDetailPage product={product} userEmail={currentUser?.email ?? "مهمان"} hasCourseAccess={hasCourseAccess} />
+      <CourseDetailPage product={product} userEmail={currentUser?.email ?? "مهمان"} hasCourseAccess={hasCourseAccess} reviews={reviews} reviewProductSlug={product.slug} />
       <SiteFooter />
     </>
   );

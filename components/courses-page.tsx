@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { HomeFaq, HomeTestimonials } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
+import type { PublicContent } from "@/lib/public/content";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
@@ -60,7 +61,7 @@ export function PsychologyCourseCatalog({ title = "دوره‌های اُزون"
   );
 }
 
-export function CoursesPage() {
+export function CoursesPage({ content }: { content?: PublicContent }) {
   return (
     <main className="courses-page">
       <div className="courses-page-inner">
@@ -101,13 +102,13 @@ export function CoursesPage() {
 
       <section className="courses-testimonials home-testimonials" aria-labelledby="courses-testimonials-title">
         <div className="home-testimonial-heading"><h2 id="courses-testimonials-title">نظرات شما</h2><p>تجربه همراهان اُزون از مسیر مشاوره و گفت‌وگو.</p></div>
-        <HomeTestimonials />
+        <HomeTestimonials items={content?.testimonials} />
       </section>
 
       <section className="courses-faq home-faq" aria-labelledby="courses-faq-title">
         <div className="home-faq-inner">
           <h2 id="courses-faq-title">سوالات متداول دوره‌ها</h2>
-          <HomeFaq />
+          <HomeFaq items={content?.faqs} />
         </div>
       </section>
 

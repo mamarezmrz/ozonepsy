@@ -45,7 +45,9 @@ export async function rescheduleAdminAppointment(actorId: string, id: string, st
     const before = await tx.appointment.findFirst({ where: { id, ...scopeWhere(session) }, select: { id: true, status: true, startsAt: true, endsAt: true } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "جلسه پیدا نشد.");
     if (([AppointmentStatus.COMPLETED, AppointmentStatus.CANCELED] as AppointmentStatus[]).includes(before.status)) throw new AdminServiceError("CONFLICT", "جلسه انجام‌شده یا لغوشده قابل تغییر زمان نیست.");
-    const updated = await tx.appointment.update({ where: { id }, data: { startsAt, endsAt, status: AppointmentStatus.RESCHEDULED }, select: { id: true, status: true, startsAt: true, endsAt: true } });
+    const changed = await tx.appointment.updateMany({ where: { id, status: before.status }, data: { startsAt, endsAt, status: AppointmentStatus.RESCHEDULED } });
+    if (changed.count !== 1) throw new AdminServiceError("CONFLICT", "جلسه هم‌زمان توسط کاربر دیگری تغییر کرده است.");
+    const updated = await tx.appointment.findUniqueOrThrow({ where: { id }, select: { id: true, status: true, startsAt: true, endsAt: true } });
     await recordAdminAuditWithClient(tx, { actorId, action: "APPOINTMENT_RESCHEDULED", targetType: "APPOINTMENT", targetId: id, beforeState: before, afterState: updated, reason: trimmedReason });
     return updated;
   });
@@ -60,9 +62,11 @@ export async function transitionAdminAppointment(actorId: string, id: string, st
     if (before.status === status) return before;
     if (before.status === AppointmentStatus.CANCELED || before.status === AppointmentStatus.COMPLETED) throw new AdminServiceError("CONFLICT", "وضعیت نهایی جلسه قابل تغییر نیست.");
     if (status === AppointmentStatus.COMPLETED && before.usage?.status === SessionUsageStatus.REVERSED) throw new AdminServiceError("CONFLICT", "مصرف جلسه قبلاً معکوس شده است.");
-    const updated = await tx.appointment.update({ where: { id }, data: { status }, select: { id: true, status: true } });
+    const changed = await tx.appointment.updateMany({ where: { id, status: before.status }, data: { status } });
+    if (changed.count !== 1) throw new AdminServiceError("CONFLICT", "جلسه هم‌زمان توسط کاربر دیگری تغییر کرده است.");
+    const updated = await tx.appointment.findUniqueOrThrow({ where: { id }, select: { id: true, status: true } });
     if (status === AppointmentStatus.COMPLETED && before.entitlementId && !before.usage) {
-      await tx.sessionUsage.create({ data: { entitlementId: before.entitlementId, appointmentId: id, status: SessionUsageStatus.COMPLETED, recordedById: actorId, reason: trimmedReason } });
+      await tx.sessionUsage.upsert({ where: { appointmentId: id }, create: { entitlementId: before.entitlementId, appointmentId: id, status: SessionUsageStatus.COMPLETED, recordedById: actorId, reason: trimmedReason }, update: {} });
     }
     await recordAdminAuditWithClient(tx, { actorId, action: status === AppointmentStatus.COMPLETED ? "APPOINTMENT_COMPLETED" : status === AppointmentStatus.CANCELED ? "APPOINTMENT_CANCELED" : `APPOINTMENT_${status}`, targetType: "APPOINTMENT", targetId: id, beforeState: before, afterState: updated, reason: trimmedReason });
     return updated;

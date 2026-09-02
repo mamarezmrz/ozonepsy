@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
+import type { PublicContent } from "@/lib/public/content";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
@@ -30,7 +31,7 @@ const packageDescription = [
   "امکان برگشت هزینه در صورت عدم رضایت",
 ];
 
-export function PricingPage() {
+export function PricingPage({ content }: { content?: PublicContent }) {
   return (
     <main className="pricing-page">
       <div className="pricing-page-inner">
@@ -82,7 +83,7 @@ export function PricingPage() {
       <section className="pricing-faq home-faq" aria-labelledby="pricing-faq-title">
         <div className="home-faq-inner">
           <h2 id="pricing-faq-title">سوالات متداول قیمت‌گذاری و خرید</h2>
-          <HomeFaq />
+          <HomeFaq items={content?.faqs} />
         </div>
       </section>
 

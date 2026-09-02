@@ -3,8 +3,8 @@ import Link from "next/link";
 import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
-import { PsychologyCourseCatalog } from "@/components/courses-page";
 import { type ConsultationCategoryContent, consultationCategoryContent } from "@/lib/consultation-categories";
+import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
@@ -15,17 +15,18 @@ const serviceSteps = [
   ["۴", "برگزاری جلسه", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
-export function ConsultationCategoryPage({ content }: { content: ConsultationCategoryContent }) {
+export function ConsultationCategoryPage({ content, reviews = [], reviewProductSlug = null }: { content: ConsultationCategoryContent; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null }) {
   return (
-    <main className="consultation-page">
+    <main className={`consultation-page consultation-page-${content.slug}`}>
       <div className="consultation-page-inner">
         <figure className="consultation-hero-image">
-          <Image className="consultation-hero-media" src={asset("76e3e1af9940b43bd5e8f2804cf3de35eec93210.jpg")} alt={content.heroAlt} fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
+          <Image className="consultation-hero-media" src={asset(content.heroImage ?? "76e3e1af9940b43bd5e8f2804cf3de35eec93210.jpg")} alt={content.heroAlt} fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
           <Image className="consultation-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="consultation-intro" aria-labelledby="consultation-title">
           <h1 id="consultation-title">{content.title}</h1>
+          {content.subtitle ? <h2>{content.subtitle}</h2> : null}
           <div className="consultation-copy">{content.introParagraphs.map((paragraph, index) => <p key={`intro-${index}`}>{paragraph}</p>)}</div>
         </section>
 
@@ -36,17 +37,17 @@ export function ConsultationCategoryPage({ content }: { content: ConsultationCat
 
         <section className="consultation-benefits" aria-labelledby="consultation-benefits-title">
           <h2 id="consultation-benefits-title">{content.benefitsTitle}</h2>
-          <div className="consultation-benefit-grid">{content.benefits.map(([title, description], index) => <article key={`${title}-${index}`} className="consultation-benefit-card"><span className="consultation-check" aria-hidden="true"><CheckIcon /></span><div><h3>{title}</h3><p>{description}</p></div></article>)}</div>
+          <div className="consultation-benefit-grid">{content.benefits.map(([title, description], index) => <article key={`${title}-${index}`} className="consultation-benefit-card"><div className="consultation-benefit-head"><span className="consultation-check" aria-hidden="true"><CheckIcon /></span><h3>{title}</h3></div><p>{description}</p></article>)}</div>
         </section>
 
-        <section className="consultation-cases" aria-labelledby="consultation-cases-title">
-          <h2 id="consultation-cases-title">{content.casesTitle}</h2>
-          <p>{content.casesDescription}</p>
-          <div className="consultation-case-grid">{content.cases.map(({ title, href }, index) => <Link key={`${href}-${title}-${index}`} href={href} className="consultation-case-card"><span>{title}</span><span className="consultation-case-arrow" aria-hidden="true" /></Link>)}</div>
-        </section>
+        {content.slug !== "teenagers" && content.slug !== "couples" ? (
+          <section className="consultation-cases" aria-labelledby="consultation-cases-title">
+            <h2 id="consultation-cases-title">{content.casesTitle}</h2>
+            <p>{content.casesDescription}</p>
+            <div className="consultation-case-grid">{content.cases.map(({ title, href }, index) => <Link key={`${href}-${title}-${index}`} href={href} className="consultation-case-card"><span>{title}</span><span className="consultation-case-arrow" aria-hidden="true" /></Link>)}</div>
+          </section>
+        ) : null}
       </div>
-
-      <PsychologyCourseCatalog title="دوره‌های روانشناسی" />
 
       <section className="consultation-steps home-service-steps" aria-labelledby="consultation-steps-title">
         <div className="home-service-steps-inner">
@@ -56,10 +57,10 @@ export function ConsultationCategoryPage({ content }: { content: ConsultationCat
         </div>
       </section>
 
-      <ConsultationTestimonials />
+      <ConsultationTestimonials productSlug={reviewProductSlug} reviews={reviews} />
 
       <section className="consultation-faq home-faq" aria-labelledby="consultation-faq-title">
-        <div className="home-faq-inner"><h2 id="consultation-faq-title">{content.faqTitle}</h2><HomeFaq /></div>
+        <div className="home-faq-inner"><h2 id="consultation-faq-title">{content.faqTitle}</h2><HomeFaq items={content.faqItems} /></div>
       </section>
 
       <AboutPreconsultation />
@@ -68,7 +69,7 @@ export function ConsultationCategoryPage({ content }: { content: ConsultationCat
 }
 
 export function IndividualConsultationPage() {
-  return <ConsultationCategoryPage content={consultationCategoryContent.individual} />;
+  return <ConsultationCategoryPage content={consultationCategoryContent.individual} reviewProductSlug="individual-consultation" />;
 }
 
 function CheckIcon() {

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
+import type { PublicContent } from "@/lib/public/content";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
@@ -21,7 +22,7 @@ function ContactSocialIcon({ type }: { type: SocialType }) {
   return <span className={`contact-social-icon is-${type}`} aria-hidden="true" />;
 }
 
-export function ContactPage() {
+export function ContactPage({ content }: { content?: PublicContent }) {
   return (
     <main className="contact-page">
       <div className="contact-page-inner">
@@ -73,7 +74,7 @@ export function ContactPage() {
       <section className="contact-faq home-faq" aria-labelledby="contact-faq-title">
         <div className="home-faq-inner">
           <h2 id="contact-faq-title">سوالات متداول</h2>
-          <HomeFaq />
+          <HomeFaq items={content?.faqs} />
         </div>
       </section>
 

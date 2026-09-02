@@ -4,20 +4,40 @@ import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
 import { HomeFaq } from "@/components/home-interactive";
 import { groupTherapySessions } from "@/lib/group-therapy";
+import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
 const groupIntro = [
-  "فشاری که اتم اکسیژن در آن شکل می‌گیرد، او را ناآرام و پرانرژی می‌سازد. برای آرام کردن این آشوب، طبیعت راه‌های گوناگونی دارد: پیوند مونواکسید، دی‌اکسید و به‌طور اساسی‌تر اکسیدها.",
-  "اما یک راز بزرگ‌تر هم هست: وقتی سه اتم اکسیژن در پیوندهای پی‌درپی و زنجیره‌ای کنار هم قرار می‌گیرند، چیزی تازه شکل می‌گیرد؛ «مولکول اُزون». این مولکول حاصل یک برهم‌کنش دائمی و جمعی است؛ جایی که فشارها پخش می‌شوند و پایداری تازه‌ای پدید می‌آید.",
-  "ما انسان‌ها هم زیر فشارهای زندگی، همین نیاز را داریم. گاهی تنها یک پیوند کافی نیست؛ ما به جمعی امن احتیاج داریم، جایی که چندین نفر با هم در تعامل و حمایت مداوم قرار بگیرند.",
-  "جلسه گروه‌درمانی درست مثل مولکول اُزون است؛ چند نفر کنار هم، با حضور روانشناس خبره، پیوندی امن می‌سازند که فراتر از جمع تک‌تک‌شان است. همان‌طور که اُزون از کنار هم بودن سه اتم ناپایدار به پایداری می‌رسد، ما هم در گروه‌درمانی از جمع و پیوند امن با دیگران آرامش و استقامت تازه‌ای پیدا می‌کنیم.",
+  `فشاری که اتم اکسیژن در آن شکل می‌گیرد، او را ناآرام و پرانرژی می‌سازد.
+برای آرام کردن این آشوب، طبیعت راه‌های گوناگونی دارد: پیوند مونوکسید، دی‌اکسید، و به طور اساسی تراکسیدها.`,
+  `اما یک راز بزرگ‌تر هم هست:
+وقتی سه اتم اکسیژن در پیوندهای پی‌درپی و زنجیره‌ای کنار هم قرار می‌گیرند، چیزی تازه شکل می‌گیرد؛ «مولکول اُزون».
+این مولکول حاصل یک برهم‌کنش دائمی و جمعی است؛ جایی که فشارها پخش می‌شوند و پایداری تازه‌ای پدید می‌آید.`,
+  `ما انسان‌ها هم زیر فشارهای زندگی، همین نیاز را داریم.
+گاهی تنها یک پیوند کافی نیست؛ ما به جمعی امن احتیاج داریم، جایی که چندین نفر با هم در تعامل و حمایت مداوم قرار بگیرند.
+جلسه گروه‌درمانی درست مثل مولکول اُزون است:
+چند نفر کنار هم، با حضور روانشناس خبره، پیوندی امن می‌سازند که فراتر از جمع تک‌تک‌شان است. همان‌طور که اُزون از کنار هم بودن سه اتم ناپایدار به پایداری می‌رسد، ما هم در گروه‌درمانی از جمع و پیوند امن با دیگران آرامش و استقامت تازه‌ای پیدا می‌کنیم.`,
 ] as const;
 
 const groupBenefits = [
-  ["راه‌های واقعی یاد می‌گیری", "از تجربه‌های گروه و مسیرهای مختلف، راه‌های عملی و واقعی برای روبه‌رو شدن با چالش‌ها پیدا می‌کنی."],
-  ["خودت را بهتر می‌شناسی", "با شنیدن تجربه‌های دیگران، خودت را واضح‌تر می‌بینی و احساساتت را بهتر می‌شناسی."],
-  ["امیدت به تغییر بیشتر می‌شود", "حس همراهی گروه، انگیزه‌ات را بیشتر می‌کند تا در مسیر رشد و تغییر بمانی."],
+  ["تنها نیستی", "می‌فهمی دیگران هم احساساتی مثل تو درگیرن، حتی اونایی که فکر می‌کنی فقط مال تو هستن."],
+  ["آینه‌ی انسانی", "با شنیدن تجربه‌ی دیگران، خودت را واضح‌تر می‌بینی."],
+  ["تمرین ارتباط سالم", "یاد می‌گیری احساساتت را بدون اینکه دفاعی یا خجالت‌زده شوی، بیان کنی."],
+  ["افزایش امید برای تغییر", "حس همراهی گروه، انگیزه‌ات را بیشتر می‌کند که در مسیر بمانی."],
+  ["تنظیم احساسات", "یاد می‌گیری چطور خشم، غم، یا ترس را بشناسی و مدیریت کنی."],
+  ["رشد اجتماعی", "اعتماد به‌نفست در جمع بالا می‌رود و مهارت ارتباطت قوی‌تر می‌شود."],
+] as const;
+
+const groupTherapyMeaning = [
+  `تا حالا برایت پیش آمده وسط جمع لبخند بزنی، اما از درون خسته باشی؟
+یا حرفی را هزار بار توی ذهنت مرور کنی، اما نتوانی جایی بازگویی کنی؟
+یا اینکه انگار همه چیز سر جایش است، ولی چیزی سر جایش نیست؟
+اینجا همان نقطه‌ای است که اُزون معنا پیدا می‌کند.`,
+  `اُزون فقط برای روزهای سخت نیست؛ برای رشد کردن کنار دیگران است. در گروه‌درمانی، وقتی می‌بینی آدم‌های مختلف هم درگیر دغدغه‌هایی شبیه تو هستند؛ از تعارض در رابطه گرفته تا اعتماد، خشم یا مرزهای شخصی، شروع می‌کنی «خود» را از بیرون دیدن، و همین نقطه‌ی تغییر است.
+در اُزون، تراپیست مثل رهبر یک گروه موسیقی است؛ صداها را هماهنگ می‌کند، مراقب ریتم جمع است و اجازه می‌دهد هرکس نت خودش را بنوازد؛ تا از دل این هم‌نوازی، معنا و آرامش تازه‌ای پیدا می‌کنیم.
+گاهی پاسخ، نه در خلوت خودت، بلکه در آینه‌ی جمع پیدا می‌شود.
+شاید اُزون همان حلقه‌ی گمشده‌ی درمان تو باشد.`,
 ] as const;
 
 const serviceSteps = [
@@ -27,7 +47,16 @@ const serviceSteps = [
   ["۴", "برگزاری جلسات", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
-export function GroupTherapyPage() {
+const groupFaqItems = [
+  { question: "گروه‌درمانی دقیقاً چیه و چه فرقی با مشاوره فردی داره؟", answer: "پاسخ سوال" },
+  { question: "چه چیزی باعث میشه گروه‌درمانی اثربخشی‌اش از جلسات فردی بیشتر باشه؟", answer: "پاسخ سوال" },
+  { question: "اولین جلسه گروه‌درمانی چطور پیش میره؟", answer: "پاسخ سوال" },
+  { question: "من می‌تونم فقط شنونده باشم یا لازمه حتماً حرف بزنم؟", answer: "پاسخ سوال" },
+  { question: "میشه از هر جای دنیا به گروه‌درمانی آنلاین وصل شد؟", answer: "پاسخ سوال" },
+  { question: "آیا گروه‌درمانی جایگزین مشاوره فردی میشه یا بهتره همزمان انجام بشه؟", answer: "پاسخ سوال" },
+] as const;
+
+export function GroupTherapyPage({ reviews = [] }: { reviews?: readonly PublicReview[] }) {
   return (
     <main className="group-therapy-page">
       <div className="group-therapy-page-inner">
@@ -37,7 +66,8 @@ export function GroupTherapyPage() {
         </figure>
 
         <section className="group-therapy-intro" aria-labelledby="group-therapy-title">
-          <h1 id="group-therapy-title">گروه درمانی</h1>
+          <h1 id="group-therapy-title">اُزون - گروه درمانی</h1>
+          <h2>چرا نام گروه‌درمانی ما «اُزون» است؟</h2>
           <div className="group-therapy-copy">
             {groupIntro.map((paragraph, index) => <p key={`group-intro-${index}`}>{paragraph}</p>)}
           </div>
@@ -47,13 +77,20 @@ export function GroupTherapyPage() {
           <Image src="/icons/group-therapy-atom.svg" alt="" width={360} height={66} />
         </div>
 
+        <section className="group-therapy-meaning" aria-labelledby="group-therapy-meaning-title">
+          <h2 id="group-therapy-meaning-title">آیا اُزون همان حلقه‌ی گمشده‌ی درمان توست؟</h2>
+          <div className="group-therapy-meaning-copy">
+            {groupTherapyMeaning.map((paragraph, index) => <p key={`group-meaning-${index}`}>{paragraph}</p>)}
+          </div>
+        </section>
+
         <section className="group-therapy-benefits" aria-labelledby="group-therapy-benefits-title">
           <h2 id="group-therapy-benefits-title">مزایای جلسات گروه درمانی</h2>
           <div className="group-therapy-benefit-grid">
-            {groupBenefits.map(([title, description], index) => (
-              <article key={`group-benefit-${index}`} className={`group-therapy-benefit-card${index === 2 ? " is-wide" : ""}`}>
-                <span className="group-therapy-benefit-check" aria-hidden="true"><CheckIcon /></span>
-                <div><h3>{title}</h3><p>{description}</p></div>
+            {groupBenefits.map(([title, description]) => (
+              <article key={`group-benefit-${title}`} className="group-therapy-benefit-card">
+                <div className="group-therapy-benefit-head"><span className="group-therapy-benefit-check" aria-hidden="true"><CheckIcon /></span><h3>{title}</h3></div>
+                <p>{description}</p>
               </article>
             ))}
           </div>
@@ -61,7 +98,7 @@ export function GroupTherapyPage() {
 
         <section className="group-therapy-sessions" aria-labelledby="group-therapy-sessions-title">
           <h2 id="group-therapy-sessions-title">انواع جلسات گروه درمانی</h2>
-          <p>جلسات گروه‌درمانی برای موضوعات مختلف طراحی شده‌اند و در فضایی امن و همراه با دیگران برگزار می‌شوند.</p>
+          <p>مشاوره فردی به هر آن چیزی که برای توسعه فردی، درمان اختلالات روانی و ارتقاء سلامت روان نیاز است، می‌پردازد. این مشاوره به صورت محرمانه بین شما و تراپیست مورد نظر انجام می‌شود.</p>
           <div className="group-therapy-session-grid">
             {groupTherapySessions.map((session) => (
               <article key={session.slug} className="group-therapy-session-card">
@@ -89,10 +126,10 @@ export function GroupTherapyPage() {
         </div>
       </section>
 
-      <ConsultationTestimonials />
+      <ConsultationTestimonials productSlug="group-therapy" reviews={reviews} />
 
       <section className="group-therapy-faq home-faq" aria-labelledby="group-therapy-faq-title">
-        <div className="home-faq-inner"><h2 id="group-therapy-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq /></div>
+        <div className="home-faq-inner"><h2 id="group-therapy-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq items={groupFaqItems} /></div>
       </section>
 
       <AboutPreconsultation />

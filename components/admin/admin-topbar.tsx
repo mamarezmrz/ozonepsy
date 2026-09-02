@@ -4,7 +4,7 @@ export function AdminTopbar({}: { session: AdminSessionView }) {
   return (
     <header className="admin-topbar">
       <div>
-        <h1>پنل مدیریت</h1>
+        <span className="admin-topbar-title">پنل مدیریت</span>
       </div>
     </header>
   );

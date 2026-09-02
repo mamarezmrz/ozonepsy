@@ -23,3 +23,19 @@ test("admin paths are identified independently from host routing", () => {
   assert.equal(isAdminPath("/api/admin/auth/login"), true);
   assert.equal(isAdminPath("/dashboard"), false);
 });
+
+test("production accepts only the explicitly configured admin host", () => {
+  const previous = { node: process.env.NODE_ENV, admin: process.env.ADMIN_HOST, dev: process.env.ADMIN_DEV_HOST };
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.ADMIN_HOST = "admin.example.com";
+    process.env.ADMIN_DEV_HOST = "admin.localhost:3000";
+    assert.equal(isAdminHost("admin.example.com"), true);
+    assert.equal(isAdminHost("admin.localhost:3000"), false);
+    assert.equal(isAdminHost("example.com"), false);
+  } finally {
+    if (previous.node === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previous.node;
+    if (previous.admin === undefined) delete process.env.ADMIN_HOST; else process.env.ADMIN_HOST = previous.admin;
+    if (previous.dev === undefined) delete process.env.ADMIN_DEV_HOST; else process.env.ADMIN_DEV_HOST = previous.dev;
+  }
+});

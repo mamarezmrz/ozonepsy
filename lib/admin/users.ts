@@ -102,8 +102,10 @@ export async function updateAdminUserStatus(userId: string, actorId: string, sta
     if (!before) throw new AdminServiceError("NOT_FOUND", "کاربر پیدا نشد.");
     if (before.status === status) throw new AdminServiceError("CONFLICT", "کاربر از قبل همین وضعیت را دارد.");
 
-    const updated = await tx.user.update({ where: { id: userId }, data: { status }, select: { id: true, status: true } });
-    if (status === UserStatus.SUSPENDED) {
+    const changed = await tx.user.updateMany({ where: { id: userId, status: before.status }, data: { status } });
+    if (changed.count !== 1) throw new AdminServiceError("CONFLICT", "وضعیت کاربر هم‌زمان توسط کاربر دیگری تغییر کرده است.");
+    const updated = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true, status: true } });
+    if (status === UserStatus.SUSPENDED || status === UserStatus.ARCHIVED) {
       await tx.authSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
     }
     await recordAdminAuditWithClient(tx, {
@@ -118,4 +120,3 @@ export async function updateAdminUserStatus(userId: string, actorId: string, sta
     return updated;
   });
 }
-

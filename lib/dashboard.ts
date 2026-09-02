@@ -54,6 +54,17 @@ export type DashboardPayment = {
   date: string;
 };
 
+export type DashboardCommentStatus = "PENDING" | "PUBLISHED" | "HIDDEN";
+
+export type DashboardComment = {
+  id: string;
+  body: string;
+  status: DashboardCommentStatus;
+  pageTitle: string;
+  pageHref: string;
+  date: string;
+};
+
 export type DashboardData = {
   profile: {
     name: string;
@@ -65,6 +76,7 @@ export type DashboardData = {
   groupTherapy: DashboardGroupTherapyCard[];
   courses: DashboardCard[];
   payments: DashboardPayment[];
+  comments: DashboardComment[];
   supportFundTotalMinor: number;
 };
 
@@ -122,6 +134,14 @@ function formatSessionTime(date: Date) {
   return `ساعت ${time}`;
 }
 
+function reviewPage(product: { kind: string; slug: string; title: string } | null) {
+  if (!product) return { pageTitle: "اُزون", pageHref: "/" };
+  if (product.kind === "COURSE") return { pageTitle: product.title, pageHref: `/courses/${product.slug}` };
+  if (product.kind === "GROUP") return { pageTitle: product.title, pageHref: "/group-therapy" };
+  if (product.kind === "CONSULTATION") return { pageTitle: product.title, pageHref: "/consultations/individual" };
+  return { pageTitle: product.title, pageHref: "/consultations" };
+}
+
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -174,6 +194,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
           },
         },
       },
+      reviews: {
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          body: true,
+          status: true,
+          createdAt: true,
+          product: { select: { kind: true, slug: true, title: true } },
+        },
+      },
     },
   });
 
@@ -184,9 +215,16 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       groupTherapy: [],
       courses: [],
       payments: [],
+      comments: [],
       supportFundTotalMinor: 0,
     };
   }
+
+  const userDeletedReviewRows = await prisma.adminAuditLog.findMany({
+    where: { actorId: userId, targetType: "REVIEW", action: "REVIEW_HIDDEN_BY_USER" },
+    select: { targetId: true },
+  });
+  const userDeletedReviewIds = new Set(userDeletedReviewRows.map((row) => row.targetId));
 
   const supportFundTotal = await prisma.supportContribution.aggregate({
     where: {
@@ -288,6 +326,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       amount: formatMoney(order.totalMinor, order.currency),
       date: formatDate(order.createdAt),
     })),
+    comments: user.reviews.filter((review) => !userDeletedReviewIds.has(review.id)).map((review) => {
+      const page = reviewPage(review.product);
+      return {
+        id: review.id,
+        body: review.body,
+        status: review.status as DashboardCommentStatus,
+        pageTitle: page.pageTitle,
+        pageHref: page.pageHref,
+        date: formatDate(review.createdAt),
+      };
+    }),
     supportFundTotalMinor: supportFundTotal._sum.amountMinor ?? 0,
   };
 }

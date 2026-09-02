@@ -6,11 +6,12 @@ import { useRef, useState } from "react";
 import { AboutPreconsultation } from "@/components/about-page";
 import { HomeFaq } from "@/components/home-interactive";
 import type { GroupTherapySession } from "@/lib/group-therapy";
+import type { PublicContent } from "@/lib/public/content";
 
 const asset = (name: string) => `/figma-home/${name}`;
 const collapsedSessionListHeight = 320;
 
-export function GroupTherapyDetailPage({ session }: { session: GroupTherapySession }) {
+export function GroupTherapyDetailPage({ session, content }: { session: GroupTherapySession; content?: PublicContent }) {
   const [expanded, setExpanded] = useState(false);
   const [sessionListHeight, setSessionListHeight] = useState(collapsedSessionListHeight);
   const sessionListRef = useRef<HTMLDivElement>(null);
@@ -109,7 +110,7 @@ export function GroupTherapyDetailPage({ session }: { session: GroupTherapySessi
       </section>
 
       <section className="group-detail-faq home-faq" aria-labelledby="group-detail-faq-title">
-        <div className="home-faq-inner"><h2 id="group-detail-faq-title">سوالات متداول مربوط به {session.title}</h2><HomeFaq /></div>
+        <div className="home-faq-inner"><h2 id="group-detail-faq-title">سوالات متداول مربوط به {session.title}</h2><HomeFaq items={content?.faqs} /></div>
       </section>
 
       <AboutPreconsultation />

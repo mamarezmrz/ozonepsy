@@ -84,7 +84,7 @@ export default async function DashboardSection({ params }: { params: Promise<{ p
   if (page === "comments") {
     return (
       <UserDashboardShell data={data} activeHref="/dashboard/comments" title={title} className="is-comments-page">
-        <CommentsPage />
+        <CommentsPage initialComments={data.comments} />
       </UserDashboardShell>
     );
   }

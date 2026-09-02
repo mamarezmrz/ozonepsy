@@ -12,6 +12,7 @@ test("admin list query applies defaults and an allow-listed sort", () => {
 
 test("admin list query rejects invalid pagination and caps page size", () => {
   assert.throws(() => adminListQuerySchema.parse({ page: 0 }), /Too small/);
+  assert.throws(() => adminListQuerySchema.parse({ page: 100001 }), /Too big/);
   assert.throws(() => adminListQuerySchema.parse({ pageSize: 101 }), /Too big/);
 });
 
