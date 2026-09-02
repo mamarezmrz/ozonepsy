@@ -4,6 +4,7 @@ import { CourseDetailPage } from "@/components/course-detail-page";
 import { SiteFooter, SiteHeader } from "@/components/site-header-server";
 import { products } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth/service";
+import { userHasCourseAccess } from "@/lib/course-access";
 import { createPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -22,11 +23,12 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   }
 
   const currentUser = await getCurrentUser();
+  const hasCourseAccess = currentUser ? await userHasCourseAccess(currentUser.id, product.slug) : false;
 
   return (
     <>
       <SiteHeader />
-      <CourseDetailPage product={product} userEmail={currentUser?.email ?? "مهمان"} />
+      <CourseDetailPage product={product} userEmail={currentUser?.email ?? "مهمان"} hasCourseAccess={hasCourseAccess} />
       <SiteFooter />
     </>
   );

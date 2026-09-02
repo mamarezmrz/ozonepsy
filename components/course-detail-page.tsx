@@ -26,7 +26,7 @@ const lessons = [
   { title: "جلسه ۱۰: جمع‌بندی و ارزیابی نهایی", duration: "۰۰:۱۴:۴۶", free: false },
 ] as const;
 
-export function CourseDetailPage({ product, userEmail }: { product: Product; userEmail: string }) {
+export function CourseDetailPage({ product, userEmail, hasCourseAccess }: { product: Product; userEmail: string; hasCourseAccess: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [lessonListHeight, setLessonListHeight] = useState(collapsedLessonListHeight);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -230,13 +230,15 @@ export function CourseDetailPage({ product, userEmail }: { product: Product; use
               <span>مشاوره فردی</span>
               <span>گروه درمانی</span>
             </div>
-            <div className="course-detail-purchase">
-              <span className="course-detail-price">
-                <b>${product.price === 179 ? "179.9" : product.price.toFixed(1)}</b>
-                <small>(USD)</small>
-              </span>
-              <Link href={`/checkout/${product.id}`} className="course-detail-buy">خرید دوره</Link>
-            </div>
+            {hasCourseAccess ? null : (
+              <div className="course-detail-purchase">
+                <span className="course-detail-price">
+                  <b>${product.price === 179 ? "179.9" : product.price.toFixed(1)}</b>
+                  <small>(USD)</small>
+                </span>
+                <Link href={`/checkout/${product.id}`} className="course-detail-buy">خرید دوره</Link>
+              </div>
+            )}
           </div>
           <figure className="course-detail-image">
             <Image
@@ -291,22 +293,26 @@ export function CourseDetailPage({ product, userEmail }: { product: Product; use
               className={`course-lesson-list${expanded ? " is-expanded" : ""}`}
               style={{ height: `${lessonListHeight}px` }}
             >
-              {lessons.map((lesson, index) => (
-                <button
-                  key={`course-lesson-${index}`}
-                  type="button"
-                  className={`course-lesson-row${lesson.free ? " is-free" : " is-locked"}`}
-                  disabled={!lesson.free}
-                  onClick={() => lesson.free && openVideo()}
-                  aria-label={lesson.free ? `پخش ${lesson.title}` : `${lesson.title} قفل است`}
-                >
-                  <span className="course-lesson-icon" aria-hidden="true">
-                    {lesson.free ? <PlayIcon /> : <LockIcon />}
-                  </span>
-                  <span className="course-lesson-duration">{lesson.duration}</span>
-                  <span className="course-lesson-title">{lesson.title}</span>
-                </button>
-              ))}
+              {lessons.map((lesson, index) => {
+                const canPlayLesson = lesson.free || hasCourseAccess;
+
+                return (
+                  <button
+                    key={`course-lesson-${index}`}
+                    type="button"
+                    className={`course-lesson-row${canPlayLesson ? " is-free" : " is-locked"}`}
+                    disabled={!canPlayLesson}
+                    onClick={() => canPlayLesson && openVideo()}
+                    aria-label={canPlayLesson ? `پخش ${lesson.title}` : `${lesson.title} قفل است`}
+                  >
+                    <span className="course-lesson-icon" aria-hidden="true">
+                      {canPlayLesson ? <PlayIcon /> : <LockIcon />}
+                    </span>
+                    <span className="course-lesson-duration">{lesson.duration}</span>
+                    <span className="course-lesson-title">{lesson.title}</span>
+                  </button>
+                );
+              })}
             </div>
             <button
               type="button"
