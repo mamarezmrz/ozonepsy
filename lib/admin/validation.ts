@@ -3,6 +3,7 @@ import { z } from "zod";
 export const adminLoginSchema = z.object({
   email: z.string().trim().email("ایمیل معتبر نیست.").max(320),
   password: z.string().min(1, "رمز ورود را وارد کنید.").max(200),
+  rememberMe: z.boolean().default(false),
 });
 
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
@@ -124,4 +125,65 @@ export const adminContentStatusSchema = z.object({
 
 export const adminMediaArchiveSchema = z.object({
   reason: z.string().trim().min(1).max(1000),
+});
+
+const adminConsultationBenefitRowSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().trim().max(240),
+  description: z.string().trim().max(4000),
+});
+
+export const adminConsultationBenefitsSchema = z.object({
+  sections: z.array(z.object({
+    pageKey: z.enum(["individual", "couples", "teenagers", "group-therapy"]),
+    enabled: z.boolean(),
+    benefits: z.array(adminConsultationBenefitRowSchema).max(50),
+  })).length(4).superRefine((sections, context) => {
+    const keys = sections.map((section) => section.pageKey);
+    if (new Set(keys).size !== keys.length) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["sections"], message: "هر حوزه فقط یک بار باید ارسال شود." });
+    }
+  }),
+});
+
+const adminIndividualConsultationCaseSchema = z.object({
+  id: z.union([z.string().uuid(), z.string().regex(/^pending-[a-z0-9-]+$/i)]).optional(),
+  title: z.string().trim().max(240),
+  slug: z.string().trim().max(160).refine((value) => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value), "اسلاگ صفحه معتبر نیست."),
+});
+
+export const adminIndividualConsultationCasesSchema = z.object({
+  sections: z.array(z.object({
+    pageKey: z.enum(["individual", "couples", "teenagers", "group-therapy"]),
+    title: z.string().trim().max(240),
+    description: z.string().trim().max(4000),
+    enabled: z.boolean(),
+    cases: z.array(adminIndividualConsultationCaseSchema).max(50),
+  })).length(4).superRefine((sections, context) => {
+    const keys = sections.map((section) => section.pageKey);
+    if (new Set(keys).size !== keys.length) context.addIssue({ code: z.ZodIssueCode.custom, path: ["sections"], message: "هر حوزه فقط یک بار باید ارسال شود." });
+  }),
+});
+
+const adminTopicListSchema = z.array(z.string().trim().max(4000)).max(50);
+
+export const adminIndividualConsultationTopicSchema = z.object({
+  title: z.string().trim().min(1).max(240),
+  description: z.string().trim().min(1).max(20000),
+  introList: adminTopicListSchema,
+  signsTitle: z.string().trim().max(240),
+  signs: adminTopicListSchema,
+  signsNote: z.string().trim().max(4000),
+  why: z.string().trim().min(1).max(20000),
+  whenToGetHelpTitle: z.string().trim().max(240),
+  whenToGetHelp: adminTopicListSchema,
+  whatHelps: adminTopicListSchema,
+  approachTitle: z.string().trim().max(240),
+  approachParagraphs: adminTopicListSchema,
+  approach: adminTopicListSchema,
+  hideShortQuestions: z.boolean(),
+  shortQuestions: adminTopicListSchema,
+  imageMode: z.enum(["multiply", "normal", "multiply-no-branding", "normal-no-branding"]),
+  heroMediaId: z.string().uuid().nullable(),
+  heroImageRemoved: z.boolean(),
 });

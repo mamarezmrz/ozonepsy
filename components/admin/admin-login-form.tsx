@@ -17,7 +17,11 @@ export function AdminLoginForm() {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
+        body: JSON.stringify({
+          email: form.get("email"),
+          password: form.get("password"),
+          rememberMe: form.get("rememberMe") === "on",
+        }),
       });
       const body = await response.json() as { ok?: boolean; message?: string; error?: string };
       if (!response.ok || !body.ok) {
@@ -44,6 +48,11 @@ export function AdminLoginForm() {
       <label className="block text-sm text-[#3b4040]">
         رمز ورود
         <input name="password" type="password" autoComplete="current-password" required dir="ltr" className="mt-2 h-12 w-full rounded-[16px] bg-[#e8eded] px-4 outline-none transition focus:ring-2 focus:ring-[#73bebf]" />
+      </label>
+      <label className="admin-login-remember">
+        <input name="rememberMe" type="checkbox" />
+        <span className="admin-login-remember-box" aria-hidden="true">✓</span>
+        <span>مرا به خاطر بسپار</span>
       </label>
       {error ? <p role="alert" className="rounded-[14px] bg-[#fff5f5] px-4 py-3 text-sm leading-6 text-[#db4244]">{error}</p> : null}
       <button type="submit" disabled={pending} className="h-12 w-full rounded-[18px] bg-[#f0aa7e] text-[#3b4040] transition hover:bg-[#e99a69] disabled:cursor-not-allowed disabled:opacity-60">

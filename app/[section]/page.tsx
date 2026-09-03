@@ -13,6 +13,8 @@ import { products } from "@/lib/data";
 import { ProductCard, SectionTitle } from "@/components/ui";
 import { createPageMetadata } from "@/lib/seo";
 import { getPublicContent } from "@/lib/public/content";
+import { getPublicConsultationBenefits } from "@/lib/consultation-benefits";
+import { getPublicConsultationCases } from "@/lib/individual-consultation-content";
 import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 
 const content: Record<string, { title: string; description: string }> = {
@@ -59,8 +61,12 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
     return <><SiteHeader /><CoursesPage content={publicContent} /><SiteFooter /></>;
   }
   if (section === "group-therapy") {
-    const reviews = await getPublishedReviewsForProductSlug("group-therapy");
-    return <><SiteHeader /><GroupTherapyPage reviews={reviews} /><SiteFooter /></>;
+    const [reviews, dynamicBenefits, dynamicCases] = await Promise.all([
+      getPublishedReviewsForProductSlug("group-therapy"),
+      getPublicConsultationBenefits("group-therapy"),
+      getPublicConsultationCases("group-therapy"),
+    ]);
+    return <><SiteHeader /><GroupTherapyPage reviews={reviews} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} /><SiteFooter /></>;
   }
   if (section === "partners") {
     return <><SiteHeader /><PartnersPage /><SiteFooter /></>;

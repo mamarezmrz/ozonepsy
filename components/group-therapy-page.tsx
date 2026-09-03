@@ -4,6 +4,8 @@ import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
 import { HomeFaq } from "@/components/home-interactive";
 import { groupTherapySessions } from "@/lib/group-therapy";
+import type { PublicConsultationBenefits } from "@/lib/consultation-benefits";
+import type { PublicConsultationCases } from "@/lib/individual-consultation-content";
 import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
@@ -56,7 +58,13 @@ const groupFaqItems = [
   { question: "آیا گروه‌درمانی جایگزین مشاوره فردی میشه یا بهتره همزمان انجام بشه؟", answer: "پاسخ سوال" },
 ] as const;
 
-export function GroupTherapyPage({ reviews = [] }: { reviews?: readonly PublicReview[] }) {
+export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases }: { reviews?: readonly PublicReview[]; dynamicBenefits?: PublicConsultationBenefits | null; dynamicCases?: PublicConsultationCases | null }) {
+  const benefits = dynamicBenefits ?? {
+    enabled: true,
+    items: groupBenefits.map(([title, description], index) => ({ id: `legacy-${index}`, title, description, sortOrder: index })),
+  };
+  const cases = dynamicCases ?? { enabled: false, title: "گروه درمانی برای چه موضوعاتی مناسب است؟", description: "", items: [] };
+
   return (
     <main className="group-therapy-page">
       <div className="group-therapy-page-inner">
@@ -84,17 +92,27 @@ export function GroupTherapyPage({ reviews = [] }: { reviews?: readonly PublicRe
           </div>
         </section>
 
-        <section className="group-therapy-benefits" aria-labelledby="group-therapy-benefits-title">
-          <h2 id="group-therapy-benefits-title">مزایای جلسات گروه درمانی</h2>
-          <div className="group-therapy-benefit-grid">
-            {groupBenefits.map(([title, description]) => (
-              <article key={`group-benefit-${title}`} className="group-therapy-benefit-card">
-                <div className="group-therapy-benefit-head"><span className="group-therapy-benefit-check" aria-hidden="true"><CheckIcon /></span><h3>{title}</h3></div>
-                <p>{description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+        {benefits.enabled && benefits.items.length > 0 ? (
+          <section className="group-therapy-benefits" aria-labelledby="group-therapy-benefits-title">
+            <h2 id="group-therapy-benefits-title">مزایای جلسات گروه درمانی</h2>
+            <div className="group-therapy-benefit-grid">
+              {benefits.items.map(({ id, title, description }) => (
+                <article key={id} className="group-therapy-benefit-card">
+                  <div className="group-therapy-benefit-head"><span className="group-therapy-benefit-check" aria-hidden="true"><CheckIcon /></span><h3>{title}</h3></div>
+                  <p>{description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {cases.enabled && cases.items.length > 0 ? (
+          <section className="consultation-cases group-therapy-cases" aria-labelledby="group-therapy-cases-title">
+            <h2 id="group-therapy-cases-title">{cases.title}</h2>
+            {cases.description ? <p>{cases.description}</p> : null}
+            <div className="consultation-case-grid">{cases.items.map(({ id, title, href }) => <Link key={id} href={href} className="consultation-case-card"><span>{title}</span><span className="consultation-case-arrow" aria-hidden="true" /></Link>)}</div>
+          </section>
+        ) : null}
 
         <section className="group-therapy-sessions" aria-labelledby="group-therapy-sessions-title">
           <h2 id="group-therapy-sessions-title">انواع جلسات گروه درمانی</h2>

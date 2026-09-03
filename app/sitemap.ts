@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
-import { consultationTopics } from "@/lib/consultation-topics";
 import { institutionProfiles } from "@/lib/institutions";
 import { groupTherapySessions } from "@/lib/group-therapy";
 import { therapistProfiles } from "@/lib/therapists";
 import { getPublicSiteUrl } from "@/lib/seo";
+import { getLegacyIndividualConsultationCases, getPublicIndividualConsultationCases } from "@/lib/individual-consultation-content";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const dynamicCases = await getPublicIndividualConsultationCases();
+  const individualCases = dynamicCases ?? getLegacyIndividualConsultationCases();
   const paths = [
     "/",
     "/consultations",
@@ -20,7 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...therapistProfiles.map((profile) => `/therapists/${profile.slug}`),
     ...institutionProfiles.map((profile) => `/institutes/${profile.slug}`),
     ...groupTherapySessions.map((session) => `/group-therapy/${session.slug}`),
-    ...consultationTopics.map((topic) => `/consultations/individual/${topic.slug}`),
+    ...individualCases.items.map((item) => item.href),
   ];
 
   return paths.map((path) => ({ url: `${getPublicSiteUrl()}${path}`, lastModified: new Date() }));

@@ -40,20 +40,20 @@ type SessionMetadata = {
   userAgent?: string;
 };
 
-function adminCookieOptions(maxAge: number) {
+function adminCookieOptions(rememberMe: boolean) {
   return {
     name: ADMIN_SESSION_COOKIE,
     httpOnly: true,
-    maxAge,
+    ...(rememberMe ? { maxAge: adminSessionConfig.ttlSeconds } : {}),
     path: "/",
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
   };
 }
 
-export async function setAdminSessionCookie(token: string, maxAge = adminSessionConfig.ttlSeconds) {
+export async function setAdminSessionCookie(token: string, options: { rememberMe?: boolean } = {}) {
   const cookieStore = await cookies();
-  cookieStore.set({ ...adminCookieOptions(maxAge), value: token });
+  cookieStore.set({ ...adminCookieOptions(options.rememberMe === true), value: token });
 }
 
 export async function getAdminSessionToken() {

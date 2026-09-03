@@ -3,6 +3,7 @@ export type ConsultationTopic = {
   title: string;
   image: string;
   imageMode?: "multiply" | "normal";
+  showHeroBranding?: boolean;
   description: string;
   introList?: string[];
   signsTitle?: string;

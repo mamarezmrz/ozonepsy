@@ -16,6 +16,8 @@ const links = [
   { href: "/sessions", label: "جلسات", permission: "sessions.read" },
   { href: "/reviews", label: "نظرات", permission: "reviews.read" },
   { href: "/categories", label: "دسته‌بندی‌ها", permission: "categories.read" },
+  { href: "/consultation-benefits", label: "مزایای مشاوره", permission: "content.read" },
+  { href: "/consultation-issues", label: "مشکلات حوزه‌های مشاوره", permission: "content.read" },
   { href: "/audit-logs", label: "گزارش فعالیت", permission: "audit.read" },
 ] as const;
 

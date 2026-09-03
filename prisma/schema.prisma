@@ -163,7 +163,7 @@ model User {
   uploadedMedia           MediaAsset[]             @relation("MediaUploader")
   specialistProfile       Specialist?
   createdAdminInvites     AdminInvite[]            @relation("AdminInviteCreator")
-  acceptedAdminInvite     AdminInvite?            @relation("AdminInviteAcceptedUser")
+  acceptedAdminInvite     AdminInvite?             @relation("AdminInviteAcceptedUser")
 }
 
 model Profile {
@@ -294,13 +294,13 @@ model AuthToken {
 }
 
 model Category {
-  id          String    @id @default(uuid()) @db.Uuid
-  slug        String    @unique @db.VarChar(120)
-  title       String    @db.VarChar(200)
+  id          String         @id @default(uuid()) @db.Uuid
+  slug        String         @unique @db.VarChar(120)
+  title       String         @db.VarChar(200)
   description String?
   status      CategoryStatus @default(ACTIVE)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   products    Product[]
 
   @@index([status, updatedAt])
@@ -322,7 +322,7 @@ model Specialist {
   user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
   consultationProducts ConsultationProduct[]
   appointments         Appointment[]
-  courseAssignments     CourseSpecialist[]
+  courseAssignments    CourseSpecialist[]
 }
 
 model Product {
@@ -394,15 +394,15 @@ model CourseProduct {
 }
 
 model CourseModule {
-  id              String        @id @default(uuid()) @db.Uuid
-  courseProductId String        @db.Uuid
-  title           String        @db.VarChar(240)
+  id              String         @id @default(uuid()) @db.Uuid
+  courseProductId String         @db.Uuid
+  title           String         @db.VarChar(240)
   description     String?
   order           Int
-  status          ProductStatus @default(DRAFT)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  courseProduct   CourseProduct @relation(fields: [courseProductId], references: [productId], onDelete: Cascade)
+  status          ProductStatus  @default(DRAFT)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  courseProduct   CourseProduct  @relation(fields: [courseProductId], references: [productId], onDelete: Cascade)
   lessons         CourseLesson[]
 
   @@unique([courseProductId, order])
@@ -430,9 +430,9 @@ model CourseLesson {
 
 model CourseSpecialist {
   courseProductId String        @db.Uuid
-  specialistId   String        @db.Uuid
+  specialistId    String        @db.Uuid
   courseProduct   CourseProduct @relation(fields: [courseProductId], references: [productId], onDelete: Cascade)
-  specialist     Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  specialist      Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
 
   @@id([courseProductId, specialistId])
   @@index([specialistId])
@@ -629,47 +629,128 @@ model Testimonial {
   @@index([status, sortOrder])
 }
 
+model ConsultationBenefitsSection {
+  id        String                @id @default(uuid()) @db.Uuid
+  pageKey   String                @unique @db.VarChar(40)
+  enabled   Boolean               @default(true)
+  benefits  ConsultationBenefit[]
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([enabled])
+}
+
+model ConsultationBenefit {
+  id          String                      @id @default(uuid()) @db.Uuid
+  sectionId   String                      @db.Uuid
+  title       String                      @db.VarChar(240)
+  description String
+  sortOrder   Int                         @default(0)
+  section     ConsultationBenefitsSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+
+  @@unique([sectionId, sortOrder])
+  @@index([sectionId, sortOrder])
+}
+
+model IndividualConsultationCaseSection {
+  id          String                       @id @default(uuid()) @db.Uuid
+  pageKey     String                       @unique @db.VarChar(40)
+  title       String                       @db.VarChar(240)
+  description String
+  enabled     Boolean                      @default(true)
+  cases       IndividualConsultationCase[]
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+}
+
+model IndividualConsultationCase {
+  id        String                            @id @default(uuid()) @db.Uuid
+  sectionId String                            @db.Uuid
+  title     String                            @db.VarChar(240)
+  slug      String                            @db.VarChar(160)
+  sortOrder Int                               @default(0)
+  status    ContentStatus                     @default(PUBLISHED)
+  section   IndividualConsultationCaseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  createdAt DateTime                          @default(now())
+  updatedAt DateTime                          @updatedAt
+
+  @@unique([sectionId, slug])
+  @@index([sectionId, status, sortOrder])
+}
+
+model IndividualConsultationTopic {
+  id                 String        @id @default(uuid()) @db.Uuid
+  slug               String        @unique @db.VarChar(160)
+  title              String        @db.VarChar(240)
+  description        String
+  introList          Json?
+  signsTitle         String?       @db.VarChar(240)
+  signs              Json
+  signsNote          String?
+  why                String
+  whenToGetHelpTitle String?       @db.VarChar(240)
+  whenToGetHelp      Json
+  whatHelps          Json
+  approachTitle      String?       @db.VarChar(240)
+  approachParagraphs Json?
+  approach           Json
+  hideShortQuestions Boolean       @default(true)
+  shortQuestions     Json
+  imageMode          String        @default("multiply") @db.VarChar(20)
+  heroMediaId        String?       @db.Uuid
+  heroImageRemoved   Boolean       @default(false)
+  status             ContentStatus @default(PUBLISHED)
+  heroMedia          MediaAsset?   @relation("IndividualConsultationTopicHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status, updatedAt])
+}
+
 model MediaAsset {
-  id           String          @id @default(uuid()) @db.Uuid
-  storageKey   String          @unique @db.VarChar(500)
-  originalName String          @db.VarChar(255)
-  mimeType     String          @db.VarChar(120)
-  extension    String          @db.VarChar(20)
-  size         Int
-  width        Int?
-  height       Int?
-  altText      String?
-  visibility   MediaVisibility @default(PRIVATE)
-  status       MediaStatus     @default(ACTIVE)
-  uploaderId   String?         @db.Uuid
-  uploader     User?           @relation("MediaUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
-  products     Product[]       @relation("ProductCoverMedia")
-  specialists  Specialist[]    @relation("SpecialistProfileMedia")
-  lessons      CourseLesson[]  @relation("LessonMedia")
-  testimonials Testimonial[]   @relation("TestimonialAvatar")
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id                 String                        @id @default(uuid()) @db.Uuid
+  storageKey         String                        @unique @db.VarChar(500)
+  originalName       String                        @db.VarChar(255)
+  mimeType           String                        @db.VarChar(120)
+  extension          String                        @db.VarChar(20)
+  size               Int
+  width              Int?
+  height             Int?
+  altText            String?
+  visibility         MediaVisibility               @default(PRIVATE)
+  status             MediaStatus                   @default(ACTIVE)
+  uploaderId         String?                       @db.Uuid
+  uploader           User?                         @relation("MediaUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
+  products           Product[]                     @relation("ProductCoverMedia")
+  specialists        Specialist[]                  @relation("SpecialistProfileMedia")
+  lessons            CourseLesson[]                @relation("LessonMedia")
+  testimonials       Testimonial[]                 @relation("TestimonialAvatar")
+  consultationTopics IndividualConsultationTopic[] @relation("IndividualConsultationTopicHeroMedia")
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
 
   @@index([status, visibility, createdAt])
   @@index([uploaderId, createdAt])
 }
 
 model AdminAuditLog {
-  id            String   @id @default(uuid()) @db.Uuid
-  actorId       String?  @db.Uuid
-  action        String   @db.VarChar(120)
-  targetType    String   @db.VarChar(80)
-  targetId      String   @db.VarChar(80)
+  id            String      @id @default(uuid()) @db.Uuid
+  actorId       String?     @db.Uuid
+  action        String      @db.VarChar(120)
+  targetType    String      @db.VarChar(80)
+  targetId      String      @db.VarChar(80)
   result        AuditResult @default(SUCCESS)
   beforeState   Json?
   afterState    Json?
   reason        String?
-  requestId     String?  @db.VarChar(120)
-  correlationId String?  @db.VarChar(120)
-  ipAddress     String?  @db.VarChar(64)
-  userAgent     String?  @db.VarChar(500)
-  createdAt     DateTime @default(now())
-  actor         User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  requestId     String?     @db.VarChar(120)
+  correlationId String?     @db.VarChar(120)
+  ipAddress     String?     @db.VarChar(64)
+  userAgent     String?     @db.VarChar(500)
+  createdAt     DateTime    @default(now())
+  actor         User?       @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([targetType, targetId, createdAt])
   @@index([actorId, createdAt])

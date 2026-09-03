@@ -4,6 +4,8 @@ import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
 import { type ConsultationCategoryContent, consultationCategoryContent } from "@/lib/consultation-categories";
+import type { PublicConsultationBenefits } from "@/lib/consultation-benefits";
+import type { PublicConsultationCases } from "@/lib/individual-consultation-content";
 import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
@@ -15,7 +17,13 @@ const serviceSteps = [
   ["۴", "برگزاری جلسه", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
-export function ConsultationCategoryPage({ content, reviews = [], reviewProductSlug = null }: { content: ConsultationCategoryContent; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null }) {
+export function ConsultationCategoryPage({ content, reviews = [], reviewProductSlug = null, dynamicBenefits, dynamicCases }: { content: ConsultationCategoryContent; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null; dynamicBenefits?: PublicConsultationBenefits | null; dynamicCases?: PublicConsultationCases | null }) {
+  const benefits = dynamicBenefits ?? {
+    enabled: true,
+    items: content.benefits.map(([title, description], index) => ({ id: `legacy-${index}`, title, description, sortOrder: index })),
+  };
+  const cases = dynamicCases ?? { enabled: true, title: content.casesTitle, description: content.casesDescription, items: content.cases.map((item, index) => ({ id: `legacy-${index}`, title: item.title, slug: item.href.split("/").pop() ?? "", href: item.href, sortOrder: index })) };
+
   return (
     <main className={`consultation-page consultation-page-${content.slug}`}>
       <div className="consultation-page-inner">
@@ -35,16 +43,18 @@ export function ConsultationCategoryPage({ content, reviews = [], reviewProductS
           <div className="consultation-copy">{content.moreParagraphs.map((paragraph, index) => <p key={`more-${index}`}>{paragraph}</p>)}</div>
         </section>
 
-        <section className="consultation-benefits" aria-labelledby="consultation-benefits-title">
-          <h2 id="consultation-benefits-title">{content.benefitsTitle}</h2>
-          <div className="consultation-benefit-grid">{content.benefits.map(([title, description], index) => <article key={`${title}-${index}`} className="consultation-benefit-card"><div className="consultation-benefit-head"><span className="consultation-check" aria-hidden="true"><CheckIcon /></span><h3>{title}</h3></div><p>{description}</p></article>)}</div>
-        </section>
+        {benefits.enabled && benefits.items.length > 0 ? (
+          <section className="consultation-benefits" aria-labelledby="consultation-benefits-title">
+            <h2 id="consultation-benefits-title">{content.benefitsTitle}</h2>
+            <div className="consultation-benefit-grid">{benefits.items.map(({ id, title, description }) => <article key={id} className="consultation-benefit-card"><div className="consultation-benefit-head"><span className="consultation-check" aria-hidden="true"><CheckIcon /></span><h3>{title}</h3></div><p>{description}</p></article>)}</div>
+          </section>
+        ) : null}
 
-        {content.slug !== "teenagers" && content.slug !== "couples" ? (
+        {cases.enabled && cases.items.length > 0 ? (
           <section className="consultation-cases" aria-labelledby="consultation-cases-title">
-            <h2 id="consultation-cases-title">{content.casesTitle}</h2>
-            <p>{content.casesDescription}</p>
-            <div className="consultation-case-grid">{content.cases.map(({ title, href }, index) => <Link key={`${href}-${title}-${index}`} href={href} className="consultation-case-card"><span>{title}</span><span className="consultation-case-arrow" aria-hidden="true" /></Link>)}</div>
+            <h2 id="consultation-cases-title">{cases.title}</h2>
+            <p>{cases.description}</p>
+            <div className="consultation-case-grid">{cases.items.map(({ id, title, href }) => <Link key={id} href={href} className="consultation-case-card"><span>{title}</span><span className="consultation-case-arrow" aria-hidden="true" /></Link>)}</div>
           </section>
         ) : null}
       </div>

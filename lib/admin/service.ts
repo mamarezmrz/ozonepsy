@@ -37,7 +37,7 @@ export class AdminAuthenticationError extends Error {
 
 const invalidCredentialsMessage = "ایمیل یا رمز ورود نادرست است.";
 
-export async function loginAdmin(email: string, password: string, metadata: AdminAuthMetadata) {
+export async function loginAdmin(email: string, password: string, metadata: AdminAuthMetadata, rememberMe = false) {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (await isAdminLoginBlocked(normalizedEmail, metadata.ipAddress)) {
@@ -101,7 +101,7 @@ export async function loginAdmin(email: string, password: string, metadata: Admi
     });
     return created;
   });
-  await setAdminSessionCookie(token);
+  await setAdminSessionCookie(token, { rememberMe });
 
   return {
     user: { id: user.id, email: user.email, displayName: user.profile?.displayName ?? null },

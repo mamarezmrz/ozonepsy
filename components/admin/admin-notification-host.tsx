@@ -8,6 +8,10 @@ type AdminNotification = {
   tone: "success" | "error";
 };
 
+export function dispatchAdminNotification(message: string, tone: AdminNotification["tone"] = "success") {
+  window.dispatchEvent(new CustomEvent<AdminNotification>("admin-notification", { detail: { message, tone } }));
+}
+
 export function AdminNotificationHost() {
   const [notification, setNotification] = useState<AdminNotification | null>(null);
 

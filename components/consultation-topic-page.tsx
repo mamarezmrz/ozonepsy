@@ -14,6 +14,9 @@ const serviceSteps = [
 
 export function ConsultationTopicPage({ topic, content }: { topic: ConsultationTopic; content?: PublicContent }) {
   const faqTopicTitle = topic.title.replace(/\s*\([^()]*\)\s*$/, "");
+  const approachParagraphs = topic.approachParagraphs;
+  const hasApproachParagraphs = Array.isArray(approachParagraphs) ? approachParagraphs.length > 0 : Boolean(approachParagraphs?.trim());
+  const isUploadedHero = topic.image.startsWith("/api/media/");
 
   return (
     <main className="consultation-topic-page">
@@ -24,11 +27,10 @@ export function ConsultationTopicPage({ topic, content }: { topic: ConsultationT
           {topic.introList ? <ul className="consultation-topic-intro-list">{topic.introList.map((item, index) => <li key={`intro-${index}`}>{item}</li>)}</ul> : null}
         </section>
 
-        <figure className="consultation-topic-hero" aria-label={topic.title}>
-          <div className="consultation-topic-circles" aria-hidden="true" />
-          <Image className="consultation-topic-logo" src="/ozone-logo.svg" alt="اُزون" width={124} height={124} loading="eager" />
-          <Image className={`consultation-topic-person consultation-topic-person-${topic.imageMode ?? "normal"}`} src={`/figma-home/${topic.image}`} alt="" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
-        </figure>
+        {topic.image ? <figure className={`consultation-topic-hero${isUploadedHero ? " consultation-topic-hero-uploaded" : ""}`} aria-label={topic.title}>
+          {topic.showHeroBranding !== false ? <><div className="consultation-topic-circles" aria-hidden="true" /><Image className="consultation-topic-logo" src="/ozone-logo.svg" alt="اُزون" width={124} height={124} loading="eager" /></> : null}
+          <Image className={`consultation-topic-person consultation-topic-person-${topic.imageMode ?? "normal"}`} src={topic.image.startsWith("/") ? topic.image : `/figma-home/${topic.image}`} alt="" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
+        </figure> : null}
 
         <div className="consultation-topic-content">
           <TopicSection title={topic.signsTitle ?? "نشانه‌های رایج (چند علامت کافی است)"}>
@@ -38,8 +40,8 @@ export function ConsultationTopicPage({ topic, content }: { topic: ConsultationT
           <TopicSection title="چرا پیش می‌آید؟"><p>{topic.why}</p></TopicSection>
           <TopicSection title={topic.whenToGetHelpTitle ?? "چه زمانی لازم است کمک بگیریم؟"}><ul>{topic.whenToGetHelp.map((item, index) => <li key={`help-${index}`}>{item}</li>)}</ul></TopicSection>
           <TopicSection title="چه کارهایی معمولاً کمک می‌کند؟"><TopicParagraphs content={topic.whatHelps} /></TopicSection>
-          {topic.approachParagraphs ? (
-            <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><TopicParagraphs content={topic.approachParagraphs} /></TopicSection>
+          {hasApproachParagraphs ? (
+            <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><TopicParagraphs content={approachParagraphs ?? ""} /></TopicSection>
           ) : (
             <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><ul>{topic.approach.map((item, index) => <li key={`approach-${index}`}>{item}</li>)}</ul></TopicSection>
           )}

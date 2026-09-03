@@ -5,6 +5,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-header-server";
 import { consultationTopicSlugAliases, consultationTopics, getConsultationTopic } from "@/lib/consultation-topics";
 import { createPageMetadata } from "@/lib/seo";
 import { getPublicContent } from "@/lib/public/content";
+import { getPublicIndividualConsultationTopic } from "@/lib/individual-consultation-content";
 
 export function generateStaticParams() {
   return [...consultationTopics.map((topic) => topic.slug), ...Object.keys(consultationTopicSlugAliases)].map((slug) => ({ slug }));
@@ -12,13 +13,15 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const topic = getConsultationTopic(slug);
+  const stored = await getPublicIndividualConsultationTopic(slug);
+  const topic = stored.topic ?? (!stored.blocked ? getConsultationTopic(slug) : undefined);
   return topic ? createPageMetadata(topic.title, topic.description) : createPageMetadata("مشاوره فردی");
 }
 
 export default async function IndividualTopicPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const topic = getConsultationTopic(slug);
+  const stored = await getPublicIndividualConsultationTopic(slug);
+  const topic = stored.topic ?? (!stored.blocked ? getConsultationTopic(slug) : undefined);
   if (!topic) notFound();
   const publicContent = await getPublicContent();
 

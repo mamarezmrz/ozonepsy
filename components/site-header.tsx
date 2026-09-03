@@ -144,7 +144,6 @@ export function SiteHeader({
                   {consultationLinks.map(([label, href]) => (
                     <Link key={href} href={href} className="site-header-submenu-link focus-ring" onClick={closeMenu}>
                       <span>{label}</span>
-                      <Image src="/icons/chevron-down.svg" alt="" width={16} height={16} />
                     </Link>
                   ))}
                 </div>

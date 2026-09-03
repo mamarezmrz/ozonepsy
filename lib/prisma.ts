@@ -16,7 +16,21 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function isCurrentPrismaClient(client: PrismaClient | undefined): client is PrismaClient {
+  if (!client) return false;
+
+  // A dev server can keep the previous singleton alive across a Prisma Client
+  // regeneration. Detect that stale instance before using a newly generated
+  // model delegate such as consultationBenefitsSection.
+  const candidate = client as PrismaClient & { consultationBenefitsSection?: unknown; individualConsultationCaseSection?: unknown; individualConsultationTopic?: unknown };
+  return typeof candidate.consultationBenefitsSection !== "undefined"
+    && typeof candidate.individualConsultationCaseSection !== "undefined"
+    && typeof candidate.individualConsultationTopic !== "undefined";
+}
+
+export const prisma = isCurrentPrismaClient(globalForPrisma.prisma)
+  ? globalForPrisma.prisma
+  : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

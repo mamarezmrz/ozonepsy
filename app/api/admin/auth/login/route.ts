@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const input = parseAdminLoginInput(payload);
-    const result = await loginAdmin(input.email, input.password, getRequestMetadata(request));
+    const result = await loginAdmin(input.email, input.password, getRequestMetadata(request), input.rememberMe);
 
     return NextResponse.json({
       ok: true,

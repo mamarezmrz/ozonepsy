@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { dispatchAdminNotification } from "@/components/admin/admin-notification-host";
 
 type AdminActionButtonProps = {
   action: string;
@@ -75,7 +76,7 @@ export function AdminActionButton({ action, label, method = "POST", variant = "s
       setOpen(false);
       setReason("");
       if (successMessage) {
-        window.dispatchEvent(new CustomEvent("admin-notification", { detail: { message: successMessage, tone: "success" } }));
+        dispatchAdminNotification(successMessage);
       }
       router.refresh();
     } catch {
