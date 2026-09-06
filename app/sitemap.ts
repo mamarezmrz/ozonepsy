@@ -5,6 +5,8 @@ import { getPublishedProducts } from "@/lib/public/catalog";
 import { getPublicSiteUrl } from "@/lib/seo";
 import { getPublicIndividualConsultationCases } from "@/lib/individual-consultation-content";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dynamicCases = await getPublicIndividualConsultationCases();
   const specialists = await getPublicSpecialists();
