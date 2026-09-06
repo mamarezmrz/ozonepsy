@@ -4,7 +4,7 @@ import { getCurrentAdminSession } from "@/lib/admin/session";
 
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const session = await getCurrentAdminSession();
-  if (!session) redirect("/login");
+  if (!session) redirect("/admin/login");
 
   return <AdminShell session={session}>{children}</AdminShell>;
 }

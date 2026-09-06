@@ -16,7 +16,7 @@ export function AdminLogoutButton() {
         headers: { "content-type": "application/json" },
       });
     } finally {
-      router.replace("/login");
+      router.replace("/admin/login");
     }
   }
 

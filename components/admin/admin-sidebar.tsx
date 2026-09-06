@@ -9,7 +9,7 @@ import { ADMIN_ROLE_LABELS } from "@/lib/admin/constants";
 import type { AdminSessionView } from "@/lib/admin/session";
 
 const links = [
-  { href: "/", label: "نمای کلی", permission: "dashboard.view" },
+  { href: "/admin", label: "نمای کلی", permission: "dashboard.view" },
   { href: "/users", label: "کاربران", permission: "users.read" },
   { href: "/courses", label: "دوره‌ها", permission: "courses.read" },
   { href: "/specialists", label: "متخصصان", permission: "instructors.read" },

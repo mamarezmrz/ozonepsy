@@ -14,6 +14,15 @@ export function getAdminHosts() {
   return new Set(hosts.filter(Boolean));
 }
 
+export function isTemporaryRailwayAdminHost(host: string | null | undefined) {
+  const configuredAdminHost = normalizeHost(process.env.ADMIN_HOST);
+  const railwayPublicDomain = normalizeHost(process.env.RAILWAY_PUBLIC_DOMAIN);
+  return process.env.NODE_ENV === "production"
+    && !configuredAdminHost
+    && Boolean(railwayPublicDomain)
+    && normalizeHost(host) === railwayPublicDomain;
+}
+
 export function isAdminHost(host: string | null | undefined) {
   const normalized = normalizeHost(host);
   return Boolean(normalized) && getAdminHosts().has(normalized);

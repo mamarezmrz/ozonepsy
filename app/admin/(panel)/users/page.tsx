@@ -18,7 +18,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const data = await listAdminUsers(query, status);
   const currentParams = Object.fromEntries(Object.entries(params).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
 
-  return <div className="admin-page-stack"><AdminPageHeader eyebrow="مدیریت کاربران عمومی" title="کاربران" description="فهرست کاربران عمومی با داده‌های واقعی و صفحه‌بندی سمت سرور." action={<AdminButton href="/" variant="secondary">بازگشت به نمای کلی</AdminButton>} />
+  return <div className="admin-page-stack"><AdminPageHeader eyebrow="مدیریت کاربران عمومی" title="کاربران" description="فهرست کاربران عمومی با داده‌های واقعی و صفحه‌بندی سمت سرور." action={<AdminButton href="/admin" variant="secondary">بازگشت به نمای کلی</AdminButton>} />
     <section className="admin-panel-card"><AdminListToolbar><AdminSearchInput defaultValue={query.search} placeholder="نام، ایمیل یا شماره تلفن" /><label className="admin-search-field"><span>وضعیت</span><AdminSelect name="status" defaultValue={status ?? ""} ariaLabel="وضعیت کاربر" options={[{ value: "", label: "همه" }, { value: UserStatus.ACTIVE, label: "فعال" }, { value: UserStatus.SUSPENDED, label: "تعلیق‌شده" }, { value: UserStatus.ARCHIVED, label: "بایگانی" }]} /></label><input type="hidden" name="sort" value={query.sort} /></AdminListToolbar>
       <AdminDataTable rows={data.rows} getRowKey={(row) => row.id} columns={[
         { key: "name", label: "نام", render: (row) => <Link className="admin-table-link" href={`/users/${row.id}`}>{row.name}</Link> },
