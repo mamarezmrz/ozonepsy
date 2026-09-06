@@ -17,6 +17,7 @@ import { getPublicConsultationCases } from "@/lib/individual-consultation-conten
 import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 import { getPublishedProducts } from "@/lib/public/catalog";
 import { getPublicSpecialists } from "@/lib/public/specialists";
+import { groupFaqItems } from "@/lib/consultation-categories";
 
 const content: Record<string, { title: string; description: string }> = {
   consultations: { title: "حوزه‌های مشاوره", description: "از میان مسیرهای مختلف مشاوره، گزینه‌ای را پیدا کنید که به نیاز امروزتان نزدیک است." },
@@ -68,7 +69,7 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
       getPublicConsultationCases("group-therapy"),
       getPublishedProducts("group"),
     ]);
-    return <><SiteHeader /><GroupTherapyPage reviews={reviews} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} groupProducts={groupProducts} faqItems={publicContent.faqs} /><SiteFooter /></>;
+    return <><SiteHeader /><GroupTherapyPage reviews={reviews} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} groupProducts={groupProducts} faqItems={groupFaqItems} /><SiteFooter /></>;
   }
   if (section === "partners") {
     const specialists = await getPublicSpecialists();

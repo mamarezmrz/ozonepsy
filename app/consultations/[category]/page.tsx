@@ -7,7 +7,6 @@ import { getPublicConsultationBenefits } from "@/lib/consultation-benefits";
 import { getPublicConsultationCases } from "@/lib/individual-consultation-content";
 import { createPageMetadata } from "@/lib/seo";
 import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
-import { getPublicContent } from "@/lib/public/content";
 
 const categoryDescriptions: Record<string, string> = {
   individual: "مشاوره فردی آنلاین و محرمانه برای شناخت بهتر خود و عبور از چالش‌ها.",
@@ -26,12 +25,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   const content = getConsultationCategoryContent(category);
   if (!content) notFound();
   const reviewProductSlug = content.slug === "individual" ? "individual-consultation" : content.slug === "teenagers" ? "teenagers" : content.slug === "couples" ? "couples" : null;
-  const [reviews, dynamicBenefits, dynamicCases, publicContent] = await Promise.all([
+  const [reviews, dynamicBenefits, dynamicCases] = await Promise.all([
     reviewProductSlug ? getPublishedReviewsForProductSlug(reviewProductSlug) : Promise.resolve([]),
     getPublicConsultationBenefits(content.slug),
     getPublicConsultationCases(content.slug),
-    getPublicContent(),
   ]);
 
-  return <><SiteHeader /><ConsultationCategoryPage content={content} reviews={reviews} reviewProductSlug={reviewProductSlug} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} faqItems={publicContent.faqs} /><SiteFooter /></>;
+  return <><SiteHeader /><ConsultationCategoryPage content={content} reviews={reviews} reviewProductSlug={reviewProductSlug} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} faqItems={content.faqItems} /><SiteFooter /></>;
 }
