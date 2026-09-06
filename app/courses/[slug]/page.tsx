@@ -1,5 +1,37 @@
 import { notFound } from "next/navigation";
-import { products, formatPrice } from "@/lib/data";
-import { Button } from "@/components/ui";
-import { SiteFooter, SiteHeader } from "@/components/site-header";
-export default async function CoursePage({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const product=products.find(p=>p.slug===slug);if(!product)notFound();return <><SiteHeader/><main className="container-oz py-12"><div className="grid items-center gap-10 rounded-[32px] bg-[#355859] p-7 text-white md:p-14 lg:grid-cols-2"><div className={`h-72 rounded-[28px] bg-gradient-to-br ${product.accent} p-8 text-6xl font-black text-white/70`}>دوره</div><div><span className="text-[#eba983]">{product.category}</span><h1 className="mt-3 text-4xl font-black md:text-6xl">{product.title}</h1><p className="mt-5 leading-8 text-white/70">{product.description} این دوره با رویکردی کاربردی طراحی شده تا بتوانید آموخته‌ها را در زندگی روزمره به کار بگیرید.</p><div className="mt-8 flex items-center gap-5"><span className="text-2xl font-black">{formatPrice(product.price)}</span><Button href={`/checkout/${product.id}`}>خرید دوره</Button></div></div></div><section className="mx-auto max-w-3xl py-16"><h2 className="text-3xl font-black">در این دوره چه می‌آموزید؟</h2><div className="mt-6 grid gap-3">{["شناخت الگوهای رفتاری","مدیریت احساسات دشوار","ارتباط مؤثرتر با دیگران","تمرین‌های قابل استفاده در زندگی"].map(item=><div key={item} className="rounded-xl bg-white p-4 shadow-sm">✓ {item}</div>)}</div></section></main><SiteFooter/></>}
+import type { Metadata } from "next";
+import { CourseDetailPage } from "@/components/course-detail-page";
+import { SiteFooter, SiteHeader } from "@/components/site-header-server";
+import { getCurrentUser } from "@/lib/auth/service";
+import { userHasCourseAccess } from "@/lib/course-access";
+import { createPageMetadata } from "@/lib/seo";
+import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
+import { getPublishedCourseBySlug } from "@/lib/public/catalog";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getPublishedCourseBySlug(slug);
+
+  return product ? createPageMetadata(product.title, product.description) : createPageMetadata("جزئیات دوره");
+}
+
+export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getPublishedCourseBySlug(slug);
+
+  if (!product) {
+    notFound();
+  }
+
+  const currentUser = await getCurrentUser();
+  const hasCourseAccess = currentUser ? await userHasCourseAccess(currentUser.id, product.slug) : false;
+  const reviews = await getPublishedReviewsForProductSlug(product.slug);
+
+  return (
+    <>
+      <SiteHeader />
+      <CourseDetailPage product={product} userEmail={currentUser?.email ?? "مهمان"} hasCourseAccess={hasCourseAccess} reviews={reviews} reviewProductSlug={product.slug} />
+      <SiteFooter />
+    </>
+  );
+}

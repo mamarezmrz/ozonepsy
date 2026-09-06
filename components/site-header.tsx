@@ -5,6 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthModal, type AuthModalMode } from "@/components/auth-modal";
+import { SiteNotification } from "@/components/site-notification";
+import { consultationTopics } from "@/lib/consultation-topics";
+import { institutionProfiles } from "@/lib/institutions";
+import type { SiteHeaderUser } from "@/types/site-header";
 
 const consultationLinks = [
   ["مشاوره فردی", "/consultations/individual"],
@@ -28,6 +32,8 @@ const breadcrumbLabels: Record<string, string> = {
   "/group-therapy": "گروه درمانی",
   "/therapists": "مشاوران اُزون",
   "/pricing": "قیمت‌گذاری و خرید",
+  "/support-fund": "صندوق حمایت",
+  "/partners": "همکاران اُزون",
   "/about": "درباره ما",
   "/contact": "تماس با ما",
   "/free-session": "پیش‌مشاوره رایگان",
@@ -44,22 +50,45 @@ function getBreadcrumbLabel(pathname: string) {
   if (breadcrumbLabels[pathname]) return breadcrumbLabels[pathname];
   if (pathname.startsWith("/consultations/")) {
     const category = pathname.split("/")[2];
+    if (category === "individual" && pathname.split("/")[3]) {
+      const slug = pathname.split("/")[3];
+      return consultationTopics.find((topic) => topic.slug === slug)?.title ?? "جزئیات مشاوره فردی";
+    }
     return category === "couples" ? "زوج و رابطه" : category === "teenagers" ? "کودک و نوجوان" : "مشاوره فردی";
   }
   if (pathname.startsWith("/courses/")) return "جزئیات دوره";
+  if (pathname.startsWith("/group-therapy/")) {
+    return "جزئیات جلسه گروه‌درمانی";
+  }
+  if (pathname.startsWith("/therapists/")) {
+    return "جزئیات مشاور";
+  }
+  if (pathname.startsWith("/institutes/")) {
+    const slug = pathname.split("/")[2];
+    return institutionProfiles.find((profile) => profile.slug === slug)?.name ?? "جزئیات موسسه";
+  }
   if (pathname.startsWith("/checkout/")) return "تکمیل سفارش";
   if (pathname.startsWith("/dashboard/")) return "داشبورد";
   if (pathname.startsWith("/admin/")) return "مدیریت اُزون";
   return "صفحه";
 }
 
-export function SiteHeader() {
+export function SiteHeader({
+  initialUser = null,
+  showBreadcrumb = true,
+}: {
+  initialUser?: SiteHeaderUser | null;
+  showBreadcrumb?: boolean;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [consultationsOpen, setConsultationsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>("login");
+  const [headerUser, setHeaderUser] = useState<SiteHeaderUser | null>(initialUser);
+  const [notification, setNotification] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const consultationsRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = Boolean(headerUser);
 
   useEffect(() => {
     if (!consultationsOpen) return;
@@ -90,7 +119,7 @@ export function SiteHeader() {
       <header className="site-header sticky top-0 z-40 bg-[#fafcfc]/95 backdrop-blur">
       <div className="site-header-inner container-oz">
         <Link href="/" aria-label="اُزون" className="site-header-logo" onClick={closeMenu}>
-          <Image src="/ozone-logo.svg" alt="اُزون" width={48} height={48} priority />
+          <Image src="/ozone-logo.svg" alt="اُزون" width={48} height={48} priority loading="eager" />
         </Link>
 
         <nav className={`site-header-nav${menuOpen ? " is-open" : ""}`} aria-label="منوی اصلی">
@@ -104,20 +133,13 @@ export function SiteHeader() {
                 onClick={() => setConsultationsOpen((open) => !open)}
               >
                 <span>حوزه‌های مشاوره</span>
-                <Image
-                  src="/icons/chevron-down.svg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className={consultationsOpen ? "is-open" : ""}
-                />
+                <span className={`site-header-consultation-chevron${consultationsOpen ? " is-open" : ""}`} aria-hidden="true" />
               </button>
               {consultationsOpen && (
                 <div id="consultations-submenu" className="site-header-submenu">
                   {consultationLinks.map(([label, href]) => (
                     <Link key={href} href={href} className="site-header-submenu-link focus-ring" onClick={closeMenu}>
                       <span>{label}</span>
-                      <Image src="/icons/chevron-down.svg" alt="" width={16} height={16} />
                     </Link>
                   ))}
                 </div>
@@ -132,10 +154,21 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header-actions">
-          <button type="button" className="site-header-login focus-ring" onClick={openAuthModal} aria-haspopup="dialog" aria-expanded={authModalOpen}>
-            <span className="site-header-user-icon" aria-hidden="true" />
-            <span dir="rtl">ورود / ثبت نام</span>
-          </button>
+          {isAuthenticated ? (
+            <Link href="/dashboard" className="site-header-login focus-ring" onClick={closeMenu}>
+                {headerUser?.avatarUrl ? (
+        <Image className="site-header-user-avatar" src={headerUser.avatarUrl} alt="" aria-hidden="true" width={32} height={32} loading="eager" />
+                ) : (
+                  <span className="site-header-user-icon" aria-hidden="true" />
+                )}
+                <span dir="rtl">{headerUser?.label ?? "حساب کاربری"}</span>
+            </Link>
+          ) : (
+            <button type="button" className="site-header-login focus-ring" onClick={openAuthModal} aria-haspopup="dialog" aria-expanded={authModalOpen}>
+              <span className="site-header-user-icon" aria-hidden="true" />
+              <span dir="rtl">ورود / ثبت نام</span>
+            </button>
+          )}
           <button
             type="button"
             className="site-header-menu-toggle focus-ring"
@@ -148,12 +181,36 @@ export function SiteHeader() {
         </div>
       </div>
       </header>
-      {pathname !== "/" && (
+      {showBreadcrumb && pathname !== "/" && (
         <nav className="page-breadcrumb" aria-label="مسیر صفحه">
           <div className="page-breadcrumb-inner container-oz">
             <Link href="/">خانه</Link>
             <span aria-hidden="true">›</span>
-            <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+            {pathname.startsWith("/group-therapy/") ? (
+              <>
+                <Link href="/group-therapy">گروه درمانی</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : pathname.startsWith("/therapists/") ? (
+              <>
+                <Link href="/partners">مشاوران اُزون</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : pathname.startsWith("/institutes/") ? (
+              <>
+                <Link href="/partners">همکاران اُزون</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : pathname.startsWith("/consultations/individual/") ? (
+              <>
+                <Link href="/consultations/individual">مشاوره فردی</Link>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>
+              </>
+            ) : <span aria-current="page">{getBreadcrumbLabel(pathname)}</span>}
           </div>
         </nav>
       )}
@@ -163,7 +220,14 @@ export function SiteHeader() {
         mode={authModalMode}
         onClose={() => setAuthModalOpen(false)}
         onModeChange={setAuthModalMode}
+        onNotification={(message, tone = "success", user) => {
+          setNotification({ message, tone });
+          if (tone === "success") {
+            setHeaderUser(user ?? { label: "حساب کاربری", avatarUrl: null });
+          }
+        }}
       />
+      {notification && <SiteNotification message={notification.message} tone={notification.tone} onDismiss={() => setNotification(null)} />}
     </>
   );
 }

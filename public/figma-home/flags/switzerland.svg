@@ -1,0 +1,8 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip-switzerland)">
+    <path d="M0 0H80V80H0V0Z" fill="#FF0000"/>
+    <path d="M15 32.5H65V47.5H15V32.5Z" fill="white"/>
+    <path d="M32.5 15H47.5V65H32.5V15Z" fill="white"/>
+  </g>
+  <defs><clipPath id="clip-switzerland"><rect width="80" height="80" rx="40" fill="white"/></clipPath></defs>
+</svg>

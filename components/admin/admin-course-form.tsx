@@ -1,0 +1,10 @@
+import { AdminField } from "@/components/admin/admin-ui";
+import { AdminMutationForm } from "@/components/admin/admin-mutation-form";
+import { AdminSelect } from "@/components/admin/admin-select";
+
+type CategoryOption = { id: string; title: string };
+type CourseValues = { title?: string; slug?: string; description?: string; priceMinor?: number; currency?: string; categoryId?: string | null; deliveryMode?: string; accessDays?: number | null };
+
+export function AdminCourseForm({ action, categories, values = {}, successRedirect }: { action: string; categories: CategoryOption[]; values?: CourseValues; successRedirect?: string }) {
+  return <AdminMutationForm action={action} method={successRedirect ? "POST" : "PATCH"} submitLabel="ذخیره دوره" successRedirect={successRedirect}><div className="admin-form-grid"><AdminField label="عنوان دوره" name="title" defaultValue={values.title} required /><AdminField label="Slug" name="slug" defaultValue={values.slug} required /><AdminField label="مبلغ به واحد کوچک پول" name="priceMinor" type="number" defaultValue={values.priceMinor ?? 0} required /><AdminField label="ارز" name="currency" defaultValue={values.currency ?? "USD"} required /><label className="admin-form-field"><span>دسته‌بندی</span><AdminSelect name="categoryId" defaultValue={values.categoryId ?? ""} ariaLabel="دسته‌بندی" options={[{ value: "", label: "بدون دسته‌بندی" }, ...categories.map((category) => ({ value: category.id, label: category.title }))]} /></label><label className="admin-form-field"><span>نوع ارائه</span><AdminSelect name="deliveryMode" defaultValue={values.deliveryMode ?? "RECORDED"} ariaLabel="نوع ارائه" options={[{ value: "RECORDED", label: "ضبط‌شده" }, { value: "LIVE", label: "زنده" }]} /></label><AdminField label="مدت دسترسی به روز (اختیاری)" name="accessDays" type="number" defaultValue={values.accessDays ?? ""} /><label className="admin-form-field admin-form-field-full"><span>توضیحات</span><textarea name="description" defaultValue={values.description ?? ""} required /></label></div></AdminMutationForm>;
+}

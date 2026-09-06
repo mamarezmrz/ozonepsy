@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
+import type { PublicContent } from "@/lib/public/content";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
@@ -21,13 +22,13 @@ function ContactSocialIcon({ type }: { type: SocialType }) {
   return <span className={`contact-social-icon is-${type}`} aria-hidden="true" />;
 }
 
-export function ContactPage() {
+export function ContactPage({ content }: { content?: PublicContent }) {
   return (
     <main className="contact-page">
       <div className="contact-page-inner">
         <figure className="contact-hero-image">
           <Image className="contact-hero-media" src={asset("27b6de804ab70c53e8528b81270e5add64484aab.jpg")} alt="همکاران اُزون آماده پاسخ‌گویی هستند" fill priority quality={100} sizes="(max-width: 900px) 100vw, 960px" />
-          <Image className="contact-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} />
+          <Image className="contact-hero-logo" src="/ozone-logo.svg" alt="اُزون" width={72} height={72} loading="eager" />
         </figure>
 
         <section className="contact-details" aria-labelledby="contact-title">
@@ -73,7 +74,7 @@ export function ContactPage() {
       <section className="contact-faq home-faq" aria-labelledby="contact-faq-title">
         <div className="home-faq-inner">
           <h2 id="contact-faq-title">سوالات متداول</h2>
-          <HomeFaq />
+          <HomeFaq items={content?.faqs} />
         </div>
       </section>
 

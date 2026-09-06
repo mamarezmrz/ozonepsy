@@ -1,0 +1,789 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../lib/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum RoleName {
+  USER
+  ADMIN
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  SUPPORT
+  INSTRUCTOR
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum ProductKind {
+  CONSULTATION
+  PACKAGE
+  GROUP
+  COURSE
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CategoryStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum SpecialistStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CourseDeliveryMode {
+  RECORDED
+  LIVE
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING_PAYMENT
+  PAID
+  FAILED
+  CANCELED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  INITIATED
+  AWAITING_VERIFICATION
+  VERIFIED
+  FAILED
+  REFUNDED
+}
+
+enum EntitlementStatus {
+  ACTIVE
+  EXHAUSTED
+  EXPIRED
+  SUSPENDED
+  REVOKED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum SessionUsageStatus {
+  COMPLETED
+  REVERSED
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  HIDDEN
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum MediaVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum AuditResult {
+  SUCCESS
+  FAILURE
+}
+
+enum SupportContributionStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+enum PreconsultationRequestStatus {
+  PENDING
+  CONTACTED
+  COMPLETED
+  CANCELED
+}
+
+model User {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  email                   String                   @unique @db.VarChar(320)
+  passwordHash            String?                  @db.VarChar(255)
+  status                  UserStatus               @default(ACTIVE)
+  emailVerifiedAt         DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  profile                 Profile?
+  roles                   UserRole[]
+  sessions                AuthSession[]
+  adminSessions           AdminSession[]
+  authTokens              AuthToken[]
+  orders                  Order[]
+  purchases               Purchase[]
+  entitlements            Entitlement[]
+  appointments            Appointment[]            @relation("UserAppointments")
+  reviews                 Review[]
+  supportContributions    SupportContribution[]
+  preconsultationRequests PreconsultationRequest[]
+  auditLogs               AdminAuditLog[]          @relation("AuditActor")
+  recordedUsages          SessionUsage[]           @relation("UsageRecordedBy")
+  reversedUsages          SessionUsage[]           @relation("UsageReversedBy")
+  enrollments             Enrollment[]
+  uploadedMedia           MediaAsset[]             @relation("MediaUploader")
+  specialistProfile       Specialist?
+  createdAdminInvites     AdminInvite[]            @relation("AdminInviteCreator")
+  acceptedAdminInvite     AdminInvite?             @relation("AdminInviteAcceptedUser")
+}
+
+model Profile {
+  userId      String   @id @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName   String?  @db.VarChar(100)
+  lastName    String?  @db.VarChar(100)
+  displayName String?  @db.VarChar(200)
+  phone       String?  @db.VarChar(40)
+  country     String?  @db.VarChar(120)
+  avatarUrl   String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Role {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            RoleName         @unique
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id              String           @id @default(uuid()) @db.Uuid
+  key             String           @unique @db.VarChar(120)
+  description     String?          @db.VarChar(240)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
+
+  @@index([key])
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserRole {
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model AuthSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique @db.VarChar(255)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  userAgent String?   @db.VarChar(500)
+  ipAddress String?   @db.VarChar(64)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model AdminSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.VarChar(255)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ipAddress  String?   @db.VarChar(64)
+  userAgent  String?   @db.VarChar(500)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, revokedAt])
+}
+
+model AdminLoginRateLimit {
+  id              String    @id @default(uuid()) @db.Uuid
+  keyHash         String    @unique @db.VarChar(64)
+  attempts        Int       @default(0)
+  windowStartedAt DateTime
+  blockedUntil    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([blockedUntil])
+}
+
+model AdminInvite {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @db.VarChar(320)
+  role           RoleName
+  tokenHash      String    @unique @db.VarChar(255)
+  expiresAt      DateTime
+  usedAt         DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  createdById    String    @db.Uuid
+  acceptedUserId String?   @unique @db.Uuid
+  createdBy      User      @relation("AdminInviteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  acceptedUser   User?     @relation("AdminInviteAcceptedUser", fields: [acceptedUserId], references: [id], onDelete: SetNull)
+
+  @@index([email, expiresAt])
+  @@index([createdById, createdAt])
+  @@index([revokedAt, usedAt, expiresAt])
+}
+
+model AuthToken {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @db.Uuid
+  type      AuthTokenType
+  tokenHash String        @unique @db.VarChar(255)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, expiresAt])
+}
+
+model Category {
+  id          String         @id @default(uuid()) @db.Uuid
+  slug        String         @unique @db.VarChar(120)
+  title       String         @db.VarChar(200)
+  description String?
+  status      CategoryStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  products    Product[]
+
+  @@index([status, updatedAt])
+}
+
+model Specialist {
+  id                   String                @id @default(uuid()) @db.Uuid
+  slug                 String                @unique @db.VarChar(120)
+  displayName          String                @db.VarChar(200)
+  bio                  String?
+  specialty            String?               @db.VarChar(200)
+  imageUrl             String?
+  profileMediaId       String?               @db.Uuid
+  profileMedia         MediaAsset?           @relation("SpecialistProfileMedia", fields: [profileMediaId], references: [id], onDelete: SetNull)
+  status               SpecialistStatus      @default(ACTIVE)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  userId               String?               @unique @db.Uuid
+  user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  consultationProducts ConsultationProduct[]
+  appointments         Appointment[]
+  courseAssignments    CourseSpecialist[]
+}
+
+model Product {
+  id             String               @id @default(uuid()) @db.Uuid
+  slug           String               @unique @db.VarChar(160)
+  title          String               @db.VarChar(240)
+  description    String
+  kind           ProductKind
+  status         ProductStatus        @default(DRAFT)
+  priceMinor     Int
+  currency       String               @default("USD") @db.VarChar(3)
+  accent         String?              @db.VarChar(120)
+  label          String?              @db.VarChar(120)
+  featured       Boolean              @default(false)
+  categoryId     String?              @db.Uuid
+  category       Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  coverMediaId   String?              @db.Uuid
+  coverMedia     MediaAsset?          @relation("ProductCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  consultation   ConsultationProduct?
+  sessionPackage SessionPackage?
+  groupTherapy   GroupTherapyProduct?
+  course         CourseProduct?
+  orders         Order[]
+  purchases      Purchase[]
+  entitlements   Entitlement[]
+  appointments   Appointment[]
+  reviews        Review[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([kind, status])
+  @@index([categoryId, status])
+  @@index([featured, status])
+}
+
+model ConsultationProduct {
+  productId       String      @id @db.Uuid
+  durationMinutes Int         @default(50)
+  specialistId    String?     @db.Uuid
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  specialist      Specialist? @relation(fields: [specialistId], references: [id], onDelete: SetNull)
+}
+
+model SessionPackage {
+  productId          String  @id @db.Uuid
+  includedSessions   Int
+  expiresAfterDays   Int?
+  cancellationPolicy String?
+  product            Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model GroupTherapyProduct {
+  productId      String  @id @db.Uuid
+  cohortLabel    String? @db.VarChar(200)
+  capacity       Int?
+  schedulePolicy String?
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model CourseProduct {
+  productId    String             @id @db.Uuid
+  deliveryMode CourseDeliveryMode @default(RECORDED)
+  accessDays   Int?
+  curriculum   Json?
+  product      Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  enrollments  Enrollment[]
+  modules      CourseModule[]
+  instructors  CourseSpecialist[]
+}
+
+model CourseModule {
+  id              String         @id @default(uuid()) @db.Uuid
+  courseProductId String         @db.Uuid
+  title           String         @db.VarChar(240)
+  description     String?
+  order           Int
+  status          ProductStatus  @default(DRAFT)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  courseProduct   CourseProduct  @relation(fields: [courseProductId], references: [productId], onDelete: Cascade)
+  lessons         CourseLesson[]
+
+  @@unique([courseProductId, order])
+  @@index([courseProductId, status, order])
+}
+
+model CourseLesson {
+  id          String        @id @default(uuid()) @db.Uuid
+  moduleId    String        @db.Uuid
+  title       String        @db.VarChar(240)
+  description String?
+  order       Int
+  duration    Int?
+  status      ProductStatus @default(DRAFT)
+  isPreview   Boolean       @default(false)
+  mediaId     String?       @db.Uuid
+  media       MediaAsset?   @relation("LessonMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+  module      CourseModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([moduleId, order])
+  @@index([moduleId, status, order])
+}
+
+model CourseSpecialist {
+  courseProductId String        @db.Uuid
+  specialistId    String        @db.Uuid
+  courseProduct   CourseProduct @relation(fields: [courseProductId], references: [productId], onDelete: Cascade)
+  specialist      Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@id([courseProductId, specialistId])
+  @@index([specialistId])
+}
+
+model Order {
+  id                   String      @id @default(uuid()) @db.Uuid
+  orderNumber          String      @unique @db.VarChar(40)
+  userId               String      @db.Uuid
+  productId            String      @db.Uuid
+  status               OrderStatus @default(PENDING)
+  totalMinor           Int
+  currency             String      @db.VarChar(3)
+  productTitleSnapshot String      @db.VarChar(240)
+  snapshot             Json
+  expiresAt            DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  product              Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  payments             Payment[]
+  purchase             Purchase?
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([productId])
+}
+
+model Payment {
+  id                    String        @id @default(uuid()) @db.Uuid
+  orderId               String        @db.Uuid
+  provider              String        @db.VarChar(80)
+  status                PaymentStatus @default(INITIATED)
+  amountMinor           Int
+  currency              String        @db.VarChar(3)
+  attempt               Int           @default(1)
+  providerTransactionId String?       @unique @db.VarChar(255)
+  authority             String?       @unique @db.VarChar(255)
+  referenceId           String?       @db.VarChar(255)
+  failureCode           String?       @db.VarChar(120)
+  failureMessage        String?
+  verifiedAt            DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, attempt])
+  @@index([provider, status])
+  @@index([orderId, status])
+}
+
+model Purchase {
+  id           String        @id @default(uuid()) @db.Uuid
+  orderId      String        @unique @db.Uuid
+  userId       String        @db.Uuid
+  productId    String        @db.Uuid
+  amountMinor  Int
+  currency     String        @db.VarChar(3)
+  verifiedAt   DateTime
+  createdAt    DateTime      @default(now())
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  entitlements Entitlement[]
+
+  @@index([userId, createdAt])
+  @@index([productId])
+}
+
+model Entitlement {
+  id            String            @id @default(uuid()) @db.Uuid
+  purchaseId    String            @db.Uuid
+  userId        String            @db.Uuid
+  productId     String            @db.Uuid
+  status        EntitlementStatus @default(ACTIVE)
+  totalSessions Int?
+  startsAt      DateTime          @default(now())
+  expiresAt     DateTime?
+  suspendedAt   DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  purchase      Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  product       Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  enrollment    Enrollment?
+  appointments  Appointment[]
+  usages        SessionUsage[]
+
+  @@index([userId, status])
+  @@index([productId, status])
+  @@index([purchaseId])
+}
+
+model Enrollment {
+  id              String        @id @default(uuid()) @db.Uuid
+  entitlementId   String        @unique @db.Uuid
+  userId          String        @db.Uuid
+  courseProductId String        @db.Uuid
+  progressPercent Int           @default(0)
+  enrolledAt      DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  entitlement     Entitlement   @relation(fields: [entitlementId], references: [id], onDelete: Restrict)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  courseProduct   CourseProduct @relation(fields: [courseProductId], references: [productId], onDelete: Restrict)
+
+  @@index([userId, enrolledAt])
+  @@index([courseProductId])
+}
+
+model Appointment {
+  id            String            @id @default(uuid()) @db.Uuid
+  userId        String            @db.Uuid
+  productId     String            @db.Uuid
+  entitlementId String?           @db.Uuid
+  specialistId  String?           @db.Uuid
+  status        AppointmentStatus @default(SCHEDULED)
+  startsAt      DateTime
+  endsAt        DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  user          User              @relation("UserAppointments", fields: [userId], references: [id], onDelete: Restrict)
+  product       Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  entitlement   Entitlement?      @relation(fields: [entitlementId], references: [id], onDelete: SetNull)
+  specialist    Specialist?       @relation(fields: [specialistId], references: [id], onDelete: SetNull)
+  usage         SessionUsage?
+
+  @@index([userId, startsAt])
+  @@index([status, startsAt])
+  @@index([specialistId, startsAt])
+  @@index([entitlementId])
+}
+
+model SessionUsage {
+  id            String             @id @default(uuid()) @db.Uuid
+  entitlementId String             @db.Uuid
+  appointmentId String             @unique @db.Uuid
+  status        SessionUsageStatus @default(COMPLETED)
+  recordedById  String?            @db.Uuid
+  recordedAt    DateTime           @default(now())
+  reversedById  String?            @db.Uuid
+  reversedAt    DateTime?
+  reason        String?
+  entitlement   Entitlement        @relation(fields: [entitlementId], references: [id], onDelete: Restrict)
+  appointment   Appointment        @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  recordedBy    User?              @relation("UsageRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  reversedBy    User?              @relation("UsageReversedBy", fields: [reversedById], references: [id], onDelete: SetNull)
+
+  @@unique([entitlementId, appointmentId])
+  @@index([entitlementId, status])
+  @@index([recordedById, recordedAt])
+}
+
+model Review {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  productId String?      @db.Uuid
+  rating    Int?
+  body      String
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  product   Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([productId, status])
+}
+
+model Faq {
+  id        String        @id @default(uuid()) @db.Uuid
+  question  String
+  answer    String
+  status    ContentStatus @default(DRAFT)
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+model Testimonial {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String        @db.VarChar(200)
+  body          String
+  avatarMediaId String?       @db.Uuid
+  avatarMedia   MediaAsset?   @relation("TestimonialAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+  status        ContentStatus @default(DRAFT)
+  sortOrder     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+model ConsultationBenefitsSection {
+  id        String                @id @default(uuid()) @db.Uuid
+  pageKey   String                @unique @db.VarChar(40)
+  enabled   Boolean               @default(true)
+  benefits  ConsultationBenefit[]
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([enabled])
+}
+
+model ConsultationBenefit {
+  id          String                      @id @default(uuid()) @db.Uuid
+  sectionId   String                      @db.Uuid
+  title       String                      @db.VarChar(240)
+  description String
+  sortOrder   Int                         @default(0)
+  section     ConsultationBenefitsSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+
+  @@unique([sectionId, sortOrder])
+  @@index([sectionId, sortOrder])
+}
+
+model IndividualConsultationCaseSection {
+  id          String                       @id @default(uuid()) @db.Uuid
+  pageKey     String                       @unique @db.VarChar(40)
+  title       String                       @db.VarChar(240)
+  description String
+  enabled     Boolean                      @default(true)
+  cases       IndividualConsultationCase[]
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+}
+
+model IndividualConsultationCase {
+  id        String                            @id @default(uuid()) @db.Uuid
+  sectionId String                            @db.Uuid
+  title     String                            @db.VarChar(240)
+  slug      String                            @db.VarChar(160)
+  sortOrder Int                               @default(0)
+  status    ContentStatus                     @default(PUBLISHED)
+  section   IndividualConsultationCaseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  createdAt DateTime                          @default(now())
+  updatedAt DateTime                          @updatedAt
+
+  @@unique([sectionId, slug])
+  @@index([sectionId, status, sortOrder])
+}
+
+model IndividualConsultationTopic {
+  id                 String        @id @default(uuid()) @db.Uuid
+  slug               String        @unique @db.VarChar(160)
+  title              String        @db.VarChar(240)
+  description        String
+  introList          Json?
+  signsTitle         String?       @db.VarChar(240)
+  signs              Json
+  signsNote          String?
+  why                String
+  whenToGetHelpTitle String?       @db.VarChar(240)
+  whenToGetHelp      Json
+  whatHelps          Json
+  approachTitle      String?       @db.VarChar(240)
+  approachParagraphs Json?
+  approach           Json
+  hideShortQuestions Boolean       @default(true)
+  shortQuestions     Json
+  imageMode          String        @default("multiply") @db.VarChar(20)
+  heroMediaId        String?       @db.Uuid
+  heroImageRemoved   Boolean       @default(false)
+  status             ContentStatus @default(PUBLISHED)
+  heroMedia          MediaAsset?   @relation("IndividualConsultationTopicHeroMedia", fields: [heroMediaId], references: [id], onDelete: SetNull)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status, updatedAt])
+}
+
+model MediaAsset {
+  id                 String                        @id @default(uuid()) @db.Uuid
+  storageKey         String                        @unique @db.VarChar(500)
+  originalName       String                        @db.VarChar(255)
+  mimeType           String                        @db.VarChar(120)
+  extension          String                        @db.VarChar(20)
+  size               Int
+  width              Int?
+  height             Int?
+  altText            String?
+  visibility         MediaVisibility               @default(PRIVATE)
+  status             MediaStatus                   @default(ACTIVE)
+  uploaderId         String?                       @db.Uuid
+  uploader           User?                         @relation("MediaUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
+  products           Product[]                     @relation("ProductCoverMedia")
+  specialists        Specialist[]                  @relation("SpecialistProfileMedia")
+  lessons            CourseLesson[]                @relation("LessonMedia")
+  testimonials       Testimonial[]                 @relation("TestimonialAvatar")
+  consultationTopics IndividualConsultationTopic[] @relation("IndividualConsultationTopicHeroMedia")
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+
+  @@index([status, visibility, createdAt])
+  @@index([uploaderId, createdAt])
+}
+
+model AdminAuditLog {
+  id            String      @id @default(uuid()) @db.Uuid
+  actorId       String?     @db.Uuid
+  action        String      @db.VarChar(120)
+  targetType    String      @db.VarChar(80)
+  targetId      String      @db.VarChar(80)
+  result        AuditResult @default(SUCCESS)
+  beforeState   Json?
+  afterState    Json?
+  reason        String?
+  requestId     String?     @db.VarChar(120)
+  correlationId String?     @db.VarChar(120)
+  ipAddress     String?     @db.VarChar(64)
+  userAgent     String?     @db.VarChar(500)
+  createdAt     DateTime    @default(now())
+  actor         User?       @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
+
+model SupportContribution {
+  id          String                    @id @default(uuid()) @db.Uuid
+  userId      String?                   @db.Uuid
+  donorName   String?                   @db.VarChar(200)
+  amountMinor Int
+  currency    String                    @default("USD") @db.VarChar(3)
+  status      SupportContributionStatus @default(PENDING)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  user        User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model PreconsultationRequest {
+  id        String                       @id @default(uuid()) @db.Uuid
+  userId    String?                      @db.Uuid
+  country   String                       @db.VarChar(120)
+  phone     String                       @db.VarChar(40)
+  message   String?                      @db.Text
+  status    PreconsultationRequestStatus @default(PENDING)
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime                     @updatedAt
+  user      User?                        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([country, createdAt])
+}

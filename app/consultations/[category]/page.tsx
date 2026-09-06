@@ -1,4 +1,37 @@
-import { products } from "@/lib/data";
-import { ProductCard, SectionTitle } from "@/components/ui";
-import { SiteFooter, SiteHeader } from "@/components/site-header";
-export default async function CategoryPage({params}:{params:Promise<{category:string}>}){const {category}=await params;const title=category==="couples"?"زوج و رابطه":category==="teenagers"?"کودک و نوجوان":"مشاوره فردی";return <><SiteHeader/><main className="container-oz py-16"><SectionTitle eyebrow="حوزه مشاوره" title={title} description="با انتخاب یک خدمت، مسیر مناسب خودتان را شروع کنید."/><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{products.filter(p=>p.kind!=="course").map(p=><ProductCard key={p.id} product={p}/>)}</div></main><SiteFooter/></>}
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { ConsultationCategoryPage } from "@/components/individual-consultation-page";
+import { SiteFooter, SiteHeader } from "@/components/site-header-server";
+import { getConsultationCategoryContent } from "@/lib/consultation-categories";
+import { getPublicConsultationBenefits } from "@/lib/consultation-benefits";
+import { getPublicConsultationCases } from "@/lib/individual-consultation-content";
+import { createPageMetadata } from "@/lib/seo";
+import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
+import { getPublicContent } from "@/lib/public/content";
+
+const categoryDescriptions: Record<string, string> = {
+  individual: "مشاوره فردی آنلاین و محرمانه برای شناخت بهتر خود و عبور از چالش‌ها.",
+  couples: "زوج‌درمانی و مشاوره رابطه برای گفت‌وگویی امن‌تر و ساختن رابطه‌ای پایدارتر.",
+  teenagers: "مشاوره تخصصی کودک و نوجوان برای رشد، آرامش و ساختن پیوندهای امن.",
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
+  const { category } = await params;
+  const content = getConsultationCategoryContent(category);
+  return content ? createPageMetadata(content.title, categoryDescriptions[category]) : createPageMetadata("صفحه پیدا نشد");
+}
+
+export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+  const { category } = await params;
+  const content = getConsultationCategoryContent(category);
+  if (!content) notFound();
+  const reviewProductSlug = content.slug === "individual" ? "individual-consultation" : content.slug === "teenagers" ? "teenagers" : content.slug === "couples" ? "couples" : null;
+  const [reviews, dynamicBenefits, dynamicCases, publicContent] = await Promise.all([
+    reviewProductSlug ? getPublishedReviewsForProductSlug(reviewProductSlug) : Promise.resolve([]),
+    getPublicConsultationBenefits(content.slug),
+    getPublicConsultationCases(content.slug),
+    getPublicContent(),
+  ]);
+
+  return <><SiteHeader /><ConsultationCategoryPage content={content} reviews={reviews} reviewProductSlug={reviewProductSlug} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} faqItems={publicContent.faqs} /><SiteFooter /></>;
+}

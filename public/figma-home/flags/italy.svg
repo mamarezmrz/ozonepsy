@@ -1,0 +1,8 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip-italy)">
+    <path d="M0 0H80V80H0V0Z" fill="white"/>
+    <path d="M0 0H26.6719V80H0V0Z" fill="#009246"/>
+    <path d="M53.3281 0H80V80H53.3281V0Z" fill="#CE2B37"/>
+  </g>
+  <defs><clipPath id="clip-italy"><rect width="80" height="80" rx="40" fill="white"/></clipPath></defs>
+</svg>

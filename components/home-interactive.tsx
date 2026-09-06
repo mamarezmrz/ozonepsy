@@ -4,34 +4,25 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { toPersianDigits } from "@/lib/format";
 
-const faqs = [
-  ["چطور مشاور مناسب خودم را پیدا کنم؟", "می‌توانید از میان حوزه‌های مشاوره شروع کنید یا از تیم اُزون برای انتخاب مشاور کمک بگیرید."],
-  ["جلسات مشاوره چگونه برگزار می‌شوند؟", "جلسات به‌صورت آنلاین و در زمان هماهنگ‌شده با مشاور برگزار می‌شوند."],
-  ["آیا امکان پیش‌مشاوره وجود دارد؟", "بله، پیش‌مشاوره رایگان به شما کمک می‌کند با نیازتان و مسیر مناسب بیشتر آشنا شوید."],
-  ["آیا اطلاعات جلسات محرمانه است؟", "حریم خصوصی و امنیت گفت‌وگوهای شما برای ما یک اصل اساسی است."],
-  ["چطور هزینه جلسات را پرداخت کنم؟", "هر خدمت به‌صورت مستقل خریداری می‌شود و پرداخت از طریق درگاه امن انجام می‌گیرد."],
-];
+type FaqItem = { question: string; answer: string };
+type TestimonialItem = { name: string; avatar: string; text: string };
 
-export function HomeFaq() {
+export function HomeFaq({ items = [] }: { items?: readonly FaqItem[] }) {
   const [open, setOpen] = useState(-1);
-  return <div className="home-faq-list">{faqs.map(([question, answer], index) => <div key={question} className="home-faq-item">
+  if (!items.length) return <p className="home-empty-state">پرسش متداولی برای نمایش ثبت نشده است.</p>;
+  return <div className="home-faq-list">{items.map(({ question, answer }, index) => <div key={question} className="home-faq-item">
     <button type="button" aria-expanded={open === index} className="focus-ring home-faq-question" onClick={() => setOpen(open === index ? -1 : index)}><span className="home-faq-icon" aria-hidden="true">{open === index ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12H19" stroke="#CC6F39" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19" stroke="#CC6F39" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 12H19" stroke="#CC6F39" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span><span>{question}</span></button>
     <div className={`home-faq-answer-wrap${open === index ? " is-open" : ""}`} aria-hidden={open !== index}><div className="home-faq-answer">{answer}</div></div>
   </div>)}</div>;
 }
 
-export function HomeTestimonials() {
+export function HomeTestimonials({ items = [] }: { items?: readonly TestimonialItem[] }) {
   const [active, setActive] = useState(7);
   const [isJumping, setIsJumping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef<number | null>(null);
-  const cards = [
-    ["لیلا", "profile-1.png", "من از مشاوره با آقای حسینی بسیار خوشحالم. او با دقت به مشکلاتم گوش می‌دهد و همیشه راهکارهای مفیدی ارائه می‌کند. در هر جلسه احساس می‌کنم که پیشرفت بیشتری دارم و اعتماد به نفسم به طور قابل توجهی افزایش یافته است."],
-    ["علی", "profile-2.png", "آقای حسینی توانست به من کمک کند تا مشکلاتم را بهتر درک کنم، با استرس و چالش‌های روزمره‌ام راحت‌تر روبه‌رو شوم و مسیر تازه‌ای برای آرامش و رشد خودم پیدا کنم."],
-    ["نرگس", "profile-3.png", "من از مشاوره با آقای حسینی بسیار خوشحالم. او با دقت به مشکلاتم گوش می‌دهد و همیشه راهکارهای مفیدی ارائه می‌کند. در هر جلسه احساس می‌کنم که پیشرفت بیشتری دارم و اعتماد به نفسم به طور قابل توجهی افزایش یافته است."],
-    ["حسین", "profile-4.png", "من از مشاوره با آقای حسینی بسیار خوشحالم. او با دقت به مشکلاتم گوش می‌دهد و همیشه راهکارهای مفیدی ارائه می‌کند. در هر جلسه احساس می‌کنم که پیشرفت بیشتری دارم."],
-    ["مریم", "profile-5.png", "تجربه من از جلسات مشاوره بسیار مثبت بود. شنیده شدم و توانستم با آرامش بیشتری برای تصمیم‌های مهم زندگی‌ام قدم بردارم."]
-  ];
+  const cards = items;
+  if (!cards.length) return <p className="home-empty-state">نظری برای نمایش ثبت نشده است.</p>;
   const repeatedCards = [...cards, ...cards, ...cards];
   const selected = active % cards.length;
   const trackStyle = { "--testimonial-index": active } as CSSProperties;
@@ -65,7 +56,7 @@ export function HomeTestimonials() {
       requestAnimationFrame(() => requestAnimationFrame(() => setIsJumping(false)));
     }
   };
-  return <div className="home-testimonial-wrap"><div className={`home-testimonial-track${isJumping ? " is-jumping" : ""}${isDragging ? " is-dragging" : ""}`} style={trackStyle} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel} onTransitionEnd={handleTrackTransitionEnd}>{repeatedCards.map(([name, avatar, text], index) => <article key={`${name}-${index}`} className={`home-testimonial-card ${index % cards.length === selected ? "is-active" : ""}`}><div className="home-testimonial-top"><Image className="home-avatar" src={`/figma-home/${avatar}`} alt="" width={48} height={48} /><span>{name}</span></div><div className="home-testimonial-body"><p>{text}</p></div></article>)}</div><div className="home-carousel-controls"><button type="button" className="focus-ring" aria-label="نظر قبلی" onClick={movePrevious}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button><div className="home-dots">{cards.map((_, index) => <button type="button" key={index} aria-label={`نظر ${toPersianDigits(index + 1)}`} className={index === selected ? "active" : ""} onClick={() => setActive(cards.length + index)} />)}</div><button type="button" className="focus-ring" aria-label="نظر بعدی" onClick={moveNext}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button></div></div>;
+  return <div className="home-testimonial-wrap"><div className={`home-testimonial-track${isJumping ? " is-jumping" : ""}${isDragging ? " is-dragging" : ""}`} style={trackStyle} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel} onTransitionEnd={handleTrackTransitionEnd}>{repeatedCards.map(({ name, avatar, text }, index) => <article key={`${name}-${index}`} className={`home-testimonial-card ${index % cards.length === selected ? "is-active" : ""}`}><div className="home-testimonial-top"><Image className="home-avatar" src={avatar.startsWith("/") ? avatar : `/figma-home/${avatar}`} alt="" width={48} height={48} /><span>{name}</span></div><div className="home-testimonial-body"><p>{text}</p></div></article>)}</div><div className="home-carousel-controls"><button type="button" className="focus-ring" aria-label="نظر قبلی" onClick={movePrevious}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button><div className="home-dots">{cards.map((_, index) => <button type="button" key={index} aria-label={`نظر ${toPersianDigits(index + 1)}`} className={index === selected ? "active" : ""} onClick={() => setActive(cards.length + index)} />)}</div><button type="button" className="focus-ring" aria-label="نظر بعدی" onClick={moveNext}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button></div></div>;
 }
 
 const socialImages = [

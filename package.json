@@ -3,21 +3,35 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "predev": "prisma generate",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs tests/admin-security.test.mjs tests/admin-query.test.mjs tests/security-foundations.test.mjs",
+    "test:unit": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs tests/admin-security.test.mjs tests/admin-query.test.mjs tests/security-foundations.test.mjs",
+    "test:integration": "node --test tests/integration.test.mjs",
+    "admin:bootstrap": "prisma db seed"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1121.0",
+    "@aws-sdk/s3-request-presigner": "^3.1121.0",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
     "next": "16.3.2",
+    "pg": "^8.23.0",
+    "prisma": "^7.9.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
     "tailwindcss": "^4",
