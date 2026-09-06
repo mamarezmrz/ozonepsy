@@ -8,7 +8,7 @@ import type { AdminSessionView } from "@/lib/admin/session";
 const courseWhere = { kind: ProductKind.COURSE } as const;
 
 function courseScope(session?: AdminSessionView) {
-  return session?.roles.length === 1 && session.roles[0] === "INSTRUCTOR"
+  return session?.roles.includes("INSTRUCTOR") && !session.roles.some((role) => role === "ADMIN" || role === "SUPER_ADMIN")
     ? { course: { is: { instructors: { some: { specialist: { userId: session.userId } } } } } }
     : {};
 }

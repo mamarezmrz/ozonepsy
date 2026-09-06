@@ -1,23 +1,15 @@
 import { AboutPreconsultation } from "@/components/about-page";
 import { PartnersExpandableGrid, type PartnerItem } from "@/components/partners-expandable-grid";
 import { institutionProfiles } from "@/lib/institutions";
-import { therapistProfiles } from "@/lib/therapists";
 
-const institutions: PartnerItem[] = [...institutionProfiles, ...institutionProfiles.slice(0, 3)].map((profile) => ({
+const institutions: PartnerItem[] = institutionProfiles.map((profile) => ({
   name: profile.name,
   description: profile.specialty,
-  image: profile.image,
+  image: `/figma-home/${profile.image}`,
   href: `/institutes/${profile.slug}`,
 }));
 
-const therapists: PartnerItem[] = [...therapistProfiles, ...therapistProfiles.slice(0, 5)].map((profile) => ({
-  name: profile.name,
-  description: profile.specialty,
-  image: profile.image,
-  href: `/therapists/${profile.slug}`,
-}));
-
-export function PartnersPage() {
+export async function PartnersPage({ specialists }: { specialists: PartnerItem[] }) {
   return (
     <main className="partners-page">
       <div className="partners-page-inner">
@@ -27,7 +19,7 @@ export function PartnersPage() {
         </section>
 
         <PartnersExpandableGrid title="موسسات همکار" items={institutions} variant="institution" />
-        <PartnersExpandableGrid title="مشاوران همکار" items={therapists} variant="therapist" />
+        <PartnersExpandableGrid title="مشاوران همکار" items={specialists} variant="therapist" />
       </div>
 
       <AboutPreconsultation />

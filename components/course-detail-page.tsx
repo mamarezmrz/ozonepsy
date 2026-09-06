@@ -5,34 +5,21 @@ import Link from "next/link";
 import { type ChangeEvent, type CSSProperties, useEffect, useRef, useState } from "react";
 import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
-import type { Product } from "@/lib/data";
+import type { PublicCoursePage } from "@/lib/public/catalog-types";
 import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
 const collapsedLessonListHeight = 384;
-const testVideoSource = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
 
-const lessons = [
-  { title: "مقدمه", duration: "۰۰:۰۱:۴۶", free: true },
-  { title: "جلسه ۱: مقدمه‌ای بر روانشناسی و سلامت روان", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۲: شناخت و مدیریت استرس", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۳: ارتباطات مؤثر و مهارت‌های اجتماعی", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۴: خودآگاهی و رشد فردی", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۵: تکنیک‌های حل مسئله", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۶: کار با احساسات و هیجانات", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۷: تقویت اعتماد به نفس", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۸: مدیریت زمان و برنامه‌ریزی", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۹: کار گروهی و همکاری", duration: "۰۰:۱۴:۴۶", free: false },
-  { title: "جلسه ۱۰: جمع‌بندی و ارزیابی نهایی", duration: "۰۰:۱۴:۴۶", free: false },
-] as const;
-
-export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews = [], reviewProductSlug = null }: { product: Product; userEmail: string; hasCourseAccess: boolean; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null }) {
+export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews = [], reviewProductSlug = null }: { product: PublicCoursePage; userEmail: string; hasCourseAccess: boolean; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const [lessonListHeight, setLessonListHeight] = useState(collapsedLessonListHeight);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoClosing, setVideoClosing] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoSource, setVideoSource] = useState<string | null>(null);
+  const [videoTitle, setVideoTitle] = useState("ویدئوی دوره");
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const [videoVolume, setVideoVolume] = useState(1);
@@ -62,7 +49,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
     };
   }, []);
 
-  const openVideo = () => {
+  const openVideo = (source: string, title: string) => {
     if (videoCloseTimerRef.current) {
       clearTimeout(videoCloseTimerRef.current);
       videoCloseTimerRef.current = null;
@@ -70,6 +57,8 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
 
     setVideoClosing(false);
     setVideoPlaying(false);
+    setVideoSource(source);
+    setVideoTitle(title);
     setVideoProgress(0);
     setVideoDuration(0);
     setVideoOpen(true);
@@ -215,6 +204,9 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
     });
   };
 
+  const courseLessons = product.modules.flatMap((module) => module.lessons);
+  const previewLesson = courseLessons.find((lesson) => lesson.isPreview && lesson.mediaUrl);
+
   return (
     <main className="course-detail-page">
       <div className="course-detail-inner">
@@ -225,7 +217,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
         <section className="course-detail-hero" aria-labelledby="course-detail-title">
           <div className="course-detail-copy">
             <h1 id="course-detail-title">{product.title}</h1>
-            <p>توضیح کوتاه مربوط به دوره</p>
+            <p>{product.description}</p>
             <div className="course-detail-tags" aria-label="دسته‌بندی دوره">
               <span>مشاوره فردی</span>
               <span>مشاوره فردی</span>
@@ -234,8 +226,8 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
             {hasCourseAccess ? null : (
               <div className="course-detail-purchase">
                 <span className="course-detail-price">
-                  <b>${product.price === 179 ? "179.9" : product.price.toFixed(1)}</b>
-                  <small>(USD)</small>
+                  <b>{new Intl.NumberFormat("en-US", { style: "currency", currency: product.currency }).format(product.priceMinor / 100)}</b>
+                  <small>({product.currency})</small>
                 </span>
                 <Link href={`/checkout/${product.id}`} className="course-detail-buy">خرید دوره</Link>
               </div>
@@ -243,7 +235,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
           </div>
           <figure className="course-detail-image">
             <Image
-              src={asset("image-20.png")}
+              src={product.coverUrl ?? asset("image-20.png")}
               alt={product.title}
               fill
               priority
@@ -259,8 +251,8 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
         <section className="course-detail-content" aria-labelledby="course-detail-specs-title">
           <div className="course-detail-section">
             <h2 id="course-detail-specs-title">مشخصات</h2>
-            <p><strong>مدرس:</strong> دکتر رضا مولودی</p>
-            <p><strong>مدت دوره:</strong> دسترسی مادام‌العمر</p>
+            <p><strong>مدرس:</strong> {product.instructorName ?? "—"}</p>
+            <p><strong>مدت دوره:</strong> {product.duration ?? "—"}</p>
           </div>
 
           <div className="course-detail-section">
@@ -273,7 +265,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
 
           <section className="course-detail-section course-detail-demo" aria-labelledby="course-demo-title">
             <h2 id="course-demo-title">دموی دوره</h2>
-            <button type="button" className="course-demo-preview focus-ring" onClick={openVideo} aria-label="پخش دموی دوره">
+            <button type="button" className="course-demo-preview focus-ring" onClick={() => previewLesson?.mediaUrl && openVideo(previewLesson.mediaUrl, previewLesson.title)} disabled={!previewLesson} aria-label="پخش دموی دوره">
               <Image
                 src={asset("image-21.png")}
                 alt="پیش‌نمایش دموی دوره"
@@ -294,26 +286,26 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
               className={`course-lesson-list${expanded ? " is-expanded" : ""}`}
               style={{ height: `${lessonListHeight}px` }}
             >
-              {lessons.map((lesson, index) => {
-                const canPlayLesson = lesson.free || hasCourseAccess;
+              {courseLessons.length ? courseLessons.map((lesson) => {
+                const canPlayLesson = Boolean(lesson.mediaUrl) && (lesson.isPreview || hasCourseAccess);
 
                 return (
                   <button
-                    key={`course-lesson-${index}`}
+                    key={lesson.id}
                     type="button"
                     className={`course-lesson-row${canPlayLesson ? " is-free" : " is-locked"}`}
                     disabled={!canPlayLesson}
-                    onClick={() => canPlayLesson && openVideo()}
+                    onClick={() => canPlayLesson && lesson.mediaUrl && openVideo(lesson.mediaUrl, lesson.title)}
                     aria-label={canPlayLesson ? `پخش ${lesson.title}` : `${lesson.title} قفل است`}
                   >
                     <span className="course-lesson-icon" aria-hidden="true">
                       {canPlayLesson ? <PlayIcon /> : <LockIcon />}
                     </span>
-                    <span className="course-lesson-duration">{lesson.duration}</span>
+                    <span className="course-lesson-duration">{formatLessonDuration(lesson.duration)}</span>
                     <span className="course-lesson-title">{lesson.title}</span>
                   </button>
                 );
-              })}
+              }) : <p className="course-detail-empty">هنوز سرفصل منتشرشده‌ای برای این دوره ثبت نشده است.</p>}
             </div>
             <button
               type="button"
@@ -338,11 +330,11 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
             <button type="button" className="course-video-modal-close focus-ring" onClick={closeVideo} aria-label="بستن ویدئو">
               <span aria-hidden="true" />
             </button>
-            <h2 id="course-video-modal-title" className="sr-only">دموی دوره</h2>
+            <h2 id="course-video-modal-title" className="sr-only">{videoTitle}</h2>
             <div ref={videoFrameRef} className="course-video-frame">
               <video
                 ref={videoRef}
-                src={testVideoSource}
+                src={videoSource ?? undefined}
                 poster={asset("image-21.png")}
                 autoPlay
                 disablePictureInPicture
@@ -429,6 +421,13 @@ function formatVideoTime(seconds: number) {
   const value = `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 
   return value.replace(/\d/g, (digit) => persianDigits[Number(digit)]);
+}
+
+function formatLessonDuration(seconds: number | null) {
+  if (!seconds || seconds <= 0) return "—";
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`.replace(/\d/g, (digit) => persianDigits[Number(digit)]);
 }
 
 function PlayIcon() {

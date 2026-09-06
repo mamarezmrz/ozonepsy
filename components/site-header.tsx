@@ -7,9 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { AuthModal, type AuthModalMode } from "@/components/auth-modal";
 import { SiteNotification } from "@/components/site-notification";
 import { consultationTopics } from "@/lib/consultation-topics";
-import { groupTherapySessions } from "@/lib/group-therapy";
 import { institutionProfiles } from "@/lib/institutions";
-import { therapistProfiles } from "@/lib/therapists";
 import type { SiteHeaderUser } from "@/types/site-header";
 
 const consultationLinks = [
@@ -60,12 +58,10 @@ function getBreadcrumbLabel(pathname: string) {
   }
   if (pathname.startsWith("/courses/")) return "جزئیات دوره";
   if (pathname.startsWith("/group-therapy/")) {
-    const slug = pathname.split("/")[2];
-    return groupTherapySessions.find((session) => session.slug === slug)?.title ?? "جزئیات جلسه گروه‌درمانی";
+    return "جزئیات جلسه گروه‌درمانی";
   }
   if (pathname.startsWith("/therapists/")) {
-    const slug = pathname.split("/")[2];
-    return therapistProfiles.find((profile) => profile.slug === slug)?.name ?? "جزئیات مشاور";
+    return "جزئیات مشاور";
   }
   if (pathname.startsWith("/institutes/")) {
     const slug = pathname.split("/")[2];

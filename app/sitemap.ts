@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
 import { institutionProfiles } from "@/lib/institutions";
-import { groupTherapySessions } from "@/lib/group-therapy";
-import { therapistProfiles } from "@/lib/therapists";
+import { getPublicSpecialists } from "@/lib/public/specialists";
+import { getPublishedProducts } from "@/lib/public/catalog";
 import { getPublicSiteUrl } from "@/lib/seo";
-import { getLegacyIndividualConsultationCases, getPublicIndividualConsultationCases } from "@/lib/individual-consultation-content";
+import { getPublicIndividualConsultationCases } from "@/lib/individual-consultation-content";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dynamicCases = await getPublicIndividualConsultationCases();
-  const individualCases = dynamicCases ?? getLegacyIndividualConsultationCases();
+  const specialists = await getPublicSpecialists();
+  const groupProducts = await getPublishedProducts("group");
   const paths = [
     "/",
     "/consultations",
@@ -19,10 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/about",
     "/contact",
     "/free-session",
-    ...therapistProfiles.map((profile) => `/therapists/${profile.slug}`),
+    ...specialists.map((profile) => `/therapists/${profile.slug}`),
+    ...groupProducts.map((product) => `/group-therapy/${product.slug}`),
     ...institutionProfiles.map((profile) => `/institutes/${profile.slug}`),
-    ...groupTherapySessions.map((session) => `/group-therapy/${session.slug}`),
-    ...individualCases.items.map((item) => item.href),
+    ...(dynamicCases?.items ?? []).map((item) => item.href),
   ];
 
   return paths.map((path) => ({ url: `${getPublicSiteUrl()}${path}`, lastModified: new Date() }));

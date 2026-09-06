@@ -17,12 +17,9 @@ const serviceSteps = [
   ["۴", "برگزاری جلسه", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
-export function ConsultationCategoryPage({ content, reviews = [], reviewProductSlug = null, dynamicBenefits, dynamicCases }: { content: ConsultationCategoryContent; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null; dynamicBenefits?: PublicConsultationBenefits | null; dynamicCases?: PublicConsultationCases | null }) {
-  const benefits = dynamicBenefits ?? {
-    enabled: true,
-    items: content.benefits.map(([title, description], index) => ({ id: `legacy-${index}`, title, description, sortOrder: index })),
-  };
-  const cases = dynamicCases ?? { enabled: true, title: content.casesTitle, description: content.casesDescription, items: content.cases.map((item, index) => ({ id: `legacy-${index}`, title: item.title, slug: item.href.split("/").pop() ?? "", href: item.href, sortOrder: index })) };
+export function ConsultationCategoryPage({ content, reviews = [], reviewProductSlug = null, dynamicBenefits, dynamicCases, faqItems = [] }: { content: ConsultationCategoryContent; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null; dynamicBenefits?: PublicConsultationBenefits | null; dynamicCases?: PublicConsultationCases | null; faqItems?: readonly { question: string; answer: string }[] }) {
+  const benefits = dynamicBenefits ?? { enabled: false, items: [] };
+  const cases = dynamicCases ?? { enabled: false, title: content.casesTitle, description: content.casesDescription, items: [] };
 
   return (
     <main className={`consultation-page consultation-page-${content.slug}`}>
@@ -70,7 +67,7 @@ export function ConsultationCategoryPage({ content, reviews = [], reviewProductS
       <ConsultationTestimonials productSlug={reviewProductSlug} reviews={reviews} />
 
       <section className="consultation-faq home-faq" aria-labelledby="consultation-faq-title">
-        <div className="home-faq-inner"><h2 id="consultation-faq-title">{content.faqTitle}</h2><HomeFaq items={content.faqItems} /></div>
+        <div className="home-faq-inner"><h2 id="consultation-faq-title">{content.faqTitle}</h2><HomeFaq items={faqItems} /></div>
       </section>
 
       <AboutPreconsultation />

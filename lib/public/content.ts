@@ -15,12 +15,6 @@ export async function getPublicContent(): Promise<PublicContent> {
     prisma.faq.findMany({ where: { status: ContentStatus.PUBLISHED }, orderBy: { sortOrder: "asc" }, select: { question: true, answer: true } }),
     prisma.testimonial.findMany({ where: { status: ContentStatus.PUBLISHED }, orderBy: { sortOrder: "asc" }, select: { name: true, body: true, avatarMediaId: true } }),
   ]);
-  const mappedTestimonials = testimonials.map((item, index) => ({ name: item.name, text: item.body, avatar: item.avatarMediaId ? `/api/media/${item.avatarMediaId}` : defaultTestimonials[index % defaultTestimonials.length]?.avatar ?? "profile-1.png" }));
-  if (sourceMode() !== "database") {
-    return {
-      faqs: faqs.length ? faqs : [...defaultFaqs],
-      testimonials: mappedTestimonials.length ? mappedTestimonials : [...defaultTestimonials],
-    };
-  }
+  const mappedTestimonials = testimonials.map((item) => ({ name: item.name, text: item.body, avatar: item.avatarMediaId ? `/api/media/${item.avatarMediaId}` : "profile-1.png" }));
   return { faqs, testimonials: mappedTestimonials };
 }

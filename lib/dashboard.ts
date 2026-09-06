@@ -54,7 +54,7 @@ export type DashboardPayment = {
   date: string;
 };
 
-export type DashboardCommentStatus = "PENDING" | "PUBLISHED" | "HIDDEN";
+export type DashboardCommentStatus = "PENDING" | "PUBLISHED" | "HIDDEN" | "USER_DELETED";
 
 export type DashboardComment = {
   id: string;
@@ -326,12 +326,12 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       amount: formatMoney(order.totalMinor, order.currency),
       date: formatDate(order.createdAt),
     })),
-    comments: user.reviews.filter((review) => !userDeletedReviewIds.has(review.id)).map((review) => {
+    comments: user.reviews.map((review) => {
       const page = reviewPage(review.product);
       return {
         id: review.id,
         body: review.body,
-        status: review.status as DashboardCommentStatus,
+        status: userDeletedReviewIds.has(review.id) ? "USER_DELETED" : review.status as DashboardCommentStatus,
         pageTitle: page.pageTitle,
         pageHref: page.pageHref,
         date: formatDate(review.createdAt),

@@ -12,6 +12,14 @@ type CommentStatus = DashboardCommentStatus;
 const MODAL_TRANSITION_MS = 220;
 
 function CommentStatus({ status }: { status: CommentStatus }) {
+  if (status === "USER_DELETED") {
+    return (
+      <span className="dashboard-comments-status is-rejected">
+        <span>حذف توسط کاربر</span>
+      </span>
+    );
+  }
+
   if (status === "HIDDEN") {
     return (
       <span className="dashboard-comments-status is-rejected">
@@ -166,14 +174,14 @@ export function CommentsPage({ initialComments }: { initialComments: DashboardCo
                       <span role="cell"><Link className="dashboard-comments-page-link" href={comment.pageHref}>{comment.pageTitle}</Link></span>
                       <span role="cell" className="dashboard-payments-page-date" dir="ltr">{comment.date}</span>
                       <span role="cell" className="dashboard-comments-delete-cell">
-                        <button
+                        {comment.status === "USER_DELETED" ? null : <button
                           type="button"
                           className="dashboard-comments-delete-button"
                           aria-label={`حذف نظر درباره ${comment.pageTitle}`}
                           onClick={(event) => openDeleteModal(comment, event.currentTarget)}
                         >
                           <DeleteIcon />
-                        </button>
+                        </button>}
                       </span>
                     </div>
                   ))}

@@ -6,7 +6,7 @@ import { pageMeta, paginationOffset, type AdminListQuery } from "@/lib/admin/que
 import type { AdminSessionView } from "@/lib/admin/session";
 
 function scopeWhere(session?: AdminSessionView) {
-  return session?.roles.length === 1 && session.roles[0] === "INSTRUCTOR" ? { specialist: { userId: session.userId } } : {};
+  return session?.roles.includes("INSTRUCTOR") && !session.roles.some((role) => role === "ADMIN" || role === "SUPER_ADMIN") ? { specialist: { userId: session.userId } } : {};
 }
 
 export async function listAdminAppointments(query: AdminListQuery, filters: { status?: AppointmentStatus; specialistId?: string; from?: Date; to?: Date }, session?: AdminSessionView) {

@@ -3,35 +3,14 @@ import Link from "next/link";
 import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
 import type { PublicContent } from "@/lib/public/content";
+import type { PublicPurchaseProduct } from "@/lib/public/catalog-types";
 
 const asset = (name: string) => `/figma-home/${name}`;
 
-const individualOffers = [
-  { title: "یک جلسه مشاوره", price: "49.9", unitPrice: "9.99", oldPrice: "", discount: "", productId: "individual-1" },
-  { title: "۳ جلسه مشاوره", price: "104.8", unitPrice: "9.99", oldPrice: "149.9", discount: "۴۰٪ تخفیف", productId: "package-3" },
-  { title: "۶ جلسه مشاوره", price: "179.9", unitPrice: "9.99", oldPrice: "247.8", discount: "۴۰٪ تخفیف", productId: "package-6" },
-] as const;
-
-const groupOffers = [
-  { title: "عنوان جلسه", price: "104.8", unitPrice: "9.99", oldPrice: "", discount: "", productId: "group-therapy" },
-  { title: "عنوان جلسه", price: "104.8", unitPrice: "9.99", oldPrice: "", discount: "", productId: "group-therapy" },
-  { title: "عنوان جلسه", price: "179.9", unitPrice: "9.99", oldPrice: "247.8", discount: "۴۰٪ تخفیف", productId: "group-therapy" },
-] as const;
-
-const courseRows = [
-  { image: "image-20.png", title: "دوره‌ی مهارت‌های زندگی", discount: "" },
-  { image: "image-21.png", title: "دوره‌ی مهارت‌های زندگی", discount: "۳۰٪ تخفیف" },
-  { image: "image-7.png", title: "دوره‌ی مهارت‌های زندگی", discount: "" },
-  { image: "image-22.png", title: "دوره‌ی مهارت‌های زندگی", discount: "۳۰٪ تخفیف" },
-] as const;
-
-const packageDescription = [
-  "امکان برگشت هزینه در صورت عدم رضایت",
-  "امکان برگشت هزینه در صورت عدم رضایت",
-  "امکان برگشت هزینه در صورت عدم رضایت",
-];
-
-export function PricingPage({ content }: { content?: PublicContent }) {
+export function PricingPage({ content, products = [] }: { content?: PublicContent; products?: readonly PublicPurchaseProduct[] }) {
+  const individualProducts = products.filter((product) => product.kind === "consultation" || product.kind === "package");
+  const groupProducts = products.filter((product) => product.kind === "group");
+  const courseProducts = products.filter((product) => product.kind === "course");
   return (
     <main className="pricing-page">
       <div className="pricing-page-inner">
@@ -46,35 +25,34 @@ export function PricingPage({ content }: { content?: PublicContent }) {
           <h2 id="pricing-products-title">همه‌ی پکیج‌ها</h2>
           <p>تعداد جلسات خریداری شده در پروفایل کاربری شما ثبت شده و برای جلسات بعدی قابل استفاده خواهد بود.</p>
 
-          <PricingOfferGroup title="جلسات فردی" offers={individualOffers} />
-          <PricingOfferGroup title="گروه درمانی" offers={groupOffers} />
+          <PricingOfferGroup title="جلسات فردی" offers={individualProducts} />
+          <PricingOfferGroup title="گروه درمانی" offers={groupProducts} />
 
           <section className="pricing-course-group" aria-labelledby="pricing-courses-title">
             <h3 id="pricing-courses-title">دوره‌ها</h3>
             <div className="pricing-course-list">
-              {courseRows.map((course, index) => (
-                <article className="pricing-course-row" key={`${course.image}-${index}`}>
+              {courseProducts.length ? courseProducts.map((course, index) => (
+                <article className="pricing-course-row" key={course.id}>
                   <div className="pricing-course-row-image">
-                    <Image src={asset(course.image)} alt={course.title} fill quality={100} sizes="(max-width: 560px) 100vw, 168px" />
+                    <Image src={asset(`image-${20 + (index % 3)}.png`)} alt={course.title} fill quality={100} sizes="(max-width: 560px) 100vw, 168px" />
                   </div>
                   <div className="pricing-course-row-content">
                     <div className="pricing-course-row-price">
-                      <span dir="ltr">$179.9</span> <small>(USD)</small>
+                      <span dir="ltr">${(course.priceMinor / 100).toFixed(2)}</span> <small>({course.currency})</small>
                     </div>
-                    {course.discount && <span className="pricing-discount">{course.discount}</span>}
                     <h4>{course.title}</h4>
                     <div className="pricing-course-bottom">
                       <div className="pricing-course-row-actions">
-                        <Link href="/checkout/life-skills" className="pricing-buy-button">خرید</Link>
-                        <Link href="/courses/life-skills-course" className="pricing-details-link">جزئیات دوره</Link>
+                        <Link href={`/checkout/${course.id}`} className="pricing-buy-button">خرید</Link>
+                        <Link href={`/courses/${course.slug}`} className="pricing-details-link">جزئیات دوره</Link>
                       </div>
                       <ul className="pricing-course-points">
-                        {packageDescription.map((item, itemIndex) => <li key={`${course.image}-${itemIndex}`}>{item}</li>)}
+                        <li>{course.description}</li>
                       </ul>
                     </div>
                   </div>
                 </article>
-              ))}
+              )) : <p className="pricing-empty-state">دوره‌ی منتشرشده‌ای برای نمایش وجود ندارد.</p>}
             </div>
           </section>
         </section>
@@ -119,32 +97,31 @@ function PricingOfferGroup({
   offers,
 }: {
   title: string;
-  offers: readonly { title: string; price: string; unitPrice: string; oldPrice: string; discount: string; productId: string }[];
+  offers: readonly PublicPurchaseProduct[];
 }) {
   return (
     <section className="pricing-offer-group" aria-labelledby={`pricing-${title}`}>
       <h3 id={`pricing-${title}`}>{title}</h3>
       <div className="pricing-offer-grid">
-        {offers.map((offer, index) => (
-          <article className="pricing-offer-card" key={`${title}-${offer.title}-${index}`}>
+          {offers.length ? offers.map((offer) => (
+          <article className="pricing-offer-card" key={`${title}-${offer.id}`}>
             <div className="pricing-offer-price-row">
               <div className="pricing-offer-price-stack">
-                <div className="pricing-offer-old-price" dir="ltr">{offer.oldPrice && `$${offer.oldPrice}`}</div>
-                <div className="pricing-offer-price" dir="ltr">${offer.price} <small>(USD)</small></div>
+                <div className="pricing-offer-old-price" dir="ltr" />
+                <div className="pricing-offer-price" dir="ltr">${(offer.priceMinor / 100).toFixed(2)} <small>({offer.currency})</small></div>
                 <div className="pricing-offer-unit-price">
                   <span>هزینه هر جلسه</span>
-                  <span dir="ltr">${offer.unitPrice} <small>(USD)</small></span>
+                  <span dir="ltr">{offer.sessions ? `$${(offer.priceMinor / offer.sessions / 100).toFixed(2)}` : "—"} <small>{offer.sessions ? `(${offer.currency})` : ""}</small></span>
                 </div>
               </div>
-              {offer.discount && <span className="pricing-discount">{offer.discount}</span>}
             </div>
             <h4>{offer.title}</h4>
             <ul>
-              {packageDescription.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}
+              <li>{offer.description}</li>
             </ul>
-            <Link href={`/checkout/${offer.productId}`} className="pricing-buy-button">خرید</Link>
+            <Link href={`/checkout/${offer.id}`} className="pricing-buy-button">خرید</Link>
           </article>
-        ))}
+        )) : <p className="pricing-empty-state">محصول منتشرشده‌ای برای نمایش وجود ندارد.</p>}
       </div>
     </section>
   );

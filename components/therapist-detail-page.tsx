@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AboutPreconsultation } from "@/components/about-page";
-import { therapistProfiles, type TherapistProfile } from "@/lib/therapists";
+import type { PublicSpecialistProfile } from "@/lib/public/specialists";
 
 function ProfileSection({ title, items }: { title: string; items: string[] }) {
   return (
@@ -14,8 +14,7 @@ function ProfileSection({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-export function TherapistDetailPage({ profile }: { profile: TherapistProfile }) {
-  const relatedProfiles = therapistProfiles.filter((item) => item.slug !== profile.slug).slice(0, 4);
+export function TherapistDetailPage({ profile, relatedProfiles = [] }: { profile: PublicSpecialistProfile; relatedProfiles?: PublicSpecialistProfile[] }) {
 
   return (
     <main className="therapist-detail-page">
@@ -31,7 +30,7 @@ export function TherapistDetailPage({ profile }: { profile: TherapistProfile }) 
             <Link href="/free-session" className="therapist-cta">پیش مشاوره رایگان</Link>
           </div>
           <figure className="therapist-detail-image">
-            <Image src={`/figma-home/${profile.image}`} alt={profile.name} width={1080} height={1620} priority quality={100} sizes="(max-width: 900px) 100vw, 360px" />
+            <Image src={profile.image} alt={profile.name} width={1080} height={1620} priority quality={100} unoptimized={profile.image.startsWith("http")} sizes="(max-width: 900px) 100vw, 360px" />
           </figure>
         </section>
 
@@ -60,7 +59,7 @@ export function TherapistDetailPage({ profile }: { profile: TherapistProfile }) 
             {relatedProfiles.map((related) => (
               <Link key={related.slug} href={`/therapists/${related.slug}`} className="therapist-related-card focus-ring">
                 <span className="therapist-related-photo">
-                  <Image src={`/figma-home/${related.image}`} alt={related.name} fill sizes="(max-width: 560px) 35vw, 164px" />
+                  <Image src={related.image} alt={related.name} fill unoptimized={related.image.startsWith("http")} sizes="(max-width: 560px) 35vw, 164px" />
                 </span>
                 <span className="therapist-related-name">{related.name}</span>
                 <span className="therapist-related-specialty">{related.specialty}</span>

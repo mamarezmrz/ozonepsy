@@ -3,25 +3,26 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { toPersianDigits } from "@/lib/format";
-import { defaultFaqs, defaultTestimonials } from "@/lib/public/content-defaults";
 
 type FaqItem = { question: string; answer: string };
 type TestimonialItem = { name: string; avatar: string; text: string };
 
-export function HomeFaq({ items = defaultFaqs }: { items?: readonly FaqItem[] }) {
+export function HomeFaq({ items = [] }: { items?: readonly FaqItem[] }) {
   const [open, setOpen] = useState(-1);
+  if (!items.length) return <p className="home-empty-state">پرسش متداولی برای نمایش ثبت نشده است.</p>;
   return <div className="home-faq-list">{items.map(({ question, answer }, index) => <div key={question} className="home-faq-item">
     <button type="button" aria-expanded={open === index} className="focus-ring home-faq-question" onClick={() => setOpen(open === index ? -1 : index)}><span className="home-faq-icon" aria-hidden="true">{open === index ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12H19" stroke="#CC6F39" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19" stroke="#CC6F39" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M5 12H19" stroke="#CC6F39" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span><span>{question}</span></button>
     <div className={`home-faq-answer-wrap${open === index ? " is-open" : ""}`} aria-hidden={open !== index}><div className="home-faq-answer">{answer}</div></div>
   </div>)}</div>;
 }
 
-export function HomeTestimonials({ items = defaultTestimonials }: { items?: readonly TestimonialItem[] }) {
+export function HomeTestimonials({ items = [] }: { items?: readonly TestimonialItem[] }) {
   const [active, setActive] = useState(7);
   const [isJumping, setIsJumping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef<number | null>(null);
-  const cards = items.length ? items : defaultTestimonials;
+  const cards = items;
+  if (!cards.length) return <p className="home-empty-state">نظری برای نمایش ثبت نشده است.</p>;
   const repeatedCards = [...cards, ...cards, ...cards];
   const selected = active % cards.length;
   const trackStyle = { "--testimonial-index": active } as CSSProperties;

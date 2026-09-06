@@ -3,9 +3,9 @@ import Link from "next/link";
 import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
 import { HomeFaq } from "@/components/home-interactive";
-import { groupTherapySessions } from "@/lib/group-therapy";
 import type { PublicConsultationBenefits } from "@/lib/consultation-benefits";
 import type { PublicConsultationCases } from "@/lib/individual-consultation-content";
+import type { PublicPurchaseProduct } from "@/lib/public/catalog-types";
 import type { PublicReview } from "@/lib/reviews";
 
 const asset = (name: string) => `/figma-home/${name}`;
@@ -20,15 +20,6 @@ const groupIntro = [
 گاهی تنها یک پیوند کافی نیست؛ ما به جمعی امن احتیاج داریم، جایی که چندین نفر با هم در تعامل و حمایت مداوم قرار بگیرند.
 جلسه گروه‌درمانی درست مثل مولکول اُزون است:
 چند نفر کنار هم، با حضور روانشناس خبره، پیوندی امن می‌سازند که فراتر از جمع تک‌تک‌شان است. همان‌طور که اُزون از کنار هم بودن سه اتم ناپایدار به پایداری می‌رسد، ما هم در گروه‌درمانی از جمع و پیوند امن با دیگران آرامش و استقامت تازه‌ای پیدا می‌کنیم.`,
-] as const;
-
-const groupBenefits = [
-  ["تنها نیستی", "می‌فهمی دیگران هم احساساتی مثل تو درگیرن، حتی اونایی که فکر می‌کنی فقط مال تو هستن."],
-  ["آینه‌ی انسانی", "با شنیدن تجربه‌ی دیگران، خودت را واضح‌تر می‌بینی."],
-  ["تمرین ارتباط سالم", "یاد می‌گیری احساساتت را بدون اینکه دفاعی یا خجالت‌زده شوی، بیان کنی."],
-  ["افزایش امید برای تغییر", "حس همراهی گروه، انگیزه‌ات را بیشتر می‌کند که در مسیر بمانی."],
-  ["تنظیم احساسات", "یاد می‌گیری چطور خشم، غم، یا ترس را بشناسی و مدیریت کنی."],
-  ["رشد اجتماعی", "اعتماد به‌نفست در جمع بالا می‌رود و مهارت ارتباطت قوی‌تر می‌شود."],
 ] as const;
 
 const groupTherapyMeaning = [
@@ -49,20 +40,8 @@ const serviceSteps = [
   ["۴", "برگزاری جلسات", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
-const groupFaqItems = [
-  { question: "گروه‌درمانی دقیقاً چیه و چه فرقی با مشاوره فردی داره؟", answer: "پاسخ سوال" },
-  { question: "چه چیزی باعث میشه گروه‌درمانی اثربخشی‌اش از جلسات فردی بیشتر باشه؟", answer: "پاسخ سوال" },
-  { question: "اولین جلسه گروه‌درمانی چطور پیش میره؟", answer: "پاسخ سوال" },
-  { question: "من می‌تونم فقط شنونده باشم یا لازمه حتماً حرف بزنم؟", answer: "پاسخ سوال" },
-  { question: "میشه از هر جای دنیا به گروه‌درمانی آنلاین وصل شد؟", answer: "پاسخ سوال" },
-  { question: "آیا گروه‌درمانی جایگزین مشاوره فردی میشه یا بهتره همزمان انجام بشه؟", answer: "پاسخ سوال" },
-] as const;
-
-export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases }: { reviews?: readonly PublicReview[]; dynamicBenefits?: PublicConsultationBenefits | null; dynamicCases?: PublicConsultationCases | null }) {
-  const benefits = dynamicBenefits ?? {
-    enabled: true,
-    items: groupBenefits.map(([title, description], index) => ({ id: `legacy-${index}`, title, description, sortOrder: index })),
-  };
+export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases, groupProducts = [], faqItems = [] }: { reviews?: readonly PublicReview[]; dynamicBenefits?: PublicConsultationBenefits | null; dynamicCases?: PublicConsultationCases | null; groupProducts?: readonly PublicPurchaseProduct[]; faqItems?: readonly { question: string; answer: string }[] }) {
+  const benefits = dynamicBenefits ?? { enabled: false, items: [] };
   const cases = dynamicCases ?? { enabled: false, title: "گروه درمانی برای چه موضوعاتی مناسب است؟", description: "", items: [] };
 
   return (
@@ -116,20 +95,20 @@ export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases }
 
         <section className="group-therapy-sessions" aria-labelledby="group-therapy-sessions-title">
           <h2 id="group-therapy-sessions-title">انواع جلسات گروه درمانی</h2>
-          <p>مشاوره فردی به هر آن چیزی که برای توسعه فردی، درمان اختلالات روانی و ارتقاء سلامت روان نیاز است، می‌پردازد. این مشاوره به صورت محرمانه بین شما و تراپیست مورد نظر انجام می‌شود.</p>
+          <p>جلسه‌های گروه‌درمانی با موضوعات و ظرفیت‌های متفاوت برگزار می‌شوند تا بتوانید در فضایی امن، همراه با افراد هم‌مسیر و زیر نظر روانشناس، مسیر مناسب خود را انتخاب کنید.</p>
           <div className="group-therapy-session-grid">
-            {groupTherapySessions.map((session) => (
-              <article key={session.slug} className="group-therapy-session-card">
+            {groupProducts.length ? groupProducts.map((product, index) => (
+              <article key={product.id} className="group-therapy-session-card">
                 <div className="group-therapy-session-image">
-                  <Image src={asset(session.image)} alt={session.title} fill quality={100} sizes="(max-width: 560px) 100vw, 280px" />
+                  <Image src={asset(`image-${20 + (index % 3)}.png`)} alt={product.title} fill quality={100} sizes="(max-width: 560px) 100vw, 280px" />
                 </div>
                 <div className="group-therapy-session-card-body">
-                  <h3>{session.title}</h3>
-                  <p>{session.description}</p>
-                  <Link href={`/group-therapy/${session.slug}`} className="group-therapy-session-link">مشاهده جزئیات<span aria-hidden="true" /></Link>
+                  <h3>{product.title}</h3>
+                  <p>{product.description}</p>
+                  <Link href={`/group-therapy/${product.slug}`} className="group-therapy-session-link">مشاهده جزئیات<span aria-hidden="true" /></Link>
                 </div>
               </article>
-            ))}
+            )) : <p className="group-therapy-empty-state">در حال حاضر جلسه‌ی گروه‌درمانی منتشرشده‌ای برای نمایش وجود ندارد.</p>}
           </div>
         </section>
       </div>
@@ -147,7 +126,7 @@ export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases }
       <ConsultationTestimonials productSlug="group-therapy" reviews={reviews} />
 
       <section className="group-therapy-faq home-faq" aria-labelledby="group-therapy-faq-title">
-        <div className="home-faq-inner"><h2 id="group-therapy-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq items={groupFaqItems} /></div>
+        <div className="home-faq-inner"><h2 id="group-therapy-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq items={faqItems} /></div>
       </section>
 
       <AboutPreconsultation />

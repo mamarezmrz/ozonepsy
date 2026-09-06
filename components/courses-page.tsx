@@ -3,14 +3,9 @@ import Link from "next/link";
 import { HomeFaq, HomeTestimonials } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
 import type { PublicContent } from "@/lib/public/content";
+import type { PublicPurchaseProduct } from "@/lib/public/catalog-types";
 
 const asset = (name: string) => `/figma-home/${name}`;
-
-const courseRows = [
-  ["دوره‌ی مهارت‌های زندگی", "دوره مهارت‌های زندگی", "image-20.png", "179.9"],
-  ["دوره‌ی مهارت‌های زندگی", "دوره مهارت‌های زندگی", "image-21.png", "179.9"],
-  ["دوره‌ی مهارت‌های زندگی", "دوره مهارت‌های زندگی", "image-22.png", "179.9"],
-] as const;
 
 const courseIntro = "مشاوره فردی به هر آن چیزی که برای توسعه فردی، درمان اختلالات روانی و ارتقاء سلامت روان نیاز است، می‌پردازد. این مشاوره به صورت محرمانه بین شما و تراپیست مورد نظر انجام می‌شود و اولین گام برای قرار گرفتن در مسیر درست انتخاب مشاوره‌های تخصصی طبق مساله شماست.";
 const courseIntroFollowUp = "ما در سیمیاروم شما را راهنمایی می‌کنیم تا بهترین مشاور را برای خود انتخاب کنید و همچنین از مشکلات احتمالی به وجود آمده در سلامت روان و پیشرفت فردی خود آگاهی بیشتری داشته باشید.";
@@ -33,35 +28,35 @@ function CourseBenefit({ title, description }: { title: string; description: str
   );
 }
 
-export function PsychologyCourseCatalog({ title = "دوره‌های اُزون" }: { title?: string }) {
+export function PsychologyCourseCatalog({ title = "دوره‌های اُزون", products }: { title?: string; products: readonly PublicPurchaseProduct[] }) {
   return (
     <section className="courses-catalog" aria-labelledby="courses-catalog-title">
       <div className="courses-catalog-inner">
         <h2 id="courses-catalog-title">{title}</h2>
         <div className="home-course-list">
-          {courseRows.map(([courseTitle, tag, image, price]) => (
-            <article key={image} className="home-course-card">
+          {products.length ? products.map((product, index) => (
+            <article key={product.id} className="home-course-card">
               <div className="home-course-info">
                 <div>
-                  <h3>{courseTitle}</h3>
+                  <h3>{product.title}</h3>
                   <div className="home-course-tags"><span className="home-course-tag">گروه درمانی</span><span className="home-course-tag">مشاوره فردی</span></div>
-                  <p className="mt-4 text-sm leading-7 text-[#676b6b]">فرصتی عالی برای یادگیری تکنیک‌های مؤثر در مدیریت احساسات و روابط.</p>
+                  <p className="mt-4 text-sm leading-7 text-[#676b6b]">{product.description}</p>
                 </div>
                 <div className="home-course-footer">
-                  <div className="home-course-actions"><Link href="/checkout/life-skills" className="home-course-action home-course-action-primary">خرید</Link><Link href="/courses/life-skills-course" className="home-course-action home-course-action-secondary">جزئیات دوره</Link></div>
-                  <span className="home-course-price"><span className="home-course-currency-symbol">$</span>{price} <small className="text-xs font-normal">(USD)</small></span>
+                  <div className="home-course-actions"><Link href={`/checkout/${product.id}`} className="home-course-action home-course-action-primary">خرید</Link><Link href={`/courses/${product.slug}`} className="home-course-action home-course-action-secondary">جزئیات دوره</Link></div>
+                  <span className="home-course-price"><span className="home-course-currency-symbol">$</span>{(product.priceMinor / 100).toFixed(2)} <small className="text-xs font-normal">({product.currency})</small></span>
                 </div>
               </div>
-              <div className="home-course-image"><Image src={asset(image)} alt={tag} fill quality={100} sizes="(max-width: 560px) 304px, 160px" /></div>
+              <div className="home-course-image"><Image src={asset(`image-${20 + (index % 3)}.png`)} alt={product.title} fill quality={100} sizes="(max-width: 560px) 304px, 160px" /></div>
             </article>
-          ))}
+          )) : <p className="courses-empty-state">در حال حاضر دوره‌ی منتشرشده‌ای برای نمایش وجود ندارد.</p>}
         </div>
       </div>
     </section>
   );
 }
 
-export function CoursesPage({ content }: { content?: PublicContent }) {
+export function CoursesPage({ content, products = [] }: { content?: PublicContent; products?: readonly PublicPurchaseProduct[] }) {
   return (
     <main className="courses-page">
       <div className="courses-page-inner">
@@ -98,7 +93,7 @@ export function CoursesPage({ content }: { content?: PublicContent }) {
         </section>
       </div>
 
-      <PsychologyCourseCatalog />
+      <PsychologyCourseCatalog products={products} />
 
       <section className="courses-testimonials home-testimonials" aria-labelledby="courses-testimonials-title">
         <div className="home-testimonial-heading"><h2 id="courses-testimonials-title">نظرات شما</h2><p>تجربه همراهان اُزون از مسیر مشاوره و گفت‌وگو.</p></div>

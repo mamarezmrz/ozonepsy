@@ -1,7 +1,6 @@
 import { ContentStatus } from "@/lib/generated/prisma/enums";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { consultationCategoryContent } from "@/lib/consultation-categories";
 import { getConsultationTopic, type ConsultationTopic } from "@/lib/consultation-topics";
 
 export type ConsultationCasesPageKey = "individual" | "couples" | "teenagers" | "group-therapy";
@@ -113,7 +112,7 @@ export async function getPublicConsultationCases(pageKey: ConsultationCasesPageK
     const slugs = section.cases.map((item) => item.slug);
     const publishedTopics = slugs.length ? await topic.findMany({ where: { slug: { in: slugs }, status: ContentStatus.PUBLISHED }, select: { slug: true, title: true, description: true, why: true } }) : [];
     const readyTopicSlugs = new Set(publishedTopics.filter((item) => item.title.trim() && item.description.trim() && item.why.trim()).map((item) => item.slug));
-    const items = section.cases.filter((item) => item.title.trim() && item.slug.trim() && (readyTopicSlugs.has(item.slug) || (pageKey === "individual" && Boolean(getConsultationTopic(item.slug))))).map((item) => ({ ...item, href: consultationCaseHref(pageKey, item.slug) }));
+    const items = section.cases.filter((item) => item.title.trim() && item.slug.trim() && readyTopicSlugs.has(item.slug)).map((item) => ({ ...item, href: consultationCaseHref(pageKey, item.slug) }));
     return {
       pageKey,
       enabled: section.enabled && items.length > 0,
@@ -176,15 +175,4 @@ export async function getPublicConsultationTopic(slug: string, pageKey: Consulta
 
 export async function getPublicIndividualConsultationTopic(slug: string): Promise<PublicTopicResult> {
   return getPublicConsultationTopic(slug, "individual");
-}
-
-export function getLegacyIndividualConsultationCases() {
-  const content = consultationCategoryContent.individual;
-  return {
-    enabled: true,
-    pageKey: "individual",
-    title: content.casesTitle,
-    description: content.casesDescription,
-    items: content.cases.map((item, index) => ({ id: `legacy-${index}`, title: item.title, slug: item.href.split("/").pop() ?? "", href: item.href, sortOrder: index })),
-  } satisfies PublicIndividualConsultationCases;
 }

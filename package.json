@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs tests/admin-security.test.mjs tests/admin-query.test.mjs tests/security-foundations.test.mjs",
     "test:unit": "node --experimental-strip-types --test tests/admin-authorization.test.mjs tests/admin-host.test.mjs tests/admin-security.test.mjs tests/admin-query.test.mjs tests/security-foundations.test.mjs",
+    "test:integration": "node --test tests/integration.test.mjs",
     "admin:bootstrap": "prisma db seed"
   },
   "dependencies": {

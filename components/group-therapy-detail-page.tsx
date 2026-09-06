@@ -2,36 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
 import { AboutPreconsultation } from "@/components/about-page";
 import { HomeFaq } from "@/components/home-interactive";
-import type { GroupTherapySession } from "@/lib/group-therapy";
 import type { PublicContent } from "@/lib/public/content";
+import type { PublicGroupTherapyPage } from "@/lib/public/catalog-types";
 
-const asset = (name: string) => `/figma-home/${name}`;
-const collapsedSessionListHeight = 320;
+const fallbackImage = "/figma-home/image-20.png";
 
-export function GroupTherapyDetailPage({ session, content }: { session: GroupTherapySession; content?: PublicContent }) {
-  const [expanded, setExpanded] = useState(false);
-  const [sessionListHeight, setSessionListHeight] = useState(collapsedSessionListHeight);
-  const sessionListRef = useRef<HTMLDivElement>(null);
-
-  const toggleSessions = () => {
-    const list = sessionListRef.current;
-    const nextExpanded = !expanded;
-
-    if (!list) {
-      setExpanded(nextExpanded);
-      return;
-    }
-
-    setSessionListHeight(list.getBoundingClientRect().height);
-    setExpanded(nextExpanded);
-
-    requestAnimationFrame(() => {
-      setSessionListHeight(nextExpanded ? list.scrollHeight : collapsedSessionListHeight);
-    });
-  };
+export function GroupTherapyDetailPage({ product, content }: { product: PublicGroupTherapyPage; content?: PublicContent }) {
+  const price = new Intl.NumberFormat("en-US", { style: "currency", currency: product.currency }).format(product.priceMinor / 100);
 
   return (
     <main className="group-detail-page">
@@ -42,15 +21,15 @@ export function GroupTherapyDetailPage({ session, content }: { session: GroupThe
 
         <section className="group-detail-hero" aria-labelledby="group-detail-title">
           <div className="group-detail-copy">
-            <h1 id="group-detail-title">{session.title}</h1>
-            <p>{session.description}</p>
+            <h1 id="group-detail-title">{product.title}</h1>
+            <p>{product.description}</p>
             <div className="group-detail-purchase">
-              <span className="group-detail-price"><b>${session.price}</b><small>(USD)</small></span>
-              <Link href="/checkout/group-therapy" className="group-detail-buy">خرید جلسه</Link>
+              <span className="group-detail-price"><b>{price}</b><small>({product.currency})</small></span>
+              <Link href={`/checkout/${product.id}`} className="group-detail-buy">خرید جلسه</Link>
             </div>
           </div>
           <figure className="group-detail-image">
-            <Image src={asset(session.image)} alt={session.title} fill priority quality={100} sizes="(max-width: 900px) 100vw, 320px" />
+            <Image src={product.coverUrl ?? fallbackImage} alt={product.title} fill priority sizes="(max-width: 900px) 100vw, 320px" />
           </figure>
         </section>
 
@@ -59,35 +38,19 @@ export function GroupTherapyDetailPage({ session, content }: { session: GroupThe
         <section className="group-detail-content" aria-labelledby="group-detail-specs-title">
           <div className="group-detail-section">
             <h2 id="group-detail-specs-title">مشخصات</h2>
-            <p><strong>مدرس:</strong> {session.mentor}</p>
-            <p><strong>مدت دوره:</strong> {session.duration}</p>
+            {product.cohortLabel ? <p><strong>گروه:</strong> {product.cohortLabel}</p> : null}
+            {product.capacity !== null ? <p><strong>ظرفیت:</strong> {product.capacity} نفر</p> : null}
+            {!product.cohortLabel && product.capacity === null ? <p>مشخصات تکمیلی این محصول هنوز ثبت نشده است.</p> : null}
           </div>
 
           <div className="group-detail-section">
             <h2>توضیحات</h2>
-            <p>{session.detailDescription}</p>
+            <p>{product.description}</p>
           </div>
 
           <div className="group-detail-section group-detail-sessions" aria-labelledby="group-detail-sessions-title">
-            <h2 id="group-detail-sessions-title">جلسات</h2>
-            <div
-              id="group-detail-session-list"
-              ref={sessionListRef}
-              className={`group-detail-session-list${expanded ? " is-expanded" : ""}`}
-              style={{ height: `${sessionListHeight}px` }}
-            >
-              {session.sessions.map((item, index) => (
-                <article key={`${session.slug}-${index}`} className="group-detail-session-row">
-                  <h3>{item.title}</h3>
-                  <time dateTime={`2026-${String(index + 1).padStart(2, "0")}-23`}>{item.date}</time>
-                  <span>{item.time}</span>
-                </article>
-              ))}
-            </div>
-            <button type="button" className="group-detail-more focus-ring" aria-expanded={expanded} aria-controls="group-detail-session-list" onClick={toggleSessions}>
-              <span>{expanded ? "بستن جلسات" : "مشاهده بیشتر"}</span>
-              <span className={`group-detail-more-chevron${expanded ? " is-open" : ""}`} aria-hidden="true" />
-            </button>
+            <h2 id="group-detail-sessions-title">برنامه و زمان‌بندی</h2>
+            <p>{product.schedulePolicy?.trim() || "برنامه‌ی این گروه پس از ثبت درخواست و هماهنگی با تیم اُزون اعلام می‌شود."}</p>
           </div>
         </section>
       </div>
@@ -110,7 +73,7 @@ export function GroupTherapyDetailPage({ session, content }: { session: GroupThe
       </section>
 
       <section className="group-detail-faq home-faq" aria-labelledby="group-detail-faq-title">
-        <div className="home-faq-inner"><h2 id="group-detail-faq-title">سوالات متداول مربوط به {session.title}</h2><HomeFaq items={content?.faqs} /></div>
+        <div className="home-faq-inner"><h2 id="group-detail-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq items={content?.faqs} /></div>
       </section>
 
       <AboutPreconsultation />

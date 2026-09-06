@@ -47,7 +47,7 @@ function PartnerCard({ item, variant }: { item: PartnerItem; variant: "instituti
   const card = (
     <article className={`partner-card partner-card-${variant}`}>
       <div className="partner-card-media">
-        <Image src={`/figma-home/${item.image}`} alt={item.name} fill sizes="(max-width: 560px) 100vw, (max-width: 900px) 45vw, 300px" />
+        <Image src={item.image} alt={item.name} fill unoptimized={item.image.startsWith("http")} sizes="(max-width: 560px) 100vw, (max-width: 900px) 45vw, 300px" />
       </div>
       <div className="partner-card-body">
         <h3>{item.name}</h3>
