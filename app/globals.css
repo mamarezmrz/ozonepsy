@@ -410,6 +410,8 @@
 }
 
 /* Psychology courses page */
+.home-courses{min-height:0}
+@media (max-width:900px){.home-courses{min-height:0}}
 .courses-page{background:#fafcfc;padding:48px 16px 0}
 .courses-page-inner{width:min(100%,960px);margin-inline:auto}
 .courses-hero-image{position:relative;height:304px;overflow:hidden;margin:0;border-radius:40px;background:#e8eded}
@@ -780,6 +782,7 @@
 
 /* Service journey section from the home design. */
 .home-service-steps{min-height:440px;background:#e8eded;padding:80px 40px 88px}
+.home-courses + .home-service-steps{background:#fafcfc}
 .home-service-steps-inner{width:min(100%,1440px);margin-inline:auto}
 .home-service-steps-head{display:block;text-align:center;direction:rtl}
 .home-service-steps-head h2{margin:0;color:#3b4040;font-size:32px;font-weight:700}

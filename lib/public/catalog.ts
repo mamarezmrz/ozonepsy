@@ -1,6 +1,6 @@
 import { ProductKind, ProductStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
-import type { PublicCoursePage, PublicGroupTherapyPage, PublicProductKind, PublicPurchaseProduct } from "@/lib/public/catalog-types";
+import type { PublicCourseModule, PublicCoursePage, PublicGroupTherapyPage, PublicProductKind, PublicPurchaseProduct } from "@/lib/public/catalog-types";
 
 const presentationDefaults: Record<PublicProductKind, { accent: string; label: string; category: string }> = {
   consultation: { accent: "from-[#355859] to-[#73bebf]", label: "پیشنهاد اُزون", category: "مشاوره فردی" },
@@ -16,6 +16,33 @@ const legacyProductAliases: Record<string, string> = {
   "life-skills": "life-skills-course",
   "group-therapy": "group-therapy",
 };
+
+const legacyCourseTestVideoUrl = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+
+const legacyCourseTestModules: PublicCourseModule[] = [{
+  id: "legacy-life-skills-module",
+  title: "سرفصل دوره مهارت‌های زندگی",
+  description: "سرفصل آزمایشی دوره تا زمان ثبت محتوای واقعی از پنل حفظ می‌شود.",
+  lessons: ([
+    ["مقدمه", 106, true],
+    ["جلسه ۱: مقدمه‌ای بر روانشناسی و سلامت روان", 886, false],
+    ["جلسه ۲: شناخت و مدیریت استرس", 886, false],
+    ["جلسه ۳: ارتباطات مؤثر و مهارت‌های اجتماعی", 886, false],
+    ["جلسه ۴: خودآگاهی و رشد فردی", 886, false],
+    ["جلسه ۵: تکنیک‌های حل مسئله", 886, false],
+    ["جلسه ۶: کار با احساسات و هیجانات", 886, false],
+    ["جلسه ۷: تقویت اعتماد به نفس", 886, false],
+    ["جلسه ۸: مدیریت زمان و برنامه‌ریزی", 886, false],
+    ["جلسه ۹: کار گروهی و همکاری", 886, false],
+    ["جلسه ۱۰: جمع‌بندی و ارزیابی نهایی", 886, false],
+  ] as const).map(([title, duration, isPreview], index) => ({
+    id: `legacy-life-skills-lesson-${index + 1}`,
+    title,
+    duration,
+    isPreview,
+    mediaUrl: legacyCourseTestVideoUrl,
+  })),
+}];
 
 function publicKind(kind: ProductKind): PublicProductKind {
   return kind.toLowerCase() as PublicProductKind;
@@ -94,10 +121,11 @@ export async function getPublishedProductByIdOrSlug(value: string): Promise<Publ
   return product ? mapProduct(product) : null;
 }
 
-export async function getPublishedProducts(kind?: PublicProductKind): Promise<PublicPurchaseProduct[]> {
+export async function getPublishedProducts(kind?: PublicProductKind, options?: { limit?: number; sort?: "featured" | "newest" }): Promise<PublicPurchaseProduct[]> {
   const products = await prisma.product.findMany({
     where: { status: ProductStatus.PUBLISHED, ...(kind ? { kind: kind.toUpperCase() as ProductKind } : {}) },
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    orderBy: options?.sort === "newest" ? { createdAt: "desc" } : [{ featured: "desc" }, { createdAt: "desc" }],
+    ...(options?.limit ? { take: options.limit } : {}),
     select: purchaseSelect,
   });
   return products.map(mapProduct);
@@ -135,6 +163,23 @@ export async function getPublishedCourseBySlug(slug: string): Promise<PublicCour
   if (!product?.course) return null;
 
   const mapped = mapProduct(product);
+  const modules = product.course.modules.length
+    ? product.course.modules.map((module) => ({
+        id: module.id,
+        title: module.title,
+        description: module.description,
+        lessons: module.lessons.map((lesson) => ({
+          id: lesson.id,
+          title: lesson.title,
+          duration: lesson.duration,
+          isPreview: lesson.isPreview,
+          mediaUrl: lesson.mediaId ? `/api/courses/lessons/${lesson.id}/media` : null,
+        })),
+      }))
+    : product.slug === "life-skills-course"
+      ? legacyCourseTestModules
+      : [];
+
   return {
     ...mapped,
     kind: "course",
@@ -142,18 +187,7 @@ export async function getPublishedCourseBySlug(slug: string): Promise<PublicCour
     deliveryMode: product.course.deliveryMode,
     instructorName: product.course.instructors[0]?.specialist.displayName ?? null,
     coverUrl: mediaUrl(product.coverMedia?.id ?? null, product.coverMedia?.visibility),
-    modules: product.course.modules.map((module) => ({
-      id: module.id,
-      title: module.title,
-      description: module.description,
-      lessons: module.lessons.map((lesson) => ({
-        id: lesson.id,
-        title: lesson.title,
-        duration: lesson.duration,
-        isPreview: lesson.isPreview,
-        mediaUrl: lesson.mediaId ? `/api/courses/lessons/${lesson.id}/media` : null,
-      })),
-    })),
+    modules,
   };
 }
 

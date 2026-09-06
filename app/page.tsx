@@ -29,7 +29,7 @@ const serviceSteps = [
 
 export default async function Home() {
   const publicContent = await getPublicContent();
-  const courseProducts = await getPublishedProducts("course");
+  const courseProducts = await getPublishedProducts("course", { limit: 3, sort: "newest" });
   return <>
     <SiteHeader />
     <main className="overflow-hidden bg-[#fafcfc]">
