@@ -112,7 +112,7 @@ export async function getPublicConsultationCases(pageKey: ConsultationCasesPageK
     const slugs = section.cases.map((item) => item.slug);
     const publishedTopics = slugs.length ? await topic.findMany({ where: { slug: { in: slugs }, status: ContentStatus.PUBLISHED }, select: { slug: true, title: true, description: true, why: true } }) : [];
     const readyTopicSlugs = new Set(publishedTopics.filter((item) => item.title.trim() && item.description.trim() && item.why.trim()).map((item) => item.slug));
-    const items = section.cases.filter((item) => item.title.trim() && item.slug.trim() && readyTopicSlugs.has(item.slug)).map((item) => ({ ...item, href: consultationCaseHref(pageKey, item.slug) }));
+    const items = section.cases.filter((item) => item.title.trim() && item.slug.trim() && (readyTopicSlugs.has(item.slug) || (pageKey === "individual" && Boolean(getConsultationTopic(item.slug))))).map((item) => ({ ...item, href: consultationCaseHref(pageKey, item.slug) }));
     return {
       pageKey,
       enabled: section.enabled && items.length > 0,
