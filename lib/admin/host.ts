@@ -5,7 +5,9 @@ function normalizeHost(host: string | null | undefined) {
 }
 
 export function getAdminHosts() {
-  const productionHost = normalizeHost(process.env.ADMIN_HOST);
+  // Temporary Railway fallback: until a dedicated admin domain is configured,
+  // use Railway's generated public domain as the production admin host.
+  const productionHost = normalizeHost(process.env.ADMIN_HOST || process.env.RAILWAY_PUBLIC_DOMAIN);
   const hosts = process.env.NODE_ENV === "production"
     ? [productionHost]
     : [normalizeHost(process.env.ADMIN_DEV_HOST || DEFAULT_DEV_ADMIN_HOST)];
