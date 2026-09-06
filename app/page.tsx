@@ -7,6 +7,8 @@ import { homeTitle, defaultDescription } from "@/lib/seo";
 import { getPublicContent } from "@/lib/public/content";
 import { getPublishedProducts } from "@/lib/public/catalog";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: { absolute: homeTitle }, description: defaultDescription };
 
 const asset = (name: string) => `/figma-home/${name}`;
