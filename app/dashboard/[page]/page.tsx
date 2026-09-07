@@ -50,9 +50,18 @@ export default async function DashboardSection({ params }: { params: Promise<{ p
   }
 
   if (page === "sessions") {
+    const upcoming = data.individualSessions.flatMap((session) => session.appointments.upcoming);
+    const completed = data.individualSessions.flatMap((session) => session.appointments.completed);
+    const credit = data.individualSessions.length
+      ? data.individualSessions.reduce((totals, session) => ({
+          total: totals.total + session.total,
+          completed: totals.completed + session.completed,
+          remaining: totals.remaining + session.remaining,
+        }), { total: 0, completed: 0, remaining: 0 })
+      : undefined;
     return (
       <UserDashboardShell data={data} activeHref="/dashboard/sessions" title={title}>
-        <IndividualSessionsPage />
+        <IndividualSessionsPage sessionsByTab={{ upcoming, completed }} credit={credit} />
       </UserDashboardShell>
     );
   }

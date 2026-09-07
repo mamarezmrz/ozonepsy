@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toPersianDigits } from "@/lib/format";
 
 type AdminDatePickerProps = {
   name: string;
@@ -45,6 +46,7 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
   const [time, setTime] = useState(defaultValue.slice(11, 16) || "09:00");
   const [viewDate, setViewDate] = useState(initialDate);
   const [open, setOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +54,10 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
     };
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setTimeOpen(false);
+        setOpen(false);
+      }
     };
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
@@ -67,6 +72,10 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
   const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
   const calendarCells = [...Array.from({ length: firstDay }, () => null), ...Array.from({ length: daysInMonth }, (_, index) => index + 1)];
   const monthLabel = new Intl.DateTimeFormat("fa-IR-u-ca-gregory", { month: "long", year: "numeric" }).format(viewDate);
+  const hour = time.slice(0, 2) || "09";
+  const minute = time.slice(3, 5) || "00";
+  const hours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
 
   function chooseDate(day: number) {
     const nextValue = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth(), day));
@@ -79,9 +88,18 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
     if (selectedDate) setValue(`${selectedDate}T${nextTime}`);
   }
 
+  function chooseHour(nextHour: string) {
+    chooseTime(`${nextHour}:${minute}`);
+  }
+
+  function chooseMinute(nextMinute: string) {
+    chooseTime(`${hour}:${nextMinute}`);
+  }
+
   function clear() {
     setValue("");
     setTime("09:00");
+    setTimeOpen(false);
     setOpen(false);
   }
 
@@ -99,8 +117,24 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
       </div>
       <div className="admin-date-weekdays" aria-hidden="true">{weekDays.map((day) => <span key={day}>{day}</span>)}</div>
       <div className="admin-date-grid">{calendarCells.map((day, index) => day ? <button key={day} type="button" className={selectedDate === formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth(), day)) ? "is-selected" : ""} aria-label={`${day} ${monthLabel}`} aria-current={selectedDate === formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth(), day)) ? "date" : undefined} onClick={() => chooseDate(day)}>{day.toLocaleString("fa-IR")}</button> : <span key={`empty-${index}`} aria-hidden="true" />)}</div>
-      {includeTime ? <div className="admin-date-time-row"><span>ساعت</span><input className="admin-date-time" type="time" value={time} onChange={(event) => chooseTime(event.target.value)} /></div> : null}
-      {value ? <button type="button" className="admin-date-clear" onClick={clear}>پاک کردن</button> : null}
+      {includeTime ? <div className="admin-date-time-row">
+        <div className="admin-date-time-heading"><span className="admin-date-time-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" /><path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>ساعت جلسه</span><span className="admin-date-time-value">{toPersianDigits(time)}</span></div>
+        <div className="admin-date-time-picker">
+          <button type="button" className="admin-date-time-trigger" aria-label="انتخاب ساعت جلسه" aria-expanded={timeOpen} onClick={() => setTimeOpen((current) => !current)}><span>تغییر ساعت</span><span className={`site-header-consultation-chevron${timeOpen ? " is-open" : ""}`} aria-hidden="true" /></button>
+          {timeOpen ? <div className="admin-date-time-menu" role="dialog" aria-label="انتخاب ساعت جلسه">
+            <div className="admin-date-time-menu-title">زمان را انتخاب کنید</div>
+            <div className="admin-date-time-columns">
+              <div><span className="admin-date-time-column-label">ساعت</span><div className="admin-date-time-options">{hours.map((item) => <button key={item} type="button" className={item === hour ? "is-selected" : ""} aria-pressed={item === hour} onClick={() => chooseHour(item)}>{toPersianDigits(item)}</button>)}</div></div>
+              <div><span className="admin-date-time-column-label">دقیقه</span><div className="admin-date-time-options">{minutes.map((item) => <button key={item} type="button" className={item === minute ? "is-selected" : ""} aria-pressed={item === minute} onClick={() => chooseMinute(item)}>{toPersianDigits(item)}</button>)}</div></div>
+            </div>
+            <button type="button" className="admin-date-time-confirm" onClick={() => setTimeOpen(false)}>ثبت ساعت</button>
+          </div> : null}
+        </div>
+      </div> : null}
+      <div className="admin-date-footer">
+        {value ? <button type="button" className="admin-date-clear" onClick={clear}>پاک کردن</button> : <span aria-hidden="true" />}
+        <button type="button" className="admin-date-close" onClick={() => { setTimeOpen(false); setOpen(false); }}>بستن تقویم</button>
+      </div>
     </div> : null}
   </div>;
 }

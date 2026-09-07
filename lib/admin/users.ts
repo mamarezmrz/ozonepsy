@@ -1,4 +1,4 @@
-import { RoleName, UserStatus } from "@/lib/generated/prisma/enums";
+import { AppointmentStatus, RoleName, SessionUsageStatus, UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { AdminServiceError } from "@/lib/admin/errors";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
@@ -81,15 +81,23 @@ export async function getAdminUserDetail(userId: string) {
       updatedAt: true,
       profile: { select: { firstName: true, lastName: true, displayName: true, phone: true, country: true, avatarUrl: true } },
       roles: { where: { role: { name: RoleName.USER } }, select: { role: { select: { name: true } } } },
-      orders: { orderBy: { createdAt: "desc" }, take: 8, select: { id: true, orderNumber: true, status: true, totalMinor: true, currency: true, productTitleSnapshot: true, createdAt: true } },
-      entitlements: { orderBy: { createdAt: "desc" }, take: 8, select: { id: true, status: true, totalSessions: true, createdAt: true, product: { select: { title: true } } } },
-      appointments: { orderBy: { startsAt: "desc" }, take: 8, select: { id: true, status: true, startsAt: true, endsAt: true, product: { select: { title: true } }, specialist: { select: { displayName: true } } } },
-      reviews: { orderBy: { createdAt: "desc" }, take: 8, select: { id: true, status: true, rating: true, body: true, createdAt: true, product: { select: { title: true } } } },
+      entitlements: { orderBy: { createdAt: "desc" }, take: 8, select: { id: true, status: true, totalSessions: true, createdAt: true, product: { select: { title: true, kind: true } }, usages: { where: { status: SessionUsageStatus.COMPLETED }, select: { id: true } }, appointments: { where: { status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.RESCHEDULED] } }, select: { id: true } } } },
+      appointments: { orderBy: { startsAt: "desc" }, take: 8, select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, product: { select: { title: true } }, specialist: { select: { displayName: true } } } },
     },
   });
 
   if (!user) throw new AdminServiceError("NOT_FOUND", "کاربر پیدا نشد.");
-  return { ...user, name: userName(user.profile) };
+  return {
+    ...user,
+    name: userName(user.profile),
+    entitlements: user.entitlements.map((entitlement) => ({
+      ...entitlement,
+      completedCount: entitlement.usages.length,
+      reservedCount: entitlement.appointments.length,
+      usages: undefined,
+      appointments: undefined,
+    })),
+  };
 }
 
 export async function updateAdminUserStatus(userId: string, actorId: string, status: UserStatus, reason: string) {

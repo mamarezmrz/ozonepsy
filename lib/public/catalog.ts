@@ -141,16 +141,15 @@ export async function getPublishedCourseBySlug(slug: string): Promise<PublicCour
         select: {
           deliveryMode: true,
           accessDays: true,
+          curriculum: true,
           instructors: { select: { specialist: { select: { displayName: true } } } },
           modules: {
-            where: { status: ProductStatus.PUBLISHED },
             orderBy: { order: "asc" },
             select: {
               id: true,
               title: true,
               description: true,
               lessons: {
-                where: { status: ProductStatus.PUBLISHED },
                 orderBy: { order: "asc" },
                 select: { id: true, title: true, duration: true, isPreview: true, mediaId: true, media: { select: { visibility: true } } },
               },
@@ -163,6 +162,12 @@ export async function getPublishedCourseBySlug(slug: string): Promise<PublicCour
   if (!product?.course) return null;
 
   const mapped = mapProduct(product);
+  const curriculum = product.course.curriculum && typeof product.course.curriculum === "object" && !Array.isArray(product.course.curriculum)
+    ? product.course.curriculum as Record<string, unknown>
+    : null;
+  const demoMediaId = typeof curriculum?.demoMediaId === "string" ? curriculum.demoMediaId : null;
+  const curriculumInstructorName = typeof curriculum?.instructorName === "string" && curriculum.instructorName.trim() ? curriculum.instructorName.trim() : null;
+  const durationSessions = typeof curriculum?.durationSessions === "number" && curriculum.durationSessions > 0 ? curriculum.durationSessions : null;
   const modules = product.course.modules.length
     ? product.course.modules.map((module) => ({
         id: module.id,
@@ -185,8 +190,10 @@ export async function getPublishedCourseBySlug(slug: string): Promise<PublicCour
     kind: "course",
     accessDays: product.course.accessDays,
     deliveryMode: product.course.deliveryMode,
-    instructorName: product.course.instructors[0]?.specialist.displayName ?? null,
+    instructorName: curriculumInstructorName ?? product.course.instructors[0]?.specialist.displayName ?? null,
+    duration: durationSessions === null ? mapped.duration : `${durationSessions.toLocaleString("fa-IR")} جلسه`,
     coverUrl: mediaUrl(product.coverMedia?.id ?? null, product.coverMedia?.visibility),
+    demoVideoUrl: demoMediaId ? `/api/media/${demoMediaId}` : null,
     modules,
   };
 }

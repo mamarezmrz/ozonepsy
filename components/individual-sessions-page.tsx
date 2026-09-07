@@ -12,6 +12,7 @@ export type IndividualSessionItem = {
   date: string;
   time: string;
   therapist: string;
+  dateTime?: string;
 };
 
 function SessionsCreditCard({ total, completed, remaining }: { total: number; completed: number; remaining: number }) {
@@ -46,7 +47,7 @@ function SessionCard({ session, selected }: { session: IndividualSessionItem; se
   return (
     <article className={`individual-session-card${selected ? " is-selected" : ""}`}>
       <div className="individual-session-card-topline">
-        <time dateTime="2026-01-23T14:30">{toPersianDigits(session.date)}</time>
+        <time dateTime={session.dateTime}>{toPersianDigits(session.date)}</time>
         <time>{toPersianDigits(session.time)}</time>
       </div>
       <p>{session.therapist}</p>

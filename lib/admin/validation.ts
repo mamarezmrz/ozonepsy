@@ -56,6 +56,20 @@ export const adminCourseSchema = z.object({
   accessDays: z.preprocess((value) => value === "" ? null : value, z.coerce.number().int().positive().nullable().optional()),
 });
 
+const optionalCourseMediaId = z.preprocess((value) => value === "" ? null : value, z.string().uuid().nullable().optional());
+const optionalCourseDuration = z.preprocess((value) => value === "" ? null : value, z.coerce.number().int().min(0).max(86400).nullable().optional());
+
+export const adminCourseCreateSchema = adminCourseSchema.extend({
+  coverMediaId: optionalCourseMediaId,
+  coverImageMode: z.enum(["BRANDED", "PLAIN"]).default("BRANDED"),
+  categorySlugs: z.array(z.string().trim().min(1).max(120)).max(4).default([]),
+  instructorName: z.string().trim().max(200).default(""),
+  durationSessions: z.preprocess((value) => value === "" ? null : value, z.coerce.number().int().positive().nullable().optional()),
+  demoMediaId: optionalCourseMediaId,
+  demoVideoDuration: optionalCourseDuration,
+  sessions: z.array(z.object({ title: z.string().trim().min(1).max(240), videoMediaId: optionalCourseMediaId, videoDuration: optionalCourseDuration })).max(100).default([]),
+});
+
 export const adminStatusSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
   reason: z.string().trim().min(1).max(1000),
@@ -95,6 +109,22 @@ export const adminAppointmentRescheduleSchema = z.object({
   endsAt: z.coerce.date().nullable().optional(),
   reason: z.string().trim().min(1).max(1000),
 }).refine((value) => !value.endsAt || value.endsAt > value.startsAt, { message: "زمان پایان باید بعد از زمان شروع باشد.", path: ["endsAt"] });
+
+export const adminEntitlementSessionsSchema = z.object({
+  totalSessions: z.coerce.number().int().min(0),
+  reason: z.string().trim().min(1, "دلیل تغییر تعداد جلسات را وارد کنید.").max(1000),
+});
+
+export const adminAppointmentCreateSchema = z.object({
+  startsAt: z.coerce.date(),
+  endsAt: z.preprocess((value) => value === "" || value === undefined ? null : value, z.coerce.date().nullable()),
+  meetingUrl: z.preprocess((value) => value === "" || value === undefined ? null : value, z.string().trim().url("لینک جلسه معتبر نیست.").max(2000).nullable()),
+  reason: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.string().trim().max(1000).optional()),
+}).refine((value) => !value.endsAt || value.endsAt > value.startsAt, { message: "زمان پایان باید بعد از زمان شروع باشد.", path: ["endsAt"] })
+  .refine((value) => {
+    if (!value.meetingUrl) return true;
+    try { return ["http:", "https:"].includes(new URL(value.meetingUrl).protocol); } catch { return false; }
+  }, { message: "لینک جلسه باید با http یا https شروع شود.", path: ["meetingUrl"] });
 
 export const adminReviewStatusSchema = z.object({
   status: z.enum(["PENDING", "PUBLISHED", "HIDDEN"]),

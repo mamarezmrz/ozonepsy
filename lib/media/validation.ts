@@ -6,9 +6,21 @@ const imageTypes = {
   "image/webp": { extension: "webp", signature: (bytes: Uint8Array) => bytes.length >= 12 && new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" && new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP" },
 } as const;
 
+const videoTypes = {
+  "video/mp4": { extension: "mp4", signature: (bytes: Uint8Array) => bytes.length >= 12 && new TextDecoder().decode(bytes.slice(4, 8)) === "ftyp" },
+  "video/webm": { extension: "webm", signature: (bytes: Uint8Array) => bytes.length >= 4 && bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3 },
+  "video/ogg": { extension: "ogv", signature: (bytes: Uint8Array) => bytes.length >= 4 && new TextDecoder().decode(bytes.slice(0, 4)) === "OggS" },
+} as const;
+
 export function validateImageBytes(mimeType: string, body: Uint8Array) {
   const definition = imageTypes[mimeType as keyof typeof imageTypes];
   if (!definition || !definition.signature(body)) throw new Error("فایل تصویر معتبر نیست.");
+  return definition.extension;
+}
+
+export function validateVideoBytes(mimeType: string, body: Uint8Array) {
+  const definition = videoTypes[mimeType as keyof typeof videoTypes];
+  if (!definition || !definition.signature(body)) throw new Error("فایل ویدئو معتبر نیست.");
   return definition.extension;
 }
 

@@ -8,10 +8,11 @@ import { createAdminMedia, listAdminMedia } from "@/lib/admin/media";
 import { parseAdminListQuery } from "@/lib/admin/query";
 import { MediaStatus, MediaVisibility } from "@/lib/generated/prisma/enums";
 import { getMediaStorage } from "@/lib/media/storage";
-import { sanitizeOriginalName, validateImageBytes } from "@/lib/media/validation";
+import { sanitizeOriginalName, validateImageBytes, validateVideoBytes } from "@/lib/media/validation";
 
 export const runtime = "nodejs";
-const maxUploadBytes = 10 * 1024 * 1024;
+const maxImageUploadBytes = 10 * 1024 * 1024;
+const maxVideoUploadBytes = 200 * 1024 * 1024;
 
 export async function GET(request: Request) {
   if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
@@ -30,11 +31,13 @@ export async function POST(request: Request) {
   try {
     const session = await requireAdminSession(); requireAdminPermissionFromSession(session, "media.write");
     const form = await request.formData(); const file = form.get("file");
-    if (!(file instanceof File) || file.size === 0) return NextResponse.json({ code: "VALIDATION_ERROR", message: "فایل تصویر را انتخاب کنید." }, { status: 400 });
-    if (file.size > maxUploadBytes) return NextResponse.json({ code: "VALIDATION_ERROR", message: "حجم فایل نباید بیشتر از ۱۰ مگابایت باشد." }, { status: 400 });
+    const mediaType = form.get("mediaType") === "VIDEO" ? "VIDEO" : "IMAGE";
+    if (!(file instanceof File) || file.size === 0) return NextResponse.json({ code: "VALIDATION_ERROR", message: mediaType === "VIDEO" ? "فایل ویدئو را انتخاب کنید." : "فایل تصویر را انتخاب کنید." }, { status: 400 });
+    const maxUploadBytes = mediaType === "VIDEO" ? maxVideoUploadBytes : maxImageUploadBytes;
+    if (file.size > maxUploadBytes) return NextResponse.json({ code: "VALIDATION_ERROR", message: mediaType === "VIDEO" ? "حجم ویدئو نباید بیشتر از ۲۰۰ مگابایت باشد." : "حجم فایل نباید بیشتر از ۱۰ مگابایت باشد." }, { status: 400 });
     const body = new Uint8Array(await file.arrayBuffer());
     let extension: string;
-    try { extension = validateImageBytes(file.type, body); } catch (error) { return NextResponse.json({ code: "VALIDATION_ERROR", message: error instanceof Error ? error.message : "فایل تصویر معتبر نیست." }, { status: 400 }); }
+    try { extension = mediaType === "VIDEO" ? validateVideoBytes(file.type, body) : validateImageBytes(file.type, body); } catch (error) { return NextResponse.json({ code: "VALIDATION_ERROR", message: error instanceof Error ? error.message : mediaType === "VIDEO" ? "فایل ویدئو معتبر نیست." : "فایل تصویر معتبر نیست." }, { status: 400 }); }
     const id = crypto.randomUUID(); const storageKey = `admin/${id}.${extension}`; const originalName = sanitizeOriginalName(file.name);
     const storage = getMediaStorage();
     await storage.put({ storageKey, body, contentType: file.type });

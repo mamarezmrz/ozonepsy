@@ -26,6 +26,25 @@ function productData(input: { title: string; slug: string; description: string; 
   };
 }
 
+export type AdminCourseCreateInput = {
+  title: string;
+  slug: string;
+  description: string;
+  priceMinor: number;
+  currency: string;
+  categoryId?: string | null;
+  deliveryMode: CourseDeliveryMode;
+  accessDays?: number | null;
+  coverMediaId?: string | null;
+  coverImageMode?: "BRANDED" | "PLAIN";
+  categorySlugs?: string[];
+  instructorName?: string;
+  durationSessions?: number | null;
+  demoMediaId?: string | null;
+  demoVideoDuration?: number | null;
+  sessions?: Array<{ title: string; videoMediaId?: string | null; videoDuration?: number | null }>;
+};
+
 export async function listAdminCourses(query: AdminListQuery, status?: ProductStatus, session?: AdminSessionView) {
   const where = { ...courseWhere, ...courseScope(session), ...(status ? { status } : {}), ...(query.search ? { OR: [{ title: { contains: query.search, mode: "insensitive" as const } }, { slug: { contains: query.search, mode: "insensitive" as const } }] } : {}) };
   const orderBy = query.sort === "title" ? { title: query.direction } : query.sort === "status" ? { status: query.direction } : { createdAt: query.direction };
@@ -56,7 +75,8 @@ export async function getAdminCourse(productId: string, session?: AdminSessionVi
       currency: true,
       status: true,
       categoryId: true,
-      category: { select: { title: true } },
+      coverMediaId: true,
+      category: { select: { title: true, slug: true } },
       course: {
         select: {
           deliveryMode: true,
@@ -81,6 +101,7 @@ export async function getAdminCourse(productId: string, session?: AdminSessionVi
                   status: true,
                   isPreview: true,
                   mediaId: true,
+                  media: { select: { originalName: true } },
                 },
               },
             },
@@ -94,24 +115,94 @@ export async function getAdminCourse(productId: string, session?: AdminSessionVi
   return { ...course, course: course.course };
 }
 
-export async function createAdminCourse(actorId: string, input: { title: string; slug: string; description: string; priceMinor: number; currency: string; categoryId?: string | null; deliveryMode: CourseDeliveryMode; accessDays?: number | null }) {
+export async function createAdminCourse(actorId: string, input: AdminCourseCreateInput) {
   const data = productData(input);
   if (!data.title || !data.slug || !data.description || data.priceMinor < 0) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات دوره کامل یا معتبر نیست.");
+  const sessions = (input.sessions ?? []).map((session) => ({ title: session.title.trim(), videoMediaId: session.videoMediaId ?? null, videoDuration: session.videoDuration ?? null })).filter((session) => session.title);
+  const curriculum = {
+    coverImageMode: input.coverImageMode ?? "BRANDED",
+    categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
+    instructorName: input.instructorName?.trim() || null,
+    durationSessions: input.durationSessions ?? null,
+    demoMediaId: input.demoMediaId ?? null,
+    demoVideoDuration: input.demoVideoDuration ?? null,
+    sessions: sessions.map((session, index) => ({ order: index, title: session.title, videoMediaId: session.videoMediaId, videoDuration: session.videoDuration })),
+  };
   return prisma.$transaction(async (tx) => {
-    const created = await tx.product.create({ data: { title: data.title, slug: data.slug, description: data.description, priceMinor: data.priceMinor, currency: data.currency, categoryId: data.categoryId, kind: ProductKind.COURSE, course: { create: { deliveryMode: data.deliveryMode, accessDays: data.accessDays } } }, select: { id: true, slug: true, title: true, status: true } });
+    if (input.coverMediaId) {
+      const media = await tx.mediaAsset.findFirst({ where: { id: input.coverMediaId, status: "ACTIVE" }, select: { id: true } });
+      if (!media) throw new AdminServiceError("VALIDATION_ERROR", "تصویر کاور معتبر نیست.");
+    }
+    const mediaIds = [...new Set([input.demoMediaId, ...sessions.map((session) => session.videoMediaId)].filter((id): id is string => Boolean(id)))];
+    if (mediaIds.length) {
+      const activeMedia = await tx.mediaAsset.findMany({ where: { id: { in: mediaIds }, status: "ACTIVE" }, select: { id: true } });
+      if (activeMedia.length !== mediaIds.length) throw new AdminServiceError("VALIDATION_ERROR", "یکی از فایل‌های ویدئویی معتبر نیست.");
+    }
+    const created = await tx.product.create({
+      data: {
+        title: data.title,
+        slug: data.slug,
+        description: data.description,
+        priceMinor: data.priceMinor,
+        currency: data.currency,
+        categoryId: data.categoryId,
+        coverMediaId: input.coverMediaId || null,
+        kind: ProductKind.COURSE,
+        course: {
+          create: {
+            deliveryMode: data.deliveryMode,
+            accessDays: data.accessDays,
+            curriculum,
+            ...(sessions.length ? {
+              modules: {
+                create: [{
+                  title: "جلسات دوره",
+                  order: 0,
+                  lessons: { create: sessions.map((session, index) => ({ title: session.title, order: index, duration: session.videoDuration, mediaId: session.videoMediaId })) },
+                }],
+              },
+            } : {}),
+          },
+        },
+      },
+      select: { id: true, slug: true, title: true, status: true },
+    });
     await recordAdminAuditWithClient(tx, { actorId, action: "COURSE_CREATED", targetType: "COURSE", targetId: created.id, afterState: created });
     return created;
   });
 }
 
-export async function updateAdminCourse(actorId: string, productId: string, input: { title: string; slug: string; description: string; priceMinor: number; currency: string; categoryId?: string | null; deliveryMode: CourseDeliveryMode; accessDays?: number | null }, session?: AdminSessionView) {
+export async function updateAdminCourse(actorId: string, productId: string, input: AdminCourseCreateInput, session?: AdminSessionView) {
   await ensureCourse(productId, session);
   const data = productData(input);
   if (!data.title || !data.slug || !data.description || data.priceMinor < 0) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات دوره کامل یا معتبر نیست.");
+  const sessions = (input.sessions ?? []).map((courseSession) => ({ title: courseSession.title.trim(), videoMediaId: courseSession.videoMediaId ?? null, videoDuration: courseSession.videoDuration ?? null })).filter((courseSession) => courseSession.title);
+  const curriculum = {
+    coverImageMode: input.coverImageMode ?? "BRANDED",
+    categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
+    instructorName: input.instructorName?.trim() || null,
+    durationSessions: input.durationSessions ?? null,
+    demoMediaId: input.demoMediaId ?? null,
+    demoVideoDuration: input.demoVideoDuration ?? null,
+    sessions: sessions.map((courseSession, index) => ({ order: index, title: courseSession.title, videoMediaId: courseSession.videoMediaId, videoDuration: courseSession.videoDuration })),
+  };
   return prisma.$transaction(async (tx) => {
-    const before = await tx.product.findUnique({ where: { id: productId }, select: { title: true, slug: true, description: true, priceMinor: true, currency: true, categoryId: true, status: true, course: { select: { deliveryMode: true, accessDays: true } } } });
+    if (input.coverMediaId) {
+      const media = await tx.mediaAsset.findFirst({ where: { id: input.coverMediaId, status: "ACTIVE" }, select: { id: true } });
+      if (!media) throw new AdminServiceError("VALIDATION_ERROR", "تصویر کاور معتبر نیست.");
+    }
+    const mediaIds = [...new Set([input.demoMediaId, ...sessions.map((courseSession) => courseSession.videoMediaId)].filter((id): id is string => Boolean(id)))];
+    if (mediaIds.length) {
+      const activeMedia = await tx.mediaAsset.findMany({ where: { id: { in: mediaIds }, status: "ACTIVE" }, select: { id: true } });
+      if (activeMedia.length !== mediaIds.length) throw new AdminServiceError("VALIDATION_ERROR", "یکی از فایل‌های ویدئویی معتبر نیست.");
+    }
+    const before = await tx.product.findUnique({ where: { id: productId }, select: { title: true, slug: true, description: true, priceMinor: true, currency: true, categoryId: true, coverMediaId: true, status: true, course: { select: { deliveryMode: true, accessDays: true, curriculum: true } } } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "دوره پیدا نشد.");
-    const updated = await tx.product.update({ where: { id: productId }, data: { title: data.title, slug: data.slug, description: data.description, priceMinor: data.priceMinor, currency: data.currency, categoryId: data.categoryId, course: { update: { deliveryMode: data.deliveryMode, accessDays: data.accessDays } } }, select: { id: true, slug: true, title: true, status: true } });
+    const updated = await tx.product.update({ where: { id: productId }, data: { title: data.title, slug: data.slug, description: data.description, priceMinor: data.priceMinor, currency: data.currency, categoryId: data.categoryId, coverMediaId: input.coverMediaId || null, course: { update: { deliveryMode: data.deliveryMode, accessDays: data.accessDays ?? before.course?.accessDays ?? null, curriculum } } }, select: { id: true, slug: true, title: true, status: true } });
+    await tx.courseModule.deleteMany({ where: { courseProductId: productId } });
+    if (sessions.length) {
+      await tx.courseModule.create({ data: { courseProductId: productId, title: "جلسات دوره", order: 0, status: before.status === ProductStatus.PUBLISHED ? ProductStatus.PUBLISHED : ProductStatus.DRAFT, lessons: { create: sessions.map((courseSession, index) => ({ title: courseSession.title, order: index, duration: courseSession.videoDuration, mediaId: courseSession.videoMediaId, status: before.status === ProductStatus.PUBLISHED ? ProductStatus.PUBLISHED : ProductStatus.DRAFT })) } } });
+    }
     await recordAdminAuditWithClient(tx, { actorId, action: "COURSE_UPDATED", targetType: "COURSE", targetId: productId, beforeState: before, afterState: updated });
     return updated;
   });
@@ -126,8 +217,31 @@ export async function setAdminCourseStatus(actorId: string, productId: string, s
     if (!before) throw new AdminServiceError("NOT_FOUND", "دوره پیدا نشد.");
     if (before.status === status) throw new AdminServiceError("CONFLICT", "دوره از قبل همین وضعیت را دارد.");
     const updated = await tx.product.update({ where: { id: productId }, data: { status }, select: { id: true, status: true } });
+    if (status === ProductStatus.PUBLISHED) {
+      const modules = await tx.courseModule.findMany({ where: { courseProductId: productId }, select: { id: true } });
+      await tx.courseModule.updateMany({ where: { courseProductId: productId }, data: { status: ProductStatus.PUBLISHED } });
+      if (modules.length) await tx.courseLesson.updateMany({ where: { moduleId: { in: modules.map((module) => module.id) } }, data: { status: ProductStatus.PUBLISHED } });
+    }
     await recordAdminAuditWithClient(tx, { actorId, action: status === ProductStatus.PUBLISHED ? "COURSE_PUBLISHED" : status === ProductStatus.ARCHIVED ? "COURSE_ARCHIVED" : "COURSE_UNPUBLISHED", targetType: "COURSE", targetId: productId, beforeState: before, afterState: updated, reason: trimmedReason });
     return updated;
+  });
+}
+
+export async function deleteAdminCourse(actorId: string, productId: string, session?: AdminSessionView) {
+  await ensureCourse(productId, session);
+  return prisma.$transaction(async (tx) => {
+    const [orders, purchases, entitlements, enrollments, appointments, reviews] = await Promise.all([
+      tx.order.count({ where: { productId } }),
+      tx.purchase.count({ where: { productId } }),
+      tx.entitlement.count({ where: { productId } }),
+      tx.enrollment.count({ where: { courseProductId: productId } }),
+      tx.appointment.count({ where: { productId } }),
+      tx.review.count({ where: { productId } }),
+    ]);
+    if (orders || purchases || entitlements || enrollments || appointments || reviews) throw new AdminServiceError("CONFLICT", "این دوره سابقه خرید، ثبت‌نام، جلسه یا نظر دارد و حذف کامل آن ممکن نیست؛ آن را مخفی کنید.");
+    const deleted = await tx.product.delete({ where: { id: productId }, select: { id: true, title: true, slug: true } });
+    await recordAdminAuditWithClient(tx, { actorId, action: "COURSE_DELETED", targetType: "COURSE", targetId: productId, beforeState: deleted });
+    return deleted;
   });
 }
 

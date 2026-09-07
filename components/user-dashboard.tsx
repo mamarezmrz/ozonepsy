@@ -74,7 +74,7 @@ function IndividualSessionCard({ session }: { session: DashboardSession }) {
         <strong>جلسه پیش رو</strong>
         {session.nextAppointment ? <time>{session.nextAppointment}</time> : <small>هنوز جلسه‌ای زمان‌بندی نشده</small>}
       </div>
-      <Link href={`/dashboard/entitlements/${session.id}`} className="user-dashboard-card-link">لینک جلسه<span className="user-dashboard-arrow" aria-hidden="true" /></Link>
+      {session.nextAppointmentLink ? <a href={session.nextAppointmentLink} target="_blank" rel="noopener noreferrer" className="user-dashboard-card-link">لینک جلسه<span className="user-dashboard-arrow" aria-hidden="true" /></a> : <span className="user-dashboard-card-link is-disabled" aria-disabled="true">لینک جلسه<span className="user-dashboard-arrow" aria-hidden="true" /></span>}
     </article>
   );
 }

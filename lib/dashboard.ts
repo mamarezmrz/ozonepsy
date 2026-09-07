@@ -23,6 +23,12 @@ export type DashboardSession = {
   completed: number;
   remaining: number;
   nextAppointment?: string;
+  nextAppointmentLink?: string;
+  nextAppointmentTimestamp?: number;
+  appointments: {
+    upcoming: Array<{ id: string; date: string; time: string; therapist: string; dateTime: string }>;
+    completed: Array<{ id: string; date: string; time: string; therapist: string; dateTime: string }>;
+  };
 };
 
 export type DashboardCard = {
@@ -167,10 +173,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
             },
           },
           appointments: {
-            where: { status: "SCHEDULED" },
+            where: { status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.RESCHEDULED, AppointmentStatus.COMPLETED] } },
             orderBy: { startsAt: "asc" },
-            take: 1,
-            select: { startsAt: true },
+            select: { id: true, status: true, startsAt: true, meetingUrl: true, specialist: { select: { displayName: true } } },
           },
           usages: { select: { status: true } },
         },
@@ -295,18 +300,32 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         })),
       });
     } else {
+      const upcomingAppointments = entitlement.appointments.filter((appointment) =>
+        (appointment.status === AppointmentStatus.SCHEDULED || appointment.status === AppointmentStatus.RESCHEDULED) && appointment.startsAt.getTime() > Date.now(),
+      );
       individualSessions.push({
         id: entitlement.id,
         title: product.title,
         total,
         completed,
         remaining: Math.max(total - completed, 0),
-        nextAppointment: entitlement.appointments[0]
-          ? formatAppointmentDate(entitlement.appointments[0].startsAt)
+        nextAppointment: upcomingAppointments[0]
+          ? formatAppointmentDate(upcomingAppointments[0].startsAt)
           : undefined,
+        nextAppointmentLink: upcomingAppointments[0]?.meetingUrl || undefined,
+        nextAppointmentTimestamp: upcomingAppointments[0]?.startsAt.getTime(),
+        appointments: {
+          upcoming: upcomingAppointments
+            .map((appointment) => ({ id: appointment.id, date: formatSessionDate(appointment.startsAt), time: formatSessionTime(appointment.startsAt), therapist: appointment.specialist?.displayName || "متخصص اُزون", dateTime: appointment.startsAt.toISOString() })),
+          completed: entitlement.appointments
+            .filter((appointment) => appointment.status === AppointmentStatus.COMPLETED)
+            .map((appointment) => ({ id: appointment.id, date: formatSessionDate(appointment.startsAt), time: formatSessionTime(appointment.startsAt), therapist: appointment.specialist?.displayName || "متخصص اُزون", dateTime: appointment.startsAt.toISOString() })),
+        },
       });
     }
   }
+
+  individualSessions.sort((left, right) => (left.nextAppointmentTimestamp ?? Number.POSITIVE_INFINITY) - (right.nextAppointmentTimestamp ?? Number.POSITIVE_INFINITY));
 
   return {
     profile: {

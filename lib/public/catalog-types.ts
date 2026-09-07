@@ -36,6 +36,7 @@ export type PublicCoursePage = PublicPurchaseProduct & {
   deliveryMode: "RECORDED" | "LIVE";
   instructorName: string | null;
   coverUrl: string | null;
+  demoVideoUrl: string | null;
   modules: PublicCourseModule[];
 };
 

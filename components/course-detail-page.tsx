@@ -14,7 +14,8 @@ const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
 
 export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews = [], reviewProductSlug = null }: { product: PublicCoursePage; userEmail: string; hasCourseAccess: boolean; reviews?: readonly PublicReview[]; reviewProductSlug?: string | null }) {
   const [expanded, setExpanded] = useState(false);
-  const [lessonListHeight, setLessonListHeight] = useState(collapsedLessonListHeight);
+  const [canExpandLessons, setCanExpandLessons] = useState(false);
+  const [lessonListHeight, setLessonListHeight] = useState<number | null>(null);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoClosing, setVideoClosing] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
@@ -48,6 +49,34 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
       }
     };
   }, []);
+
+  const courseLessons = product.modules.flatMap((module) => module.lessons);
+
+  useEffect(() => {
+    const list = lessonListRef.current;
+
+    if (!list) {
+      return;
+    }
+
+    const measureLessons = () => {
+      const needsExpansion = list.scrollHeight > collapsedLessonListHeight + 1;
+      setCanExpandLessons(needsExpansion);
+
+      if (!needsExpansion) {
+        setExpanded(false);
+        setLessonListHeight(list.scrollHeight);
+      } else if (!expanded) {
+        setLessonListHeight(collapsedLessonListHeight);
+      }
+    };
+
+    measureLessons();
+    const observer = new ResizeObserver(measureLessons);
+    observer.observe(list);
+
+    return () => observer.disconnect();
+  }, [courseLessons.length, expanded]);
 
   const openVideo = (source: string, title: string) => {
     if (videoCloseTimerRef.current) {
@@ -204,8 +233,9 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
     });
   };
 
-  const courseLessons = product.modules.flatMap((module) => module.lessons);
   const previewLesson = courseLessons.find((lesson) => lesson.isPreview && lesson.mediaUrl);
+  const previewVideo = product.demoVideoUrl ?? previewLesson?.mediaUrl ?? null;
+  const previewTitle = product.demoVideoUrl ? "دموی دوره" : previewLesson?.title ?? "دموی دوره";
 
   return (
     <main className="course-detail-page">
@@ -257,15 +287,12 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
 
           <div className="course-detail-section">
             <h2>توضیحات</h2>
-            <p>
-              {product.description} در این دوره، شرکت‌کنندگان با مفاهیمی چون مدیریت استرس، ارتباطات مؤثر و خودآگاهی آشنا می‌شوند.
-              همچنین تکنیک‌های حل مسئله و کار با هیجانات به آن‌ها کمک می‌کند تا اعتماد به نفس خود را تقویت کرده و زمان خود را به بهترین شکل مدیریت کنند.
-            </p>
+            <p>{product.description}</p>
           </div>
 
           <section className="course-detail-section course-detail-demo" aria-labelledby="course-demo-title">
             <h2 id="course-demo-title">دموی دوره</h2>
-            <button type="button" className="course-demo-preview focus-ring" onClick={() => previewLesson?.mediaUrl && openVideo(previewLesson.mediaUrl, previewLesson.title)} disabled={!previewLesson} aria-label="پخش دموی دوره">
+            <button type="button" className="course-demo-preview focus-ring" onClick={() => previewVideo && openVideo(previewVideo, previewTitle)} disabled={!previewVideo} aria-label="پخش دموی دوره">
               <Image
                 src={asset("image-21.png")}
                 alt="پیش‌نمایش دموی دوره"
@@ -283,8 +310,8 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
             <div
               id="course-lesson-list"
               ref={lessonListRef}
-              className={`course-lesson-list${expanded ? " is-expanded" : ""}`}
-              style={{ height: `${lessonListHeight}px` }}
+              className={`course-lesson-list${canExpandLessons ? " is-collapsible" : ""}${expanded ? " is-expanded" : ""}`}
+              style={{ height: lessonListHeight === null ? "auto" : `${lessonListHeight}px` }}
             >
               {courseLessons.length ? courseLessons.map((lesson) => {
                 const canPlayLesson = Boolean(lesson.mediaUrl) && (lesson.isPreview || hasCourseAccess);
@@ -307,7 +334,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
                 );
               }) : <p className="course-detail-empty">هنوز سرفصل منتشرشده‌ای برای این دوره ثبت نشده است.</p>}
             </div>
-            <button
+            {canExpandLessons ? <button
               type="button"
               className="course-detail-more focus-ring"
               aria-expanded={expanded}
@@ -316,7 +343,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
             >
               <span>{expanded ? "بستن سرفصل‌ها" : "مشاهده بیشتر"}</span>
               <span className={`course-detail-more-chevron${expanded ? " is-open" : ""}`} aria-hidden="true" />
-            </button>
+            </button> : null}
           </section>
         </section>
       </div>

@@ -46,7 +46,7 @@ export default async function AdminOverviewPage() {
             columns={[
               { key: "title", label: "جلسه", render: (row) => <span>{row.title}</span> },
               { key: "email", label: "کاربر", render: (row) => <span dir="ltr">{row.email}</span> },
-              { key: "startsAt", label: "زمان", render: (row) => <span>{row.startsAt.toLocaleString("fa-IR")}</span> },
+              { key: "startsAt", label: "زمان", render: (row) => <span>{row.startsAt.toLocaleString("fa-IR-u-ca-gregory", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> },
               { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === AppointmentStatus.RESCHEDULED ? "warning" : "info"}>{row.status === AppointmentStatus.RESCHEDULED ? "تغییرزمان‌یافته" : "برنامه‌ریزی‌شده"}</AdminStatusBadge> },
             ]}
             empty={<p className="admin-table-empty">جلسه آینده‌ای ثبت نشده است.</p>}

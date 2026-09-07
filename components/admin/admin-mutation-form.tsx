@@ -3,6 +3,7 @@
 import type { FormEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { dispatchAdminNotification } from "@/components/admin/admin-notification-host";
 
 type ApiBody = { ok?: boolean; message?: string; error?: string; fieldErrors?: Record<string, string> };
 
@@ -14,6 +15,8 @@ export function AdminMutationForm({
   pendingLabel = "در حال ذخیره…",
   className = "admin-form-stack",
   successRedirect,
+  notification = false,
+  successMessage,
 }: {
   action: string;
   method?: "POST" | "PATCH" | "PUT";
@@ -22,6 +25,8 @@ export function AdminMutationForm({
   pendingLabel?: string;
   className?: string;
   successRedirect?: string;
+  notification?: boolean;
+  successMessage?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -46,15 +51,20 @@ export function AdminMutationForm({
       });
       const body = await response.json() as ApiBody;
       if (!response.ok || !body.ok) {
-        setError(body.message ?? body.error ?? "عملیات انجام نشد.");
+        const message = body.message ?? body.error ?? "عملیات انجام نشد.";
+        if (notification) dispatchAdminNotification(message, "error");
+        else setError(message);
         return;
       }
 
-      setSuccess(body.message ?? "تغییرات با موفقیت ذخیره شد.");
+      if (notification) dispatchAdminNotification(body.message ?? successMessage ?? "تغییرات با موفقیت ذخیره شد.");
+      else setSuccess(body.message ?? successMessage ?? "تغییرات با موفقیت ذخیره شد.");
       if (successRedirect) router.push(successRedirect);
       router.refresh();
     } catch {
-      setError("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
+      const message = "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
+      if (notification) dispatchAdminNotification(message, "error");
+      else setError(message);
     } finally {
       setPending(false);
     }
@@ -63,8 +73,8 @@ export function AdminMutationForm({
   return (
     <form className={className} onSubmit={submit} noValidate>
       {children}
-      {error ? <p className="admin-inline-error" role="alert">{error}</p> : null}
-      {success ? <p className="admin-inline-success" role="status">{success}</p> : null}
+      {!notification && error ? <p className="admin-inline-error" role="alert">{error}</p> : null}
+      {!notification && success ? <p className="admin-inline-success" role="status">{success}</p> : null}
       <div className="admin-form-actions">
         <button type="submit" className="admin-button admin-button-primary" disabled={pending}>
           {pending ? pendingLabel : submitLabel}

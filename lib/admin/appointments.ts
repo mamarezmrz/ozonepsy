@@ -25,13 +25,13 @@ export async function listAdminAppointments(query: AdminListQuery, filters: { st
   const orderBy = query.sort === "status" ? { status: query.direction } : query.sort === "createdAt" ? { createdAt: query.direction } : { startsAt: query.direction };
   const [total, rows] = await Promise.all([
     prisma.appointment.count({ where }),
-    prisma.appointment.findMany({ where, orderBy, skip: paginationOffset(query), take: query.pageSize, select: { id: true, status: true, startsAt: true, endsAt: true, createdAt: true, user: { select: { id: true, email: true, profile: { select: { displayName: true, firstName: true, lastName: true } } } }, product: { select: { id: true, title: true, kind: true } }, specialist: { select: { id: true, displayName: true } }, usage: { select: { status: true } } } }),
+    prisma.appointment.findMany({ where, orderBy, skip: paginationOffset(query), take: query.pageSize, select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, createdAt: true, user: { select: { id: true, email: true, profile: { select: { displayName: true, firstName: true, lastName: true } } } }, product: { select: { id: true, title: true, kind: true } }, specialist: { select: { id: true, displayName: true } }, usage: { select: { status: true } } } }),
   ]);
   return { rows, meta: pageMeta(total, query) };
 }
 
 export async function getAdminAppointment(id: string, session?: AdminSessionView) {
-  const row = await prisma.appointment.findFirst({ where: { id, ...scopeWhere(session) }, select: { id: true, status: true, startsAt: true, endsAt: true, createdAt: true, updatedAt: true, entitlementId: true, user: { select: { id: true, email: true, profile: { select: { displayName: true, firstName: true, lastName: true, phone: true } } } }, product: { select: { id: true, title: true, slug: true, kind: true } }, specialist: { select: { id: true, displayName: true } }, entitlement: { select: { id: true, status: true, totalSessions: true, usages: { select: { id: true, status: true, recordedAt: true, reason: true } } } }, usage: { select: { id: true, status: true, recordedAt: true, reason: true, recordedById: true } } } });
+  const row = await prisma.appointment.findFirst({ where: { id, ...scopeWhere(session) }, select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, createdAt: true, updatedAt: true, entitlementId: true, user: { select: { id: true, email: true, profile: { select: { displayName: true, firstName: true, lastName: true, phone: true } } } }, product: { select: { id: true, title: true, slug: true, kind: true } }, specialist: { select: { id: true, displayName: true } }, entitlement: { select: { id: true, status: true, totalSessions: true, usages: { select: { id: true, status: true, recordedAt: true, reason: true } } } }, usage: { select: { id: true, status: true, recordedAt: true, reason: true, recordedById: true } } } });
   if (!row) throw new AdminServiceError("NOT_FOUND", "جلسه پیدا نشد.");
   return row;
 }
@@ -60,13 +60,17 @@ export async function transitionAdminAppointment(actorId: string, id: string, st
     const before = await tx.appointment.findFirst({ where: { id, ...scopeWhere(session) }, select: { id: true, status: true, entitlementId: true, usage: { select: { id: true, status: true } } } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "جلسه پیدا نشد.");
     if (before.status === status) return before;
-    if (before.status === AppointmentStatus.CANCELED || before.status === AppointmentStatus.COMPLETED) throw new AdminServiceError("CONFLICT", "وضعیت نهایی جلسه قابل تغییر نیست.");
-    if (status === AppointmentStatus.COMPLETED && before.usage?.status === SessionUsageStatus.REVERSED) throw new AdminServiceError("CONFLICT", "مصرف جلسه قبلاً معکوس شده است.");
     const changed = await tx.appointment.updateMany({ where: { id, status: before.status }, data: { status } });
     if (changed.count !== 1) throw new AdminServiceError("CONFLICT", "جلسه هم‌زمان توسط کاربر دیگری تغییر کرده است.");
     const updated = await tx.appointment.findUniqueOrThrow({ where: { id }, select: { id: true, status: true } });
-    if (status === AppointmentStatus.COMPLETED && before.entitlementId && !before.usage) {
-      await tx.sessionUsage.upsert({ where: { appointmentId: id }, create: { entitlementId: before.entitlementId, appointmentId: id, status: SessionUsageStatus.COMPLETED, recordedById: actorId, reason: trimmedReason }, update: {} });
+    if (status === AppointmentStatus.COMPLETED && before.entitlementId) {
+      if (before.usage?.status === SessionUsageStatus.REVERSED) {
+        await tx.sessionUsage.update({ where: { id: before.usage.id }, data: { status: SessionUsageStatus.COMPLETED, recordedById: actorId, recordedAt: new Date(), reversedById: null, reversedAt: null, reason: trimmedReason } });
+      } else if (!before.usage) {
+        await tx.sessionUsage.create({ data: { entitlementId: before.entitlementId, appointmentId: id, status: SessionUsageStatus.COMPLETED, recordedById: actorId, reason: trimmedReason } });
+      }
+    } else if (before.usage?.status === SessionUsageStatus.COMPLETED) {
+      await tx.sessionUsage.update({ where: { id: before.usage.id }, data: { status: SessionUsageStatus.REVERSED, reversedById: actorId, reversedAt: new Date(), reason: trimmedReason } });
     }
     await recordAdminAuditWithClient(tx, { actorId, action: status === AppointmentStatus.COMPLETED ? "APPOINTMENT_COMPLETED" : status === AppointmentStatus.CANCELED ? "APPOINTMENT_CANCELED" : `APPOINTMENT_${status}`, targetType: "APPOINTMENT", targetId: id, beforeState: before, afterState: updated, reason: trimmedReason });
     return updated;
