@@ -7,6 +7,7 @@ export type PublicPurchaseProduct = {
   description: string;
   kind: PublicProductKind;
   category: string;
+  tags: string[];
   priceMinor: number;
   currency: string;
   accent: string;

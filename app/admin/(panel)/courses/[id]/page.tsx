@@ -38,7 +38,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
     categoryId: course.categoryId,
     categorySlugs: curriculumCategorySlugs.length ? curriculumCategorySlugs : course.category?.slug ? [course.category.slug] : [],
     coverMediaId: course.coverMediaId,
-    coverImageMode: curriculum.coverImageMode === "PLAIN" ? "PLAIN" : "BRANDED",
     instructorName: typeof curriculum.instructorName === "string" ? curriculum.instructorName : "",
     durationSessions: typeof curriculum.durationSessions === "number" ? curriculum.durationSessions : null,
     demoMediaId: typeof curriculum.demoMediaId === "string" ? curriculum.demoMediaId : null,
@@ -71,7 +70,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         {canWrite ? <AdminCourseCreateForm categories={categories} values={formValues} courseId={course.id} /> : (
           <dl className="admin-detail-list">
             <div><dt>Slug</dt><dd dir="ltr">{course.slug}</dd></div>
-            <div><dt>توضیحات</dt><dd>{course.description}</dd></div>
+            <div><dt>توضیحات</dt><dd className="admin-course-description">{course.description}</dd></div>
             <div><dt>دسته‌بندی</dt><dd>{course.category?.title || "—"}</dd></div>
             <div><dt>قیمت</dt><dd dir="ltr">{(course.priceMinor / 100).toLocaleString("fa-IR")} {course.currency}</dd></div>
           </dl>

@@ -19,6 +19,13 @@ const legacyProductAliases: Record<string, string> = {
 
 const legacyCourseTestVideoUrl = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 
+const courseCategoryLabels: Record<string, string> = {
+  "individual-consultation": "مشاوره فردی",
+  "couples-and-relationships": "زوج و رابطه",
+  "children-and-adolescents": "کودک و نوجوان",
+  "group-therapy": "گروه درمانی",
+};
+
 const legacyCourseTestModules: PublicCourseModule[] = [{
   id: "legacy-life-skills-module",
   title: "سرفصل دوره مهارت‌های زندگی",
@@ -52,6 +59,13 @@ function mediaUrl(id: string | null, visibility: string | undefined) {
   return id && visibility === "PUBLIC" ? `/api/media/${id}` : null;
 }
 
+function getCourseTags(course: { curriculum: unknown } | null | undefined) {
+  if (!course?.curriculum || typeof course.curriculum !== "object" || Array.isArray(course.curriculum)) return [];
+  const categorySlugs = (course.curriculum as { categorySlugs?: unknown }).categorySlugs;
+  if (!Array.isArray(categorySlugs)) return [];
+  return [...new Set(categorySlugs.filter((slug): slug is string => typeof slug === "string").map((slug) => courseCategoryLabels[slug]).filter(Boolean))];
+}
+
 function mapProduct(product: {
   id: string;
   slug: string;
@@ -66,6 +80,7 @@ function mapProduct(product: {
   consultation: { durationMinutes: number } | null;
   sessionPackage: { includedSessions: number } | null;
   groupTherapy: { cohortLabel: string | null } | null;
+  course?: { curriculum: unknown } | null;
 }) : PublicPurchaseProduct {
   const kind = publicKind(product.kind);
   const defaults = presentationDefaults[kind];
@@ -84,6 +99,7 @@ function mapProduct(product: {
     description: product.description,
     kind,
     category: product.category?.title ?? defaults.category,
+    tags: kind === "course" ? getCourseTags(product.course) : [],
     priceMinor: product.priceMinor,
     currency: product.currency,
     accent: product.accent ?? defaults.accent,
@@ -107,6 +123,7 @@ const purchaseSelect = {
   consultation: { select: { durationMinutes: true } },
   sessionPackage: { select: { includedSessions: true } },
   groupTherapy: { select: { cohortLabel: true } },
+  course: { select: { curriculum: true } },
 } as const;
 
 export async function getPublishedProductByIdOrSlug(value: string): Promise<PublicPurchaseProduct | null> {

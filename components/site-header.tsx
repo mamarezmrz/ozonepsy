@@ -103,6 +103,17 @@ export function SiteHeader({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [consultationsOpen]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
   const closeMenu = () => {
     setMenuOpen(false);
     setConsultationsOpen(false);

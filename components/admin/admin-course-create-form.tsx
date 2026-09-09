@@ -8,7 +8,6 @@ import { CustomSelect } from "@/components/custom-select";
 import { AdminMultiSelect } from "@/components/admin/admin-multi-select";
 
 type CategoryOption = { id: string; title: string; slug: string };
-type CoverImageMode = "BRANDED" | "PLAIN";
 type VideoDraft = { mediaId: string | null; duration: number | null; fileName: string };
 type SessionDraft = { key: number; title: string; video: VideoDraft };
 type ApiResponse = { ok?: boolean; message?: string; data?: { id?: string }; fieldErrors?: Record<string, string> };
@@ -21,7 +20,6 @@ export type AdminCourseFormValues = {
   categoryId?: string | null;
   categorySlugs?: string[];
   coverMediaId?: string | null;
-  coverImageMode?: CoverImageMode;
   instructorName?: string | null;
   durationSessions?: number | null;
   demoMediaId?: string | null;
@@ -38,7 +36,11 @@ const courseCategoryOptions = [
 ] as const;
 
 function normalizeSlug(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/[\s-]+/g, "-").replace(/^-+|-+$/g, "");
+  return value.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-");
+}
+
+function finalizeSlug(value: string) {
+  return normalizeSlug(value).replace(/^-+|-+$/g, "");
 }
 
 async function readApiResponse(response: Response) {
@@ -123,19 +125,15 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
   const [demoVideo, setDemoVideo] = useState<VideoDraft>({ mediaId: values.demoMediaId ?? null, duration: values.demoVideoDuration ?? null, fileName: values.demoVideoName ?? (values.demoMediaId ? "ویدئوی بارگذاری‌شده" : "") });
   const [coverMediaId, setCoverMediaId] = useState<string | null>(values.coverMediaId ?? null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState(values.coverMediaId ? `/api/admin/media/${values.coverMediaId}/preview` : "");
-  const [coverImageMode, setCoverImageMode] = useState<CoverImageMode>(values.coverImageMode ?? "BRANDED");
-  const [sessions, setSessions] = useState<SessionDraft[]>(values.sessions?.length ? values.sessions.map((session, index) => ({ key: index + 1, title: session.title, video: { mediaId: session.videoMediaId ?? null, duration: session.videoDuration ?? null, fileName: session.videoName ?? (session.videoMediaId ? "ویدئوی بارگذاری‌شده" : "") } })) : [{ key: 1, title: "", video: { ...emptyVideo } }]);
-  const [nextSessionKey, setNextSessionKey] = useState((values.sessions?.length ?? 0) + 1);
+  const [sessions, setSessions] = useState<SessionDraft[]>(values.sessions?.length ? values.sessions.map((session, index) => ({ key: index + 1, title: session.title, video: { mediaId: session.videoMediaId ?? null, duration: session.videoDuration ?? null, fileName: session.videoName ?? (session.videoMediaId ? "ویدئوی بارگذاری‌شده" : "") } })) : []);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function uploadCover(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
     setUploadingCover(true);
-    setError(null);
     const form = new FormData();
     form.append("file", file);
     form.append("visibility", "PUBLIC");
@@ -143,14 +141,14 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
       const response = await fetch("/api/admin/media", { method: "POST", credentials: "same-origin", body: form });
       const body = await readApiResponse(response);
       if (!response.ok || !body.ok || !body.data?.id) {
-        setError(body.message ?? "بارگذاری تصویر انجام نشد.");
+        dispatchAdminNotification(body.message ?? "بارگذاری تصویر انجام نشد.", "error");
         return;
       }
       setCoverMediaId(body.data.id);
       setCoverPreviewUrl(`/api/admin/media/${body.data.id}/preview`);
       dispatchAdminNotification(body.message ?? "تصویر کاور بارگذاری شد.");
     } catch {
-      setError("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
+      dispatchAdminNotification("ارتباط با سرور برقرار نشد.", "error");
     } finally {
       setUploadingCover(false);
     }
@@ -169,29 +167,59 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
     setSessions((current) => current.map((session) => session.key === key ? { ...session, video } : session));
   }
 
-  function addSession() {
-    setSessions((current) => [...current, { key: nextSessionKey, title: "", video: { ...emptyVideo } }]);
-    setNextSessionKey((current) => current + 1);
+  function buildSessions() {
+    const count = Number.parseInt(durationSessions, 10);
+    if (!Number.isInteger(count) || count < 1 || count > 100) return;
+    setSessions(Array.from({ length: count }, (_, index) => {
+      const existing = sessions[index];
+      return existing ? { ...existing, key: index + 1 } : { key: index + 1, title: "", video: { ...emptyVideo } };
+    }));
+    dispatchAdminNotification(`${count.toLocaleString("fa-IR")} جلسه برای دوره ساخته شد.`);
   }
 
   function removeSession(key: number) {
-    setSessions((current) => current.length === 1 ? current : current.filter((session) => session.key !== key));
+    setSessions((current) => {
+      const next = current.filter((session) => session.key !== key);
+      setDurationSessions(String(next.length));
+      return next;
+    });
+  }
+
+  function addSession() {
+    setSessions((current) => {
+      const nextKey = current.reduce((largest, session) => Math.max(largest, session.key), 0) + 1;
+      const next = [...current, { key: nextKey, title: "", video: { ...emptyVideo } }];
+      setDurationSessions(String(next.length));
+      return next;
+    });
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim() || !slug.trim() || !description.trim()) {
-      setError("عنوان، اسلاگ و توضیحات دوره را وارد کنید.");
+      const message = "عنوان، اسلاگ و توضیحات دوره را وارد کنید.";
+      dispatchAdminNotification(message, "error");
       return;
     }
-    const filledSessions = sessions.filter((session) => session.title.trim());
-    const hasIncompleteSession = sessions.some((session) => !session.title.trim() && session.video.mediaId);
-    if (hasIncompleteSession) {
-      setError("برای هر ویدئوی جلسه، عنوان همان جلسه را هم وارد کنید.");
+    const requestedSessionCount = Number.parseInt(durationSessions, 10);
+    if (!Number.isInteger(requestedSessionCount) || requestedSessionCount < 1) {
+      const message = "تعداد جلسات دوره را وارد کنید و ابتدا روی «ساخت جلسات» بزنید.";
+      dispatchAdminNotification(message, "error");
       return;
     }
+    if (sessions.length !== requestedSessionCount) {
+      const message = "تعداد فیلدهای جلسه با مدت دوره یکسان نیست. دوباره روی «ساخت جلسات» بزنید.";
+      dispatchAdminNotification(message, "error");
+      return;
+    }
+    const incompleteSessionIndex = sessions.findIndex((session) => !session.title.trim() || !session.video.mediaId);
+    if (incompleteSessionIndex !== -1) {
+      const message = `عنوان و ویدئوی جلسه ${ (incompleteSessionIndex + 1).toLocaleString("fa-IR") } را کامل کنید.`;
+      dispatchAdminNotification(message, "error");
+      return;
+    }
+    const filledSessions = sessions;
     setPending(true);
-    setError(null);
     try {
       const response = await fetch(courseId ? `/api/admin/courses/${courseId}` : "/api/admin/courses", {
         method: courseId ? "PATCH" : "POST",
@@ -199,7 +227,7 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
-          slug: normalizeSlug(slug),
+          slug: finalizeSlug(slug),
           description: description.trim(),
           priceMinor: Math.round((Number(priceMajor) || 0) * 100),
           currency: currency.trim().toUpperCase() || "USD",
@@ -207,7 +235,6 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
           categorySlugs,
           deliveryMode: "RECORDED",
           coverMediaId,
-          coverImageMode,
           instructorName: instructorName.trim(),
           durationSessions: durationSessions ? Number(durationSessions) : null,
           demoMediaId: demoVideo.mediaId,
@@ -217,14 +244,14 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
       });
       const body = await readApiResponse(response);
       if (!response.ok || !body.ok) {
-        setError(body.message ?? "ذخیره دوره انجام نشد.");
+        dispatchAdminNotification(body.message ?? "ذخیره دوره انجام نشد.", "error");
         return;
       }
       dispatchAdminNotification(body.message ?? "دوره ایجاد شد.");
       router.push("/courses");
       router.refresh();
     } catch {
-      setError("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
+      dispatchAdminNotification("ارتباط با سرور برقرار نشد.", "error");
     } finally {
       setPending(false);
     }
@@ -240,20 +267,9 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
             <p>این مشخصات روی کارت دوره و در صفحه‌ی جزئیات دوره نمایش داده می‌شود.</p>
             <div className="admin-course-cover-box">
               <div className="admin-course-cover-preview">
-                {coverPreviewUrl ? <><Image src={coverPreviewUrl} alt="پیش‌نمایش تصویر کاور دوره" fill unoptimized sizes="(max-width: 1100px) 100vw, 48vw" />{coverImageMode === "BRANDED" ? <span className="admin-course-cover-branding" aria-hidden="true"><Image src="/ozone-logo.svg" alt="" width={124} height={124} /></span> : null}</> : <div className="admin-course-cover-empty">تصویر کاور دوره</div>}
+                {coverPreviewUrl ? <Image src={coverPreviewUrl} alt="پیش‌نمایش تصویر کاور دوره" fill unoptimized sizes="(max-width: 1100px) 100vw, 48vw" /> : <div className="admin-course-cover-empty">تصویر کاور دوره</div>}
               </div>
               <div className="admin-course-cover-controls">
-                <span className="admin-course-control-label">حالت نمایش تصویر</span>
-                <div className="admin-course-cover-modes">
-                  <button type="button" className={`admin-course-cover-mode${coverImageMode === "BRANDED" ? " is-active" : ""}`} onClick={() => setCoverImageMode("BRANDED")}>
-                    <span className="admin-course-cover-mode-preview is-branded"><Image src="/ozone-logo.svg" alt="" width={18} height={18} /></span>
-                    <span>با لوگو و دایره‌ها</span>
-                  </button>
-                  <button type="button" className={`admin-course-cover-mode${coverImageMode === "PLAIN" ? " is-active" : ""}`} onClick={() => setCoverImageMode("PLAIN")}>
-                    <span className="admin-course-cover-mode-preview">تصویر</span>
-                    <span>بدون لوگو</span>
-                  </button>
-                </div>
                 <div className="admin-course-cover-actions">
                   <label className="admin-button admin-button-secondary admin-course-file-input">
                     {uploadingCover ? "در حال بارگذاری…" : "انتخاب تصویر"}
@@ -278,26 +294,27 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
             <p>این بخش فقط در صفحه‌ی جزئیات دوره نمایش داده می‌شود.</p>
             <div className="admin-course-form-grid">
               <label className="admin-form-field admin-form-field-full"><span>مدرس دوره</span><input value={instructorName} onChange={(event) => setInstructorName(event.target.value)} /></label>
-              <label className="admin-form-field"><span>مدت دوره (تعداد جلسات)</span><input type="number" min="1" value={durationSessions} onChange={(event) => setDurationSessions(event.target.value)} /></label>
-              <VideoUploadField label="ویدئوی دمو" value={demoVideo} visibility="PUBLIC" onChange={setDemoVideo} onError={setError} />
+              <label className="admin-form-field"><span>مدت دوره (تعداد جلسات)</span><span className="admin-course-session-input"><input type="number" min="0" max="100" step="1" value={durationSessions} onChange={(event) => setDurationSessions(event.target.value)} /><button type="button" className="admin-course-build-sessions" onClick={buildSessions} disabled={!Number.isInteger(Number(durationSessions)) || Number(durationSessions) < 1 || Number(durationSessions) > 100}>ساخت جلسات</button></span></label>
+              <VideoUploadField label="ویدئوی دمو" value={demoVideo} visibility="PUBLIC" onChange={setDemoVideo} onError={(message) => dispatchAdminNotification(message, "error")} />
             </div>
           </section>
 
           <section className="admin-course-editor-section admin-course-sessions-section">
-            <div className="admin-course-section-heading"><div><h2>جلسات دوره</h2><p>برای هر جلسه یک ردیف جدید بسازید.</p></div><span className="admin-course-session-count">{sessions.length.toLocaleString("fa-IR")} جلسه</span></div>
+            <div className="admin-course-section-heading"><div><h2>جلسات دوره</h2></div><span className="admin-course-session-count">{sessions.length.toLocaleString("fa-IR")} جلسه</span></div>
             <div className="admin-course-session-list">
               {sessions.map((session, index) => <div className="admin-course-session-row" key={session.key}>
                 <span className="admin-course-session-number">{(index + 1).toLocaleString("fa-IR")}</span>
                 <label className="admin-form-field"><span>عنوان جلسه</span><input value={session.title} onChange={(event) => updateSession(session.key, "title", event.target.value)} /></label>
-                <VideoUploadField label="ویدئوی جلسه" value={session.video} visibility="PRIVATE" onChange={(video) => updateSessionVideo(session.key, video)} onError={setError} />
-                <button type="button" className="admin-course-session-delete" aria-label={`حذف جلسه ${(index + 1).toLocaleString("fa-IR")}`} onClick={() => removeSession(session.key)} disabled={sessions.length === 1}>×</button>
+                <VideoUploadField label="ویدئوی جلسه" value={session.video} visibility="PRIVATE" onChange={(video) => updateSessionVideo(session.key, video)} onError={(message) => dispatchAdminNotification(message, "error")} />
+                <button type="button" className="admin-course-session-delete" aria-label={`حذف جلسه ${(index + 1).toLocaleString("fa-IR")}`} onClick={() => removeSession(session.key)}>×</button>
               </div>)}
             </div>
-            <button type="button" className="admin-course-add-session" onClick={addSession}>+ افزودن جلسه</button>
+            <div className="admin-course-session-actions">
+              <button type="button" className="admin-button admin-button-secondary" onClick={addSession}>افزودن جلسه</button>
+            </div>
           </section>
         </div>
       </div>
-      {error ? <p className="admin-course-error" role="alert">{error}</p> : null}
       <div className="admin-course-actions"><button type="submit" className="admin-button admin-button-primary" disabled={pending || uploadingCover}>{pending ? "در حال ذخیره…" : "ذخیره"}</button><button type="button" className="admin-button admin-button-secondary" onClick={() => router.push("/courses")} disabled={pending}>لغو تغییرات</button></div>
     </form>
   );

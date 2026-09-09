@@ -12,7 +12,6 @@ const links = [
   { href: "/admin", label: "نمای کلی", permission: "dashboard.view" },
   { href: "/users", label: "کاربران", permission: "users.read" },
   { href: "/courses", label: "دوره‌ها", permission: "courses.read" },
-  { href: "/specialists", label: "متخصصان", permission: "instructors.read" },
   { href: "/sessions", label: "جلسات", permission: "sessions.read" },
   { href: "/reviews", label: "نظرات", permission: "reviews.read" },
   { href: "/categories", label: "دسته‌بندی‌ها", permission: "categories.read" },
@@ -25,13 +24,14 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminSidebar({ session }: { session: AdminSessionView }) {
+export function AdminSidebar({ session, isOpen = false, onClose }: { session: AdminSessionView; isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const visibleLinks = links.filter((link) => session.permissions.includes(link.permission));
   const identity = session.displayName?.trim() || session.email;
 
   return (
-    <aside className="admin-sidebar" aria-label="منوی پنل مدیریت">
+    <aside id="admin-sidebar" className={`admin-sidebar${isOpen ? " is-open" : ""}`} aria-label="منوی پنل مدیریت">
+      <button type="button" className="admin-sidebar-close" aria-label="بستن منوی پنل مدیریت" onClick={onClose}>×</button>
       <div className="admin-sidebar-profile admin-identity" title={identity}>
         <span className="admin-identity-avatar" aria-hidden="true">
           {session.avatarUrl ? <img src={session.avatarUrl} alt="" /> : identity.slice(0, 1).toUpperCase()}
@@ -49,6 +49,7 @@ export function AdminSidebar({ session }: { session: AdminSessionView }) {
             href={link.href}
             className={`admin-sidebar-link${isActive(pathname, link.href) ? " is-active" : ""}`}
             aria-current={isActive(pathname, link.href) ? "page" : undefined}
+            onClick={onClose}
           >
             <span>{link.label}</span>
             <span aria-hidden="true" className="admin-sidebar-arrow" />

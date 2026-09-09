@@ -61,7 +61,6 @@ const optionalCourseDuration = z.preprocess((value) => value === "" ? null : val
 
 export const adminCourseCreateSchema = adminCourseSchema.extend({
   coverMediaId: optionalCourseMediaId,
-  coverImageMode: z.enum(["BRANDED", "PLAIN"]).default("BRANDED"),
   categorySlugs: z.array(z.string().trim().min(1).max(120)).max(4).default([]),
   instructorName: z.string().trim().max(200).default(""),
   durationSessions: z.preprocess((value) => value === "" ? null : value, z.coerce.number().int().positive().nullable().optional()),

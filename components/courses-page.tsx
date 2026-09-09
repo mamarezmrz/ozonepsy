@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CourseDescription } from "@/components/course-description";
 import { HomeFaq, HomeTestimonials } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
 import type { PublicContent } from "@/lib/public/content";
@@ -39,8 +40,8 @@ export function PsychologyCourseCatalog({ title = "دوره‌های اُزون"
               <div className="home-course-info">
                 <div>
                   <h3>{product.title}</h3>
-                  <div className="home-course-tags"><span className="home-course-tag">گروه درمانی</span><span className="home-course-tag">مشاوره فردی</span></div>
-                  <p className="mt-4 text-sm leading-7 text-[#676b6b]">{product.description}</p>
+                  {product.tags.length ? <div className="home-course-tags">{product.tags.map((tag) => <span className="home-course-tag" key={tag}>{tag}</span>)}</div> : null}
+                  <CourseDescription description={product.description} clamp className="mt-4 text-sm leading-7 text-[#676b6b]" />
                 </div>
                 <div className="home-course-footer">
                   <div className="home-course-actions"><Link href={`/checkout/${product.id}`} className="home-course-action home-course-action-primary">خرید</Link><Link href={`/courses/${product.slug}`} className="home-course-action home-course-action-secondary">جزئیات دوره</Link></div>

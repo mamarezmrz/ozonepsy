@@ -36,7 +36,6 @@ export type AdminCourseCreateInput = {
   deliveryMode: CourseDeliveryMode;
   accessDays?: number | null;
   coverMediaId?: string | null;
-  coverImageMode?: "BRANDED" | "PLAIN";
   categorySlugs?: string[];
   instructorName?: string;
   durationSessions?: number | null;
@@ -44,6 +43,28 @@ export type AdminCourseCreateInput = {
   demoVideoDuration?: number | null;
   sessions?: Array<{ title: string; videoMediaId?: string | null; videoDuration?: number | null }>;
 };
+
+function normalizeCourseSessions(input: AdminCourseCreateInput) {
+  const sessionCount = input.durationSessions;
+  if (!Number.isInteger(sessionCount) || !sessionCount || sessionCount < 1) {
+    throw new AdminServiceError("VALIDATION_ERROR", "تعداد جلسات دوره را وارد کنید.");
+  }
+
+  const sessions = (input.sessions ?? []).map((session) => ({
+    title: session.title.trim(),
+    videoMediaId: session.videoMediaId ?? null,
+    videoDuration: session.videoDuration ?? null,
+  }));
+  if (sessions.length !== sessionCount) {
+    throw new AdminServiceError("VALIDATION_ERROR", "تعداد جلسات ساخته‌شده با مدت دوره یکسان نیست.");
+  }
+
+  const incompleteIndex = sessions.findIndex((session) => !session.title || !session.videoMediaId);
+  if (incompleteIndex !== -1) {
+    throw new AdminServiceError("VALIDATION_ERROR", `عنوان و ویدئوی جلسه ${incompleteIndex + 1} را کامل کنید.`);
+  }
+  return sessions;
+}
 
 export async function listAdminCourses(query: AdminListQuery, status?: ProductStatus, session?: AdminSessionView) {
   const where = { ...courseWhere, ...courseScope(session), ...(status ? { status } : {}), ...(query.search ? { OR: [{ title: { contains: query.search, mode: "insensitive" as const } }, { slug: { contains: query.search, mode: "insensitive" as const } }] } : {}) };
@@ -118,9 +139,9 @@ export async function getAdminCourse(productId: string, session?: AdminSessionVi
 export async function createAdminCourse(actorId: string, input: AdminCourseCreateInput) {
   const data = productData(input);
   if (!data.title || !data.slug || !data.description || data.priceMinor < 0) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات دوره کامل یا معتبر نیست.");
-  const sessions = (input.sessions ?? []).map((session) => ({ title: session.title.trim(), videoMediaId: session.videoMediaId ?? null, videoDuration: session.videoDuration ?? null })).filter((session) => session.title);
+  const sessions = normalizeCourseSessions(input);
   const curriculum = {
-    coverImageMode: input.coverImageMode ?? "BRANDED",
+    coverImageMode: "BRANDED",
     categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
     instructorName: input.instructorName?.trim() || null,
     durationSessions: input.durationSessions ?? null,
@@ -176,16 +197,7 @@ export async function updateAdminCourse(actorId: string, productId: string, inpu
   await ensureCourse(productId, session);
   const data = productData(input);
   if (!data.title || !data.slug || !data.description || data.priceMinor < 0) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات دوره کامل یا معتبر نیست.");
-  const sessions = (input.sessions ?? []).map((courseSession) => ({ title: courseSession.title.trim(), videoMediaId: courseSession.videoMediaId ?? null, videoDuration: courseSession.videoDuration ?? null })).filter((courseSession) => courseSession.title);
-  const curriculum = {
-    coverImageMode: input.coverImageMode ?? "BRANDED",
-    categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
-    instructorName: input.instructorName?.trim() || null,
-    durationSessions: input.durationSessions ?? null,
-    demoMediaId: input.demoMediaId ?? null,
-    demoVideoDuration: input.demoVideoDuration ?? null,
-    sessions: sessions.map((courseSession, index) => ({ order: index, title: courseSession.title, videoMediaId: courseSession.videoMediaId, videoDuration: courseSession.videoDuration })),
-  };
+  const sessions = normalizeCourseSessions(input);
   return prisma.$transaction(async (tx) => {
     if (input.coverMediaId) {
       const media = await tx.mediaAsset.findFirst({ where: { id: input.coverMediaId, status: "ACTIVE" }, select: { id: true } });
@@ -198,6 +210,16 @@ export async function updateAdminCourse(actorId: string, productId: string, inpu
     }
     const before = await tx.product.findUnique({ where: { id: productId }, select: { title: true, slug: true, description: true, priceMinor: true, currency: true, categoryId: true, coverMediaId: true, status: true, course: { select: { deliveryMode: true, accessDays: true, curriculum: true } } } });
     if (!before) throw new AdminServiceError("NOT_FOUND", "دوره پیدا نشد.");
+    const previousCurriculum = before.course?.curriculum && typeof before.course.curriculum === "object" && !Array.isArray(before.course.curriculum) ? before.course.curriculum as Record<string, unknown> : {};
+    const curriculum = {
+      coverImageMode: previousCurriculum.coverImageMode === "PLAIN" ? "PLAIN" : "BRANDED",
+      categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
+      instructorName: input.instructorName?.trim() || null,
+      durationSessions: input.durationSessions ?? null,
+      demoMediaId: input.demoMediaId ?? null,
+      demoVideoDuration: input.demoVideoDuration ?? null,
+      sessions: sessions.map((courseSession, index) => ({ order: index, title: courseSession.title, videoMediaId: courseSession.videoMediaId, videoDuration: courseSession.videoDuration })),
+    };
     const updated = await tx.product.update({ where: { id: productId }, data: { title: data.title, slug: data.slug, description: data.description, priceMinor: data.priceMinor, currency: data.currency, categoryId: data.categoryId, coverMediaId: input.coverMediaId || null, course: { update: { deliveryMode: data.deliveryMode, accessDays: data.accessDays ?? before.course?.accessDays ?? null, curriculum } } }, select: { id: true, slug: true, title: true, status: true } });
     await tx.courseModule.deleteMany({ where: { courseProductId: productId } });
     if (sessions.length) {

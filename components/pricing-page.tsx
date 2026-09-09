@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { HomeFaq } from "@/components/home-interactive";
 import { AboutPreconsultation } from "@/components/about-page";
+import { CourseDescription } from "@/components/course-description";
 import type { PublicContent } from "@/lib/public/content";
 import type { PublicPurchaseProduct } from "@/lib/public/catalog-types";
 
@@ -37,18 +38,18 @@ export function PricingPage({ content, products = [] }: { content?: PublicConten
                     <Image src={asset(`image-${20 + (index % 3)}.png`)} alt={course.title} fill quality={100} sizes="(max-width: 560px) 100vw, 168px" />
                   </div>
                   <div className="pricing-course-row-content">
-                    <div className="pricing-course-row-price">
-                      <span dir="ltr">${(course.priceMinor / 100).toFixed(2)}</span> <small>({course.currency})</small>
+                    <div className="pricing-course-row-heading">
+                      <h4>{course.title}</h4>
+                      <div className="pricing-course-row-price">
+                        <span dir="ltr">${(course.priceMinor / 100).toFixed(2)}</span> <small>({course.currency})</small>
+                      </div>
                     </div>
-                    <h4>{course.title}</h4>
                     <div className="pricing-course-bottom">
+                      <CourseDescription description={course.description} clamp className="pricing-course-points" />
                       <div className="pricing-course-row-actions">
                         <Link href={`/checkout/${course.id}`} className="pricing-buy-button">خرید</Link>
                         <Link href={`/courses/${course.slug}`} className="pricing-details-link">جزئیات دوره</Link>
                       </div>
-                      <ul className="pricing-course-points">
-                        <li>{course.description}</li>
-                      </ul>
                     </div>
                   </div>
                 </article>
@@ -116,9 +117,7 @@ function PricingOfferGroup({
               </div>
             </div>
             <h4>{offer.title}</h4>
-            <ul>
-              <li>{offer.description}</li>
-            </ul>
+            <p className="pricing-offer-description">{offer.description}</p>
             <Link href={`/checkout/${offer.id}`} className="pricing-buy-button">خرید</Link>
           </article>
         )) : <p className="pricing-empty-state">محصول منتشرشده‌ای برای نمایش وجود ندارد.</p>}

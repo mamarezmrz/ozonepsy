@@ -5,6 +5,7 @@ import Link from "next/link";
 import { type ChangeEvent, type CSSProperties, useEffect, useRef, useState } from "react";
 import { AboutPreconsultation } from "@/components/about-page";
 import { ConsultationTestimonials } from "@/components/consultation-testimonials";
+import { CourseDescription } from "@/components/course-description";
 import type { PublicCoursePage } from "@/lib/public/catalog-types";
 import type { PublicReview } from "@/lib/reviews";
 
@@ -247,12 +248,10 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
         <section className="course-detail-hero" aria-labelledby="course-detail-title">
           <div className="course-detail-copy">
             <h1 id="course-detail-title">{product.title}</h1>
-            <p>{product.description}</p>
-            <div className="course-detail-tags" aria-label="دسته‌بندی دوره">
-              <span>مشاوره فردی</span>
-              <span>مشاوره فردی</span>
-              <span>گروه درمانی</span>
-            </div>
+            <CourseDescription description={product.description} clamp className="course-detail-hero-description" />
+            {product.tags.length ? <div className="course-detail-tags" aria-label="دسته‌بندی دوره">
+              {product.tags.map((tag) => <span key={tag}>{tag}</span>)}
+            </div> : null}
             {hasCourseAccess ? null : (
               <div className="course-detail-purchase">
                 <span className="course-detail-price">
@@ -287,7 +286,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
 
           <div className="course-detail-section">
             <h2>توضیحات</h2>
-            <p>{product.description}</p>
+            <CourseDescription description={product.description} className="course-detail-body-description" />
           </div>
 
           <section className="course-detail-section course-detail-demo" aria-labelledby="course-demo-title">
