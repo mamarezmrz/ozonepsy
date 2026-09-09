@@ -2,15 +2,50 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { AboutPreconsultation } from "@/components/about-page";
 import { HomeFaq } from "@/components/home-interactive";
 import type { PublicContent } from "@/lib/public/content";
 import type { PublicGroupTherapyPage } from "@/lib/public/catalog-types";
 
 const fallbackImage = "/figma-home/image-20.png";
+const collapsedSessionListHeight = 384;
+
+function formatSessionDate(value: string) {
+  return new Intl.DateTimeFormat("fa-IR-u-ca-gregory", { year: "numeric", month: "long", day: "numeric" }).format(new Date(value));
+}
+
+function formatSessionTime(value: string) {
+  return new Intl.DateTimeFormat("fa-IR-u-ca-gregory", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+}
 
 export function GroupTherapyDetailPage({ product, content }: { product: PublicGroupTherapyPage; content?: PublicContent }) {
+  const [expanded, setExpanded] = useState(false);
+  const [canExpandSessions, setCanExpandSessions] = useState(false);
+  const [sessionListHeight, setSessionListHeight] = useState<number | null>(null);
+  const sessionListRef = useRef<HTMLDivElement>(null);
   const price = new Intl.NumberFormat("en-US", { style: "currency", currency: product.currency }).format(product.priceMinor / 100);
+
+  useEffect(() => {
+    const list = sessionListRef.current;
+    if (!list) return;
+
+    const measureSessions = () => {
+      const needsExpansion = list.scrollHeight > collapsedSessionListHeight + 1;
+      setCanExpandSessions(needsExpansion);
+      if (!needsExpansion) {
+        setExpanded(false);
+        setSessionListHeight(list.scrollHeight);
+      } else {
+        setSessionListHeight(expanded ? list.scrollHeight : collapsedSessionListHeight);
+      }
+    };
+
+    measureSessions();
+    const observer = new ResizeObserver(measureSessions);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [product.groupSessions.length, expanded]);
 
   return (
     <main className="group-detail-page">
@@ -38,9 +73,8 @@ export function GroupTherapyDetailPage({ product, content }: { product: PublicGr
         <section className="group-detail-content" aria-labelledby="group-detail-specs-title">
           <div className="group-detail-section">
             <h2 id="group-detail-specs-title">مشخصات</h2>
-            {product.cohortLabel ? <p><strong>گروه:</strong> {product.cohortLabel}</p> : null}
-            {product.capacity !== null ? <p><strong>ظرفیت:</strong> {product.capacity} نفر</p> : null}
-            {!product.cohortLabel && product.capacity === null ? <p>مشخصات تکمیلی این محصول هنوز ثبت نشده است.</p> : null}
+            <p><strong>مدرس:</strong> {product.instructorName ?? "—"}</p>
+            <p><strong>مدت دوره:</strong> {product.duration ?? "—"}</p>
           </div>
 
           <div className="group-detail-section">
@@ -49,8 +83,22 @@ export function GroupTherapyDetailPage({ product, content }: { product: PublicGr
           </div>
 
           <div className="group-detail-section group-detail-sessions" aria-labelledby="group-detail-sessions-title">
-            <h2 id="group-detail-sessions-title">برنامه و زمان‌بندی</h2>
-            <p>{product.schedulePolicy?.trim() || "برنامه‌ی این گروه پس از ثبت درخواست و هماهنگی با تیم اُزون اعلام می‌شود."}</p>
+            <h2 id="group-detail-sessions-title">جلسات</h2>
+            <div
+              id="group-session-list"
+              ref={sessionListRef}
+              className={`course-lesson-list group-therapy-session-list${canExpandSessions ? " is-collapsible" : ""}${expanded ? " is-expanded" : ""}`}
+              style={{ height: sessionListHeight === null ? "auto" : `${sessionListHeight}px` }}
+            >
+              {product.groupSessions.length ? product.groupSessions.map((session) => (
+                <div className="group-therapy-session-row" key={session.id}>
+                  <span className="group-therapy-session-title">{session.title}</span>
+                  <time className="group-therapy-session-date" dateTime={session.startsAt}>{formatSessionDate(session.startsAt)}</time>
+                  <time className="group-therapy-session-time" dateTime={session.startsAt}>{formatSessionTime(session.startsAt)}</time>
+                </div>
+              )) : <p className="course-detail-empty">هنوز جلسه‌ای برای این گروه ثبت نشده است.</p>}
+            </div>
+            {canExpandSessions ? <button type="button" className="course-detail-more focus-ring" aria-expanded={expanded} aria-controls="group-session-list" onClick={() => setExpanded((current) => !current)}><span>{expanded ? "بستن جلسات" : "مشاهده بیشتر"}</span><span className={`course-detail-more-chevron${expanded ? " is-open" : ""}`} aria-hidden="true" /></button> : null}
           </div>
         </section>
       </div>

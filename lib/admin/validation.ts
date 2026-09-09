@@ -69,6 +69,27 @@ export const adminCourseCreateSchema = adminCourseSchema.extend({
   sessions: z.array(z.object({ title: z.string().trim().min(1).max(240), videoMediaId: optionalCourseMediaId, videoDuration: optionalCourseDuration })).max(100).default([]),
 });
 
+const adminProductBaseSchema = z.object({
+  title: z.string().trim().min(1).max(240),
+  slug: z.string().trim().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "اسلاگ معتبر نیست."),
+  description: z.string().trim().min(1),
+  priceMinor: z.coerce.number().int().min(0),
+  discountPercent: z.coerce.number().int().min(0).max(100).default(0),
+  currency: z.string().trim().length(3).transform((value) => value.toUpperCase()),
+});
+
+export const adminGroupTherapySchema = adminProductBaseSchema.extend({
+  coverMediaId: optionalCourseMediaId,
+  instructorName: z.string().trim().max(200).optional().default(""),
+  durationSessions: z.preprocess((value) => value === "" || value === null ? null : value, z.coerce.number().int().positive().nullable().optional()),
+  sessions: z.array(z.object({ title: z.string().trim().min(1).max(240), startsAt: z.coerce.date() })).max(100).default([]),
+});
+
+export const adminIndividualConsultationSchema = adminProductBaseSchema.extend({
+  durationMinutes: z.coerce.number().int().positive().max(1440).default(50),
+  includedSessions: z.coerce.number().int().positive().max(1000).default(1),
+});
+
 export const adminStatusSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
   reason: z.string().trim().min(1).max(1000),

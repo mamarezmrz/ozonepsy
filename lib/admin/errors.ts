@@ -43,6 +43,7 @@ export function adminErrorResponse(error: unknown) {
     return NextResponse.json({ code: "VALIDATION_ERROR", message: "اطلاعات واردشده معتبر نیست.", fieldErrors }, { status: 400 });
   }
 
+  console.error("[admin] unexpected error", error);
   const code = typeof error === "object" && error !== null && "code" in error && isCode(error.code) ? error.code : "INTERNAL_ERROR";
   return NextResponse.json({ code, message: "خطایی در پردازش درخواست رخ داد." }, { status: 500 });
 }

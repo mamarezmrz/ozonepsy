@@ -9,6 +9,8 @@ export type PublicPurchaseProduct = {
   category: string;
   tags: string[];
   priceMinor: number;
+  originalPriceMinor?: number;
+  discountPercent?: number;
   currency: string;
   accent: string;
   label: string;
@@ -44,7 +46,12 @@ export type PublicCoursePage = PublicPurchaseProduct & {
 export type PublicGroupTherapyPage = PublicPurchaseProduct & {
   kind: "group";
   coverUrl: string | null;
-  cohortLabel: string | null;
-  capacity: number | null;
-  schedulePolicy: string | null;
+  instructorName: string | null;
+  groupSessions: PublicGroupTherapySession[];
+};
+
+export type PublicGroupTherapySession = {
+  id: string;
+  title: string;
+  startsAt: string;
 };

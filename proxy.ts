@@ -22,7 +22,9 @@ function isStaticAsset(pathname: string) {
 
 const temporaryAdminPathPrefixes = [
   "/users",
-  "/courses",
+    "/courses",
+    "/group-therapy",
+    "/individual-consultation",
   "/specialists",
   "/sessions",
   "/reviews",

@@ -10,6 +10,7 @@ type AdminDatePickerProps = {
   placeholder?: string;
   includeTime?: boolean;
   required?: boolean;
+  onChange?: (value: string) => void;
 };
 
 const weekDays = ["یک", "دو", "سه", "چهار", "پنج", "جمعه", "شنبه"];
@@ -39,7 +40,7 @@ function displayDate(value: string, time: string, includeTime: boolean) {
   return includeTime && time ? `${formatted}، ${time}` : formatted;
 }
 
-export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholder = "انتخاب تاریخ", includeTime = false, required = false }: AdminDatePickerProps) {
+export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholder = "انتخاب تاریخ", includeTime = false, required = false, onChange }: AdminDatePickerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const initialDate = parseDateValue(defaultValue);
   const [value, setValue] = useState(defaultValue);
@@ -79,13 +80,19 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
 
   function chooseDate(day: number) {
     const nextValue = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth(), day));
-    setValue(includeTime ? `${nextValue}T${time}` : nextValue);
+    const selectedValue = includeTime ? `${nextValue}T${time}` : nextValue;
+    setValue(selectedValue);
+    onChange?.(selectedValue);
     if (!includeTime) setOpen(false);
   }
 
   function chooseTime(nextTime: string) {
     setTime(nextTime);
-    if (selectedDate) setValue(`${selectedDate}T${nextTime}`);
+    if (selectedDate) {
+      const selectedValue = `${selectedDate}T${nextTime}`;
+      setValue(selectedValue);
+      onChange?.(selectedValue);
+    }
   }
 
   function chooseHour(nextHour: string) {
@@ -99,6 +106,7 @@ export function AdminDatePicker({ name, defaultValue = "", ariaLabel, placeholde
   function clear() {
     setValue("");
     setTime("09:00");
+    onChange?.("");
     setTimeOpen(false);
     setOpen(false);
   }

@@ -95,7 +95,7 @@ export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases, 
 
         <section className="group-therapy-sessions" aria-labelledby="group-therapy-sessions-title">
           <h2 id="group-therapy-sessions-title">انواع جلسات گروه درمانی</h2>
-          <p>جلسه‌های گروه‌درمانی با موضوعات و ظرفیت‌های متفاوت برگزار می‌شوند تا بتوانید در فضایی امن، همراه با افراد هم‌مسیر و زیر نظر روانشناس، مسیر مناسب خود را انتخاب کنید.</p>
+          <p>جلسه‌های گروه‌درمانی با موضوعات متفاوت برگزار می‌شوند تا بتوانید در فضایی امن، همراه با افراد هم‌مسیر و زیر نظر روانشناس، مسیر مناسب خود را انتخاب کنید.</p>
           <div className="group-therapy-session-grid">
             {groupProducts.length ? groupProducts.map((product, index) => (
               <article key={product.id} className="group-therapy-session-card">

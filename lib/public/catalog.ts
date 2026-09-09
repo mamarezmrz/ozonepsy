@@ -66,6 +66,39 @@ function getCourseTags(course: { curriculum: unknown } | null | undefined) {
   return [...new Set(categorySlugs.filter((slug): slug is string => typeof slug === "string").map((slug) => courseCategoryLabels[slug]).filter(Boolean))];
 }
 
+type ProductDiscountRow = { id: string; discountPercent: number | null };
+type GroupSessionCountRow = { productId: string; durationSessions: number | null };
+
+async function getProductDiscounts(productIds: readonly string[]) {
+  const discounts = new Map<string, number>();
+  if (!productIds.length) return discounts;
+  const rows = await prisma.$queryRaw<ProductDiscountRow[]>`
+    SELECT "id", "discountPercent"
+    FROM "Product"
+    WHERE "id" = ANY(${productIds}::uuid[])
+  `;
+  for (const row of rows) {
+    discounts.set(row.id, Math.min(100, Math.max(0, row.discountPercent ?? 0)));
+  }
+  return discounts;
+}
+
+async function getGroupSessionCounts(productIds: readonly string[]) {
+  const sessionCounts = new Map<string, number>();
+  if (!productIds.length) return sessionCounts;
+  const rows = await prisma.$queryRaw<GroupSessionCountRow[]>`
+    SELECT "productId", "durationSessions"
+    FROM "GroupTherapyProduct"
+    WHERE "productId" = ANY(${productIds}::uuid[])
+  `;
+  for (const row of rows) {
+    if (row.durationSessions && row.durationSessions > 0) {
+      sessionCounts.set(row.productId, row.durationSessions);
+    }
+  }
+  return sessionCounts;
+}
+
 function mapProduct(product: {
   id: string;
   slug: string;
@@ -79,15 +112,18 @@ function mapProduct(product: {
   category: { title: string } | null;
   consultation: { durationMinutes: number } | null;
   sessionPackage: { includedSessions: number } | null;
-  groupTherapy: { cohortLabel: string | null } | null;
+  groupTherapy: { productId: string } | null;
   course?: { curriculum: unknown } | null;
-}) : PublicPurchaseProduct {
+}, discountPercent = 0, groupSessionCount?: number) : PublicPurchaseProduct {
   const kind = publicKind(product.kind);
   const defaults = presentationDefaults[kind];
+  const normalizedDiscount = Math.min(100, Math.max(0, discountPercent));
+  const discountedPriceMinor = Math.round(product.priceMinor * (100 - normalizedDiscount) / 100);
+  const sessionCount = product.sessionPackage?.includedSessions ?? groupSessionCount;
   const duration = product.consultation
     ? `${product.consultation.durationMinutes} دقیقه`
-    : product.sessionPackage
-      ? `${product.sessionPackage.includedSessions} جلسه`
+    : sessionCount
+      ? `${sessionCount} جلسه`
       : product.groupTherapy
         ? "جلسات گروهی"
         : "دسترسی مادام‌العمر";
@@ -100,12 +136,13 @@ function mapProduct(product: {
     kind,
     category: product.category?.title ?? defaults.category,
     tags: kind === "course" ? getCourseTags(product.course) : [],
-    priceMinor: product.priceMinor,
+    priceMinor: discountedPriceMinor,
+    ...(normalizedDiscount > 0 ? { originalPriceMinor: product.priceMinor, discountPercent: normalizedDiscount } : {}),
     currency: product.currency,
     accent: product.accent ?? defaults.accent,
     label: product.label ?? defaults.label,
     duration,
-    sessions: product.sessionPackage?.includedSessions,
+    sessions: sessionCount,
   };
 }
 
@@ -122,7 +159,7 @@ const purchaseSelect = {
   category: { select: { title: true } },
   consultation: { select: { durationMinutes: true } },
   sessionPackage: { select: { includedSessions: true } },
-  groupTherapy: { select: { cohortLabel: true } },
+  groupTherapy: { select: { productId: true } },
   course: { select: { curriculum: true } },
 } as const;
 
@@ -135,7 +172,10 @@ export async function getPublishedProductByIdOrSlug(value: string): Promise<Publ
     },
     select: purchaseSelect,
   });
-  return product ? mapProduct(product) : null;
+  if (!product) return null;
+  const discounts = await getProductDiscounts([product.id]);
+  const groupSessionCounts = product.groupTherapy ? await getGroupSessionCounts([product.id]) : new Map<string, number>();
+  return mapProduct(product, discounts.get(product.id) ?? 0, groupSessionCounts.get(product.id));
 }
 
 export async function getPublishedProducts(kind?: PublicProductKind, options?: { limit?: number; sort?: "featured" | "newest" }): Promise<PublicPurchaseProduct[]> {
@@ -145,7 +185,9 @@ export async function getPublishedProducts(kind?: PublicProductKind, options?: {
     ...(options?.limit ? { take: options.limit } : {}),
     select: purchaseSelect,
   });
-  return products.map(mapProduct);
+  const discounts = await getProductDiscounts(products.map((product) => product.id));
+  const groupSessionCounts = await getGroupSessionCounts(products.filter((product) => product.groupTherapy).map((product) => product.id));
+  return products.map((product) => mapProduct(product, discounts.get(product.id) ?? 0, groupSessionCounts.get(product.id)));
 }
 
 export async function getPublishedCourseBySlug(slug: string): Promise<PublicCoursePage | null> {
@@ -178,7 +220,8 @@ export async function getPublishedCourseBySlug(slug: string): Promise<PublicCour
   });
   if (!product?.course) return null;
 
-  const mapped = mapProduct(product);
+  const discounts = await getProductDiscounts([product.id]);
+  const mapped = mapProduct(product, discounts.get(product.id) ?? 0);
   const curriculum = product.course.curriculum && typeof product.course.curriculum === "object" && !Array.isArray(product.course.curriculum)
     ? product.course.curriculum as Record<string, unknown>
     : null;
@@ -221,18 +264,42 @@ export async function getPublishedGroupTherapyBySlug(slug: string): Promise<Publ
     select: {
       ...purchaseSelect,
       coverMedia: { select: { id: true, visibility: true } },
-      groupTherapy: { select: { cohortLabel: true, capacity: true, schedulePolicy: true } },
+      groupTherapy: { select: { productId: true } },
     },
   });
   if (!product?.groupTherapy) return null;
 
+  type GroupTherapyDetailRow = {
+    instructorName: string | null;
+    durationSessions: number | null;
+    sessionId: string | null;
+    sessionTitle: string | null;
+    sessionStartsAt: Date | string | null;
+  };
+  const groupRows = await prisma.$queryRaw<GroupTherapyDetailRow[]>`
+    SELECT
+      g."instructorName" AS "instructorName",
+      g."durationSessions" AS "durationSessions",
+      s."id" AS "sessionId",
+      s."title" AS "sessionTitle",
+      s."startsAt" AS "sessionStartsAt"
+    FROM "GroupTherapyProduct" g
+    LEFT JOIN "GroupTherapySession" s ON s."groupTherapyProductId" = g."productId"
+    WHERE g."productId" = ${product.id}
+    ORDER BY s."order" ASC
+  `;
+  const groupDetails = groupRows[0];
+  if (!groupDetails) return null;
+  const discounts = await getProductDiscounts([product.id]);
+  const mapped = mapProduct(product, discounts.get(product.id) ?? 0, groupDetails.durationSessions ?? undefined);
+
   return {
-    ...mapProduct(product),
+    ...mapped,
     kind: "group",
     coverUrl: mediaUrl(product.coverMedia?.id ?? null, product.coverMedia?.visibility),
-    cohortLabel: product.groupTherapy.cohortLabel,
-    capacity: product.groupTherapy.capacity,
-    schedulePolicy: product.groupTherapy.schedulePolicy,
+    instructorName: groupDetails.instructorName,
+    duration: groupDetails.durationSessions ? `${groupDetails.durationSessions.toLocaleString("fa-IR")} جلسه` : mapped.duration,
+    groupSessions: groupRows.filter((session) => session.sessionId && session.sessionTitle && session.sessionStartsAt).map((session) => ({ id: session.sessionId as string, title: session.sessionTitle as string, startsAt: new Date(session.sessionStartsAt as Date | string).toISOString() })),
   };
 }
 

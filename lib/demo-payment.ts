@@ -54,23 +54,24 @@ export async function createDemoPurchase(userId: string, productId: string) {
     }
 
     const totalSessions = product.kind === ProductKind.CONSULTATION
-      ? 1
+      ? product.sessionPackage?.includedSessions ?? 1
       : product.kind === ProductKind.PACKAGE
         ? product.sessionPackage?.includedSessions ?? 1
         : product.kind === ProductKind.GROUP
           ? 4
           : null;
     const createdAt = new Date();
+    const checkoutPriceMinor = definition.priceMinor;
     const order = await tx.order.create({
       data: {
         orderNumber: orderNumber(),
         userId,
         productId: product.id,
         status: OrderStatus.PAID,
-        totalMinor: product.priceMinor,
+        totalMinor: checkoutPriceMinor,
         currency: product.currency,
         productTitleSnapshot: product.title,
-        snapshot: { title: product.title, slug: product.slug, kind: product.kind, priceMinor: product.priceMinor, currency: product.currency, totalSessions, provider: "DEMO_STRIPE" },
+        snapshot: { title: product.title, slug: product.slug, kind: product.kind, priceMinor: checkoutPriceMinor, currency: product.currency, totalSessions, provider: "DEMO_STRIPE" },
         createdAt,
       },
     });
@@ -79,7 +80,7 @@ export async function createDemoPurchase(userId: string, productId: string) {
         orderId: order.id,
         provider: "DEMO_STRIPE",
         status: PaymentStatus.VERIFIED,
-        amountMinor: product.priceMinor,
+        amountMinor: checkoutPriceMinor,
         currency: product.currency,
         attempt: 1,
         providerTransactionId: `demo_tx_${randomUUID()}`,
@@ -88,7 +89,7 @@ export async function createDemoPurchase(userId: string, productId: string) {
         verifiedAt: createdAt,
       },
     });
-    const purchase = await tx.purchase.create({ data: { orderId: order.id, userId, productId: product.id, amountMinor: product.priceMinor, currency: product.currency, verifiedAt: createdAt } });
+    const purchase = await tx.purchase.create({ data: { orderId: order.id, userId, productId: product.id, amountMinor: checkoutPriceMinor, currency: product.currency, verifiedAt: createdAt } });
     const entitlement = await tx.entitlement.create({ data: { purchaseId: purchase.id, userId, productId: product.id, status: EntitlementStatus.ACTIVE, totalSessions, startsAt: createdAt } });
     if (product.kind === ProductKind.COURSE && product.course) {
       await tx.enrollment.create({ data: { entitlementId: entitlement.id, userId, courseProductId: product.course.productId } });

@@ -658,6 +658,11 @@
 .group-detail-session-row:first-child{margin-top:18px}
 .group-detail-session-row h3{margin:0;overflow:hidden;color:#676b6b;font-size:15px;font-weight:500;line-height:1.6;text-overflow:ellipsis;white-space:nowrap}
 .group-detail-session-row time,.group-detail-session-row>span{color:#9b9e9e;font-size:12px;line-height:1.6;text-align:center;white-space:nowrap}
+.group-therapy-session-list{margin-top:16px}
+.group-therapy-session-row{display:grid;grid-template-columns:minmax(0,1fr) 170px 120px;align-items:center;min-height:56px;margin-top:8px;border-radius:12px;background:#fff;padding:0 18px;box-shadow:0 3px 12px rgba(53,88,89,.04);direction:rtl}
+.group-therapy-session-row:first-child{margin-top:18px}
+.group-therapy-session-title{min-width:0;overflow:hidden;color:#676b6b;font-size:15px;font-weight:500;line-height:1.6;text-overflow:ellipsis;white-space:nowrap}
+.group-therapy-session-date,.group-therapy-session-time{color:#9b9e9e;font-size:12px;line-height:1.6;text-align:center;white-space:nowrap}
 .group-detail-more{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px auto 0;border:0;background:transparent;padding:6px 10px;color:#0f8b8d;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .group-detail-more-chevron{display:block;width:16px;height:16px;background:currentColor;mask:url("/icons/chevron-down.svg") center/contain no-repeat;-webkit-mask:url("/icons/chevron-down.svg") center/contain no-repeat;transition:transform .3s ease}
 .group-detail-more-chevron.is-open{transform:rotate(180deg)}
@@ -672,6 +677,7 @@
   .group-detail-content{margin-top:40px;margin-bottom:64px}
   .group-detail-section{margin-top:32px}
   .group-detail-session-row{grid-template-columns:minmax(0,1fr) 120px 120px;padding-inline:12px}
+  .group-therapy-session-row{grid-template-columns:minmax(0,1fr) 120px 100px;padding-inline:12px}
 }
 
 @media (max-width:560px){
@@ -690,6 +696,9 @@
   .group-detail-session-row{grid-template-columns:minmax(0,1fr) 82px 82px;min-height:54px;padding-inline:10px}
   .group-detail-session-row h3{font-size:12px}
   .group-detail-session-row time,.group-detail-session-row>span{font-size:10px}
+  .group-therapy-session-row{grid-template-columns:minmax(0,1fr) 86px 72px;min-height:54px;padding-inline:10px}
+  .group-therapy-session-title{font-size:12px}
+  .group-therapy-session-date,.group-therapy-session-time{font-size:10px}
   .group-detail-more{font-size:14px}
 }
 
@@ -3809,6 +3818,9 @@
 .admin-course-session-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(220px, 1fr) 40px; gap: 12px; align-items: end; border: 1px solid #e6eeee; border-radius: 14px; background: #fff; padding: 12px; }
 .admin-course-session-number { display: grid; min-height: 48px; place-items: center; color: var(--admin-primary); font-size: 16px; font-weight: 800; }
 .admin-course-session-row .admin-form-field { min-width: 0; }
+.group-therapy-admin-session-row { grid-template-columns: 40px minmax(0, 1fr) minmax(260px, 1fr) 40px; }
+.group-therapy-admin-session-row .admin-date-picker { width: 100%; }
+.group-therapy-session-delete { align-self: end; }
 .admin-course-session-delete { display: grid; width: 40px; height: 48px; min-height: 48px; align-self: end; place-items: center; border: 0; border-radius: 12px; background: transparent; color: #dc5555; cursor: pointer; font: inherit; font-size: 28px; line-height: 1; transition: opacity 160ms ease, color 160ms ease; }
 .admin-course-session-delete:hover { background: transparent; color: #b82f35; }
 .admin-course-session-delete:disabled { cursor: not-allowed; opacity: .4; }
@@ -3834,6 +3846,9 @@
   .admin-course-session-row { grid-template-columns: 40px minmax(0, 1fr) 40px; }
   .admin-course-session-row .admin-form-field:nth-child(3) { grid-column: 2 / -1; }
   .admin-course-session-delete { grid-column: 3; grid-row: 1; }
+  .group-therapy-admin-session-row { grid-template-columns: 40px minmax(0, 1fr) 40px; }
+  .group-therapy-admin-session-row .admin-form-field:nth-child(3) { grid-column: 2 / -1; }
+  .group-therapy-session-delete { grid-column: 3; grid-row: 1; }
 }
 
 .admin-metric-grid {

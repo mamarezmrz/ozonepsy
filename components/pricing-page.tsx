@@ -108,13 +108,14 @@ function PricingOfferGroup({
           <article className="pricing-offer-card" key={`${title}-${offer.id}`}>
             <div className="pricing-offer-price-row">
               <div className="pricing-offer-price-stack">
-                <div className="pricing-offer-old-price" dir="ltr" />
+                <div className="pricing-offer-old-price" dir="ltr">{offer.originalPriceMinor ? `$${(offer.originalPriceMinor / 100).toFixed(2)} (${offer.currency})` : null}</div>
                 <div className="pricing-offer-price" dir="ltr">${(offer.priceMinor / 100).toFixed(2)} <small>({offer.currency})</small></div>
                 <div className="pricing-offer-unit-price">
                   <span>هزینه هر جلسه</span>
                   <span dir="ltr">{offer.sessions ? `$${(offer.priceMinor / offer.sessions / 100).toFixed(2)}` : "—"} <small>{offer.sessions ? `(${offer.currency})` : ""}</small></span>
                 </div>
               </div>
+              {offer.discountPercent ? <div className="pricing-discount">{offer.discountPercent.toLocaleString("fa-IR")}% تخفیف</div> : null}
             </div>
             <h4>{offer.title}</h4>
             <p className="pricing-offer-description">{offer.description}</p>

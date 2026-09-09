@@ -333,6 +333,7 @@ model Product {
   kind           ProductKind
   status         ProductStatus        @default(DRAFT)
   priceMinor     Int
+  discountPercent Int                 @default(0)
   currency       String               @default("USD") @db.VarChar(3)
   accent         String?              @db.VarChar(120)
   label          String?              @db.VarChar(120)
@@ -375,11 +376,28 @@ model SessionPackage {
 }
 
 model GroupTherapyProduct {
-  productId      String  @id @db.Uuid
-  cohortLabel    String? @db.VarChar(200)
-  capacity       Int?
-  schedulePolicy String?
-  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId        String                 @id @db.Uuid
+  cohortLabel      String?                @db.VarChar(200)
+  capacity         Int?
+  schedulePolicy   String?
+  instructorName   String?                @db.VarChar(200)
+  durationSessions Int?
+  product          Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sessions         GroupTherapySession[]
+}
+
+model GroupTherapySession {
+  id                    String             @id @default(uuid()) @db.Uuid
+  groupTherapyProductId String             @db.Uuid
+  title                 String             @db.VarChar(240)
+  startsAt              DateTime
+  order                 Int
+  groupTherapyProduct   GroupTherapyProduct @relation(fields: [groupTherapyProductId], references: [productId], onDelete: Cascade)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@unique([groupTherapyProductId, order])
+  @@index([groupTherapyProductId, startsAt])
 }
 
 model CourseProduct {
