@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { hasSameOrigin, getRequestMetadata } from "@/lib/security/request";
 import { AuthRateLimitError } from "@/lib/auth/rate-limit";
 import { passwordResetDevTokenEnabled, requestPasswordReset } from "@/lib/auth/recovery";
-import { sendPasswordResetEmail } from "@/lib/auth/email";
+import { EmailDeliveryConfigurationError, sendPasswordResetEmail } from "@/lib/auth/email";
 
 export const runtime = "nodejs";
 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
     const metadata = getRequestMetadata(request);
     const result = await requestPasswordReset(body.email, metadata.ipAddress ?? "unknown");
-    if (result.token && process.env.EMAIL_PROVIDER) {
+    if (result.token) {
       await sendPasswordResetEmail(body.email.trim().toLowerCase(), result.token, process.env.PUBLIC_SITE_URL ?? new URL(request.url).origin);
     }
 
@@ -34,6 +34,11 @@ export async function POST(request: Request) {
     if (error instanceof AuthRateLimitError) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 429 });
     }
+    if (error instanceof EmailDeliveryConfigurationError) {
+      console.error("[auth.forgot-password] email delivery is not configured");
+      return NextResponse.json({ ok: false, error: "ارسال ایمیل بازیابی هنوز تنظیم نشده است." }, { status: 503 });
+    }
+    console.error("[auth.forgot-password]", error instanceof Error ? error.message : error);
     return NextResponse.json({ ok: false, error: "در حال حاضر امکان ارسال درخواست وجود ندارد." }, { status: 500 });
   }
 }

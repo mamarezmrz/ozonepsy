@@ -14,7 +14,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
   const courseModule = course.course.modules.find((item) => item.id === moduleId);
 
   if (!courseModule) {
-    return <div className="admin-page-stack"><AdminPageHeader title="ماژول پیدا نشد" action={<AdminButton href={`/courses/${id}/modules`} variant="secondary">بازگشت</AdminButton>} /></div>;
+    return <div className="admin-page-stack"><AdminPageHeader title="ماژول پیدا نشد" action={<AdminButton href={`/admin/courses/${id}/modules`} variant="secondary">بازگشت</AdminButton>} /></div>;
   }
 
   const statusAction = courseModule.status === "PUBLISHED"
@@ -25,7 +25,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="admin-page-stack">
-      <AdminPageHeader eyebrow="Module" title={courseModule.title} action={<AdminButton href={`/courses/${id}/modules`} variant="secondary">بازگشت به ساختار</AdminButton>} />
+      <AdminPageHeader eyebrow="Module" title={courseModule.title} action={<AdminButton href={`/admin/courses/${id}/modules`} variant="secondary">بازگشت به ساختار</AdminButton>} />
       <section className="admin-panel-card">
         <div className="admin-section-heading">
           <h3>ویرایش ماژول</h3>
@@ -52,7 +52,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
       <section className="admin-panel-card">
         <h3>درس‌ها</h3>
         {courseModule.lessons.length
-          ? <ul className="admin-plain-list">{courseModule.lessons.map((lesson) => <li key={lesson.id}><span>{(lesson.order + 1).toLocaleString("fa-IR")} — {lesson.title}</span><AdminButton href={`/courses/${id}/modules/${courseModule.id}/lessons/${lesson.id}`} variant="secondary">ویرایش</AdminButton></li>)}</ul>
+          ? <ul className="admin-plain-list">{courseModule.lessons.map((lesson) => <li key={lesson.id}><span>{(lesson.order + 1).toLocaleString("fa-IR")} — {lesson.title}</span><AdminButton href={`/admin/courses/${id}/modules/${courseModule.id}/lessons/${lesson.id}`} variant="secondary">ویرایش</AdminButton></li>)}</ul>
           : <p className="admin-table-empty">درسی ثبت نشده است.</p>}
       </section>
     </div>

@@ -140,14 +140,14 @@ export function ConsultationTestimonials({ productSlug = null, reviews = [] }: C
             <p className="consultation-testimonials-empty">هنوز نظری برای این صفحه ثبت نشده است.</p>
           )}
 
-          <div className={`consultation-testimonials-actions${!hiddenCount ? " is-solo" : ""}`}>
+          <div className={`consultation-testimonials-actions${!hiddenCount ? " is-solo" : ""}${reviews.length === 0 ? " is-empty" : ""}`}>
             {hiddenCount > 0 ? (
               <button type="button" className="consultation-testimonials-toggle" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)}>
                 <span>{expanded ? "بستن نظرات" : `مشاهده ${toPersianDigits(hiddenCount)} نظر دیگر`}</span>
                 <span className={`consultation-testimonials-chevron${expanded ? " is-open" : ""}`} aria-hidden="true" />
               </button>
             ) : null}
-            {productSlug ? <button type="button" className="consultation-new-review" onClick={openReviewModal}>ثبت نظر جدید</button> : null}
+            {productSlug ? <button type="button" className="consultation-new-review" onClick={openReviewModal}>{reviews.length === 0 ? "ثبت نظر" : "ثبت نظر جدید"}</button> : null}
           </div>
         </div>
       </section>

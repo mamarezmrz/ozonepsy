@@ -83,12 +83,48 @@ export function SiteHeader({
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [consultationsOpen, setConsultationsOpen] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>("login");
   const [headerUser, setHeaderUser] = useState<SiteHeaderUser | null>(initialUser);
   const [notification, setNotification] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const consultationsRef = useRef<HTMLDivElement>(null);
+  const previousScrollY = useRef(0);
   const isAuthenticated = Boolean(headerUser);
+
+  useEffect(() => {
+    previousScrollY.current = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const previousScrollYValue = previousScrollY.current;
+
+      if (currentScrollY <= 8 || currentScrollY < previousScrollYValue - 4 || menuOpen || consultationsOpen) {
+        setHeaderVisible(true);
+      } else if (currentScrollY > previousScrollYValue + 4) {
+        setHeaderVisible(false);
+      }
+
+      previousScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [consultationsOpen, menuOpen]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("auth") !== "forgot") return;
+
+    url.searchParams.delete("auth");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+
+    const openTimeout = window.setTimeout(() => {
+      setAuthModalMode("forgot");
+      setAuthModalOpen(true);
+    }, 0);
+    return () => window.clearTimeout(openTimeout);
+  }, []);
 
   useEffect(() => {
     if (!consultationsOpen) return;
@@ -127,7 +163,7 @@ export function SiteHeader({
 
   return (
     <>
-      <header className="site-header sticky top-0 z-40 bg-[#fafcfc]/95 backdrop-blur">
+      <header className={`site-header sticky top-0 z-40 bg-[#fafcfc]/95 backdrop-blur${!headerVisible && !menuOpen && !consultationsOpen ? " is-hidden" : ""}`}>
       <div className="site-header-inner container-oz">
         <Link href="/" aria-label="اُزون" className="site-header-logo" onClick={closeMenu}>
           <Image src="/ozone-logo.svg" alt="اُزون" width={48} height={48} priority loading="eager" />
@@ -193,7 +229,7 @@ export function SiteHeader({
       </div>
       </header>
       {showBreadcrumb && pathname !== "/" && (
-        <nav className="page-breadcrumb" aria-label="مسیر صفحه">
+        <nav className={`page-breadcrumb${!headerVisible && !menuOpen && !consultationsOpen ? " is-hidden" : ""}`} aria-label="مسیر صفحه">
           <div className="page-breadcrumb-inner container-oz">
             <Link href="/">خانه</Link>
             <span aria-hidden="true">›</span>

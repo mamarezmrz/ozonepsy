@@ -8,25 +8,62 @@ export interface EmailDeliveryAdapter {
   send(message: EmailMessage): Promise<void>;
 }
 
+export class EmailDeliveryConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EmailDeliveryConfigurationError";
+  }
+}
+
 class DisabledEmailDelivery implements EmailDeliveryAdapter {
   async send(message: EmailMessage) {
     void message;
-    // Delivery is intentionally a deployment concern. Tokens are never logged
-    // or returned unless the explicit development escape hatch is enabled.
+    throw new EmailDeliveryConfigurationError("Email delivery provider is not configured.");
   }
 }
 
 class DevelopmentEmailDelivery implements EmailDeliveryAdapter {
   async send(message: EmailMessage) {
-    if (process.env.NODE_ENV === "production") return;
+    if (process.env.NODE_ENV === "production") {
+      throw new EmailDeliveryConfigurationError("Console email delivery cannot be used in production.");
+    }
     console.info(`[auth.email] ${message.subject} prepared for ${message.to}`);
   }
 }
 
+class ResendEmailDelivery implements EmailDeliveryAdapter {
+  async send(message: EmailMessage) {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    const from = process.env.EMAIL_FROM?.trim();
+    if (!apiKey || !from) {
+      throw new EmailDeliveryConfigurationError("Resend email delivery is not configured.");
+    }
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Resend email delivery failed with status ${response.status}.`);
+    }
+  }
+}
+
 export function getEmailDeliveryAdapter(): EmailDeliveryAdapter {
-  return process.env.EMAIL_PROVIDER?.trim().toLowerCase() === "console"
-    ? new DevelopmentEmailDelivery()
-    : new DisabledEmailDelivery();
+  const provider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
+  if (provider === "console") return new DevelopmentEmailDelivery();
+  if (provider === "resend") return new ResendEmailDelivery();
+  return new DisabledEmailDelivery();
 }
 
 export async function sendPasswordResetEmail(email: string, token: string, baseUrl: string) {

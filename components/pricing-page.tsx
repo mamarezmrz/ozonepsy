@@ -12,6 +12,7 @@ export function PricingPage({ content, products = [] }: { content?: PublicConten
   const individualProducts = products.filter((product) => product.kind === "consultation" || product.kind === "package");
   const groupProducts = products.filter((product) => product.kind === "group");
   const courseProducts = products.filter((product) => product.kind === "course");
+  const hasProducts = individualProducts.length > 0 || groupProducts.length > 0 || courseProducts.length > 0;
   return (
     <main className="pricing-page">
       <div className="pricing-page-inner">
@@ -22,17 +23,17 @@ export function PricingPage({ content, products = [] }: { content?: PublicConten
 
         <PricingFreeSessionCard />
 
-        <section className="pricing-products" aria-labelledby="pricing-products-title">
+        {hasProducts ? <section className="pricing-products" aria-labelledby="pricing-products-title">
           <h2 id="pricing-products-title">همه‌ی پکیج‌ها</h2>
           <p>تعداد جلسات خریداری شده در پروفایل کاربری شما ثبت شده و برای جلسات بعدی قابل استفاده خواهد بود.</p>
 
           <PricingOfferGroup title="جلسات فردی" offers={individualProducts} />
           <PricingOfferGroup title="گروه درمانی" offers={groupProducts} />
 
-          <section className="pricing-course-group" aria-labelledby="pricing-courses-title">
+          {courseProducts.length ? <section className="pricing-course-group" aria-labelledby="pricing-courses-title">
             <h3 id="pricing-courses-title">دوره‌ها</h3>
             <div className="pricing-course-list">
-              {courseProducts.length ? courseProducts.map((course, index) => (
+              {courseProducts.map((course, index) => (
                 <article className="pricing-course-row" key={course.id}>
                   <div className="pricing-course-row-image">
                     <Image src={asset(`image-${20 + (index % 3)}.png`)} alt={course.title} fill quality={100} sizes="(max-width: 560px) 100vw, 168px" />
@@ -53,18 +54,18 @@ export function PricingPage({ content, products = [] }: { content?: PublicConten
                     </div>
                   </div>
                 </article>
-              )) : <p className="pricing-empty-state">دوره‌ی منتشرشده‌ای برای نمایش وجود ندارد.</p>}
+              ))}
             </div>
-          </section>
-        </section>
+          </section> : null}
+        </section> : null}
       </div>
 
-      <section className="pricing-faq home-faq" aria-labelledby="pricing-faq-title">
+      {content?.faqs?.length ? <section className="pricing-faq home-faq" aria-labelledby="pricing-faq-title">
         <div className="home-faq-inner">
           <h2 id="pricing-faq-title">سوالات متداول قیمت‌گذاری و خرید</h2>
           <HomeFaq items={content?.faqs} />
         </div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>
@@ -100,11 +101,13 @@ function PricingOfferGroup({
   title: string;
   offers: readonly PublicPurchaseProduct[];
 }) {
+  if (!offers.length) return null;
+
   return (
     <section className="pricing-offer-group" aria-labelledby={`pricing-${title}`}>
       <h3 id={`pricing-${title}`}>{title}</h3>
       <div className="pricing-offer-grid">
-          {offers.length ? offers.map((offer) => (
+          {offers.map((offer) => (
           <article className="pricing-offer-card" key={`${title}-${offer.id}`}>
             <div className="pricing-offer-price-row">
               <div className="pricing-offer-price-stack">
@@ -121,7 +124,7 @@ function PricingOfferGroup({
             <p className="pricing-offer-description">{offer.description}</p>
             <Link href={`/checkout/${offer.id}`} className="pricing-buy-button">خرید</Link>
           </article>
-        )) : <p className="pricing-empty-state">محصول منتشرشده‌ای برای نمایش وجود ندارد.</p>}
+        ))}
       </div>
     </section>
   );

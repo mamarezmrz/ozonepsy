@@ -11,8 +11,8 @@ import type { AdminSessionView } from "@/lib/admin/session";
 const links = [
   { href: "/admin", label: "نمای کلی", permission: "dashboard.view" },
   { href: "/users", label: "کاربران", permission: "users.read" },
-  { href: "/courses", label: "دوره‌ها", permission: "courses.read" },
-  { href: "/group-therapy", label: "گروه‌درمانی", permission: "products.read" },
+  { href: "/admin/courses", label: "دوره‌ها", permission: "courses.read" },
+  { href: "/admin/group-therapy", label: "گروه‌درمانی", permission: "products.read" },
   { href: "/individual-consultation", label: "مشاوره فردی", permission: "products.read" },
   { href: "/sessions", label: "جلسات", permission: "sessions.read" },
   { href: "/reviews", label: "نظرات", permission: "reviews.read" },

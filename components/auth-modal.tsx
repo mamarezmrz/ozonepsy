@@ -6,7 +6,7 @@ import { CustomSelect } from "@/components/custom-select";
 import { countries } from "@/lib/countries";
 import type { SiteHeaderUser } from "@/types/site-header";
 
-export type AuthModalMode = "login" | "signup";
+export type AuthModalMode = "login" | "signup" | "forgot";
 
 type AuthModalProps = {
   open: boolean;
@@ -66,6 +66,7 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
   if (!mounted) return null;
 
   const isLogin = mode === "login";
+  const isForgot = mode === "forgot";
   const passwordType = showPassword ? "text" : "password";
   const confirmationType = showConfirmation ? "text" : "password";
 
@@ -76,7 +77,8 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/auth/${isLogin ? "login" : "signup"}`, {
+      const endpoint = isForgot ? "forgot-password" : isLogin ? "login" : "signup";
+      const response = await fetch(`/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries())),
@@ -95,7 +97,11 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
       }
 
       onClose();
-      onNotification(result.message ?? (isLogin ? "ورود شما با موفقیت انجام شد." : "ثبت‌نام شما با موفقیت انجام شد."), "success", result.user);
+      onNotification(
+        result.message ?? (isForgot ? "لینک بازیابی رمز برای شما ارسال شد." : isLogin ? "ورود شما با موفقیت انجام شد." : "ثبت‌نام شما با موفقیت انجام شد."),
+        "success",
+        result.user,
+      );
     } catch {
       setErrorMessage("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
     } finally {
@@ -105,13 +111,14 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
 
   return (
     <div className={`auth-modal${visible ? " is-visible" : ""}`} role="presentation" onMouseDown={(event) => event.currentTarget === event.target && onClose()}>
-      <section className={`auth-modal-card ${isLogin ? "is-login" : "is-signup"}`} role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <section className={`auth-modal-card ${isForgot ? "is-forgot" : isLogin ? "is-login" : "is-signup"}`} role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
         <button type="button" className="auth-modal-close focus-ring" aria-label="بستن مدال" onClick={onClose}>
           <span className="auth-modal-close-icon" aria-hidden="true" />
         </button>
         <Image className="auth-modal-logo" src="/ozone-logo.svg" alt="اُزون" width={96} height={96} loading="eager" />
         <div className="auth-modal-heading">
-          <h2 id="auth-modal-title">{isLogin ? "ورود" : "ثبت نام"}</h2>
+          <h2 id="auth-modal-title">{isForgot ? "بازیابی رمز ورود" : isLogin ? "ورود" : "ثبت نام"}</h2>
+          {isForgot && <p>ایمیل حساب کاربری خود را وارد کنید تا لینک تعیین رمز جدید برایتان ارسال شود.</p>}
         </div>
 
         <form className="auth-modal-form" noValidate onSubmit={handleSubmit}>
@@ -120,7 +127,7 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
               <input required type="email" name="email" autoComplete="email" dir="ltr" />
             </label>
 
-            {!isLogin && (
+            {!isLogin && !isForgot && (
               <label className="auth-modal-field">
                 <span>کشور خود را انتخاب کنید</span>
                 <CustomSelect
@@ -140,7 +147,7 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
               </label>
             )}
 
-            <label className="auth-modal-field">
+            {!isForgot && <label className="auth-modal-field">
               <span>رمز ورود</span>
               <span className="auth-modal-input-wrap">
                 <input required type={passwordType} name="password" autoComplete={isLogin ? "current-password" : "new-password"} />
@@ -151,9 +158,9 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
                   </span>
                 </button>
               </span>
-            </label>
+            </label>}
 
-            {!isLogin && (
+            {!isLogin && !isForgot && (
               <label className="auth-modal-field">
                 <span>تکرار رمز ورود</span>
                 <span className="auth-modal-input-wrap">
@@ -168,24 +175,28 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
               </label>
             )}
 
-            {isLogin && <button type="button" className="auth-modal-forgot" onClick={onClose}>فراموشی رمز ورود</button>}
+            {isLogin && <button type="button" className="auth-modal-forgot" onClick={() => onModeChange("forgot")}>فراموشی رمز ورود</button>}
 
             {errorMessage && <p className="auth-modal-error" role="alert">{errorMessage}</p>}
 
             <div className="auth-modal-bottom-row">
               <button type="submit" className="auth-modal-submit" disabled={isSubmitting}>
-                {isSubmitting ? "لطفاً صبر کنید" : isLogin ? "وارد شدن" : "ثبت نام"}
+                {isSubmitting ? "لطفاً صبر کنید" : isForgot ? "ارسال لینک بازیابی" : isLogin ? "وارد شدن" : "ثبت نام"}
               </button>
-              <div className="auth-modal-switch">
-                <span>{isLogin ? "قبلاً ثبت نام نکرده‌اید؟" : "قبلاً ثبت نام کرده‌اید؟"}</span>
-                <button type="button" onClick={() => {
-                  setCountry("");
-                  setCountryError(false);
-                  onModeChange(isLogin ? "signup" : "login");
-                }}>
-                  {isLogin ? "ثبت نام" : "وارد شدن"}
-                </button>
-              </div>
+              {isForgot ? (
+                <button type="button" className="auth-modal-back" onClick={() => onModeChange("login")}>بازگشت به ورود</button>
+              ) : (
+                <div className="auth-modal-switch">
+                  <span>{isLogin ? "قبلاً ثبت نام نکرده‌اید؟" : "قبلاً ثبت نام کرده‌اید؟"}</span>
+                  <button type="button" onClick={() => {
+                    setCountry("");
+                    setCountryError(false);
+                    onModeChange(isLogin ? "signup" : "login");
+                  }}>
+                    {isLogin ? "ثبت نام" : "وارد شدن"}
+                  </button>
+                </div>
+              )}
             </div>
           </form>
       </section>

@@ -101,12 +101,12 @@ export function CoursesPage({ content, products = [] }: { content?: PublicConten
         <HomeTestimonials items={content?.testimonials} />
       </section>
 
-      <section className="courses-faq home-faq" aria-labelledby="courses-faq-title">
+      {content?.faqs?.length ? <section className="courses-faq home-faq" aria-labelledby="courses-faq-title">
         <div className="home-faq-inner">
           <h2 id="courses-faq-title">سوالات متداول دوره‌ها</h2>
           <HomeFaq items={content?.faqs} />
         </div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>

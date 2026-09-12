@@ -57,9 +57,9 @@ export function ConsultationTopicPage({ topic, content }: { topic: ConsultationT
         </div>
       </section>
 
-      <section className="consultation-topic-faq home-faq" aria-labelledby="consultation-topic-faq-title">
+      {content?.faqs?.length ? <section className="consultation-topic-faq home-faq" aria-labelledby="consultation-topic-faq-title">
         <div className="home-faq-inner"><h2 id="consultation-topic-faq-title">سوالات متداول مربوط به {faqTopicTitle}</h2><HomeFaq items={content?.faqs} /></div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>

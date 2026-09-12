@@ -125,9 +125,9 @@ export function GroupTherapyPage({ reviews = [], dynamicBenefits, dynamicCases, 
 
       <ConsultationTestimonials productSlug="group-therapy" reviews={reviews} />
 
-      <section className="group-therapy-faq home-faq" aria-labelledby="group-therapy-faq-title">
+      {faqItems.length ? <section className="group-therapy-faq home-faq" aria-labelledby="group-therapy-faq-title">
         <div className="home-faq-inner"><h2 id="group-therapy-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq items={faqItems} /></div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type PartnerItem = {
   name: string;
@@ -17,17 +17,35 @@ type PartnersExpandableGridProps = {
   variant: "institution" | "therapist";
 };
 
-const initiallyVisible = 6;
+function getInitialVisibleCount() {
+  if (typeof window === "undefined") return 3;
+  if (window.innerWidth <= 560) return 1;
+  if (window.innerWidth <= 900) return 2;
+  return 3;
+}
 
 export function PartnersExpandableGrid({ title, items, variant }: PartnersExpandableGridProps) {
   const [expanded, setExpanded] = useState(false);
-  const initialItems = items.slice(0, initiallyVisible);
-  const extraItems = items.slice(initiallyVisible);
+  const [visibleCount, setVisibleCount] = useState(3);
+
+  useEffect(() => {
+    const updateVisibleCount = () => {
+      setVisibleCount(getInitialVisibleCount());
+      setExpanded(false);
+    };
+
+    updateVisibleCount();
+    window.addEventListener("resize", updateVisibleCount);
+    return () => window.removeEventListener("resize", updateVisibleCount);
+  }, []);
+
+  const initialItems = items.slice(0, visibleCount);
+  const extraItems = items.slice(visibleCount);
 
   return (
     <section className={`partners-collection partners-collection-${variant}`} aria-labelledby={`${variant}-partners-title`}>
       <h2 id={`${variant}-partners-title`}>{title}</h2>
-      <div className={`partners-list-shell${expanded ? " is-expanded" : ""}`}>
+      <div className={`partners-list-shell${expanded ? " is-expanded" : ""}${extraItems.length ? " has-more" : ""}`}>
         <div className="partners-grid">
           {initialItems.map((item, index) => <PartnerCard key={`${variant}-${item.image}-${index}`} item={item} variant={variant} />)}
           <div className={`partners-extra${expanded ? " is-open" : ""}`} aria-hidden={!expanded}>{extraItems.map((item, index) => <PartnerCard key={`${variant}-extra-${item.image}-${index}`} item={item} variant={variant} />)}</div>

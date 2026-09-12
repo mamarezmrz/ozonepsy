@@ -120,9 +120,9 @@ export function GroupTherapyDetailPage({ product, content }: { product: PublicGr
         </div>
       </section>
 
-      <section className="group-detail-faq home-faq" aria-labelledby="group-detail-faq-title">
+      {content?.faqs?.length ? <section className="group-detail-faq home-faq" aria-labelledby="group-detail-faq-title">
         <div className="home-faq-inner"><h2 id="group-detail-faq-title">سوالات متداول گروه درمانی</h2><HomeFaq items={content?.faqs} /></div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>

@@ -71,12 +71,12 @@ export function ContactPage({ content }: { content?: PublicContent }) {
         </section>
       </div>
 
-      <section className="contact-faq home-faq" aria-labelledby="contact-faq-title">
+      {content?.faqs?.length ? <section className="contact-faq home-faq" aria-labelledby="contact-faq-title">
         <div className="home-faq-inner">
           <h2 id="contact-faq-title">سوالات متداول</h2>
           <HomeFaq items={content?.faqs} />
         </div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>

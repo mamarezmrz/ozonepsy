@@ -66,9 +66,9 @@ export function ConsultationCategoryPage({ content, reviews = [], reviewProductS
 
       <ConsultationTestimonials productSlug={reviewProductSlug} reviews={reviews} />
 
-      <section className="consultation-faq home-faq" aria-labelledby="consultation-faq-title">
+      {faqItems.length ? <section className="consultation-faq home-faq" aria-labelledby="consultation-faq-title">
         <div className="home-faq-inner"><h2 id="consultation-faq-title">{content.faqTitle}</h2><HomeFaq items={faqItems} /></div>
-      </section>
+      </section> : null}
 
       <AboutPreconsultation />
     </main>

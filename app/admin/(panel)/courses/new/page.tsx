@@ -5,4 +5,4 @@ import { requireAdminPagePermission } from "@/lib/admin/page";
 import { listActiveAdminCategories } from "@/lib/admin/categories";
 
 export const metadata: Metadata = { title: "دوره جدید" };
-export default async function NewCoursePage() { await requireAdminPagePermission("courses.write"); const categories = await listActiveAdminCategories(); return <div className="admin-page-stack admin-course-create-page"><AdminPageHeader eyebrow="Course" title="ایجاد دوره" action={<AdminButton href="/courses" variant="secondary">بازگشت</AdminButton>} /><section className="admin-panel-card admin-course-create-card"><AdminCourseCreateForm categories={categories} /></section></div>; }
+export default async function NewCoursePage() { await requireAdminPagePermission("courses.write"); const categories = await listActiveAdminCategories(); return <div className="admin-page-stack admin-course-create-page"><AdminPageHeader eyebrow="Course" title="ایجاد دوره" action={<AdminButton href="/admin/courses" variant="secondary">بازگشت</AdminButton>} /><section className="admin-panel-card admin-course-create-card"><AdminCourseCreateForm categories={categories} /></section></div>; }

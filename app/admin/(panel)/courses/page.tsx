@@ -26,7 +26,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="admin-page-stack">
-      <AdminPageHeader eyebrow="Product / CourseProduct" title="دوره‌ها" description="مدیریت دوره‌های واقعی موجود در کاتالوگ اُزون." action={canWrite ? <AdminButton href="/courses/new">دوره جدید</AdminButton> : undefined} />
+      <AdminPageHeader eyebrow="Product / CourseProduct" title="دوره‌ها" description="مدیریت دوره‌های واقعی موجود در کاتالوگ اُزون." action={canWrite ? <AdminButton href="/admin/courses/new">دوره جدید</AdminButton> : undefined} />
       <section className="admin-panel-card">
         <AdminListToolbar>
           <AdminSearchInput defaultValue={query.search} placeholder="عنوان یا slug دوره" />
@@ -38,7 +38,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
             rows={data.rows}
             getRowKey={(row) => row.id}
             columns={[
-              { key: "title", label: "عنوان", render: (row) => <Link className="admin-table-link" href={`/courses/${row.id}`}>{row.title}</Link> },
+              { key: "title", label: "عنوان", render: (row) => <Link className="admin-table-link" href={`/admin/courses/${row.id}`}>{row.title}</Link> },
               { key: "slug", label: "Slug", render: (row) => <span dir="ltr">{row.slug}</span> },
               { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === ProductStatus.PUBLISHED ? "success" : row.status === ProductStatus.DRAFT ? "warning" : "neutral"}>{statusLabel(row.status)}</AdminStatusBadge> },
               { key: "category", label: "دسته‌بندی", render: (row) => <span>{row.category?.title || "—"}</span> },
@@ -54,7 +54,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                       ? { status: ProductStatus.DRAFT, label: "نمایش دوباره", variant: "secondary" as const, confirm: "این دوره دوباره به پیش‌نویس برگردد؟" }
                       : { status: ProductStatus.PUBLISHED, label: "انتشار", variant: "primary" as const, confirm: "این دوره در سایت منتشر شود؟" };
                   return <div className="admin-table-actions">
-                    {canWrite ? <AdminButton href={`/courses/${row.id}`} variant="secondary">ویرایش</AdminButton> : null}
+                    {canWrite ? <AdminButton href={`/admin/courses/${row.id}`} variant="secondary">ویرایش</AdminButton> : null}
                     {canPublish ? statusAction.status === ProductStatus.PUBLISHED ? <AdminActionButton action={`/api/admin/courses/${row.id}/status`} method="PATCH" body={{ status: statusAction.status, reason: "انتشار دوره" }} label={statusAction.label} variant={statusAction.variant} successMessage="دوره منتشر شد و در سایت نمایش داده می‌شود." /> : <AdminActionButton action={`/api/admin/courses/${row.id}/status`} method="PATCH" body={{ status: statusAction.status }} reasonRequired label={statusAction.label} variant={statusAction.variant} confirm={statusAction.confirm} successMessage={`وضعیت دوره به «${statusAction.label}» تغییر کرد.`} /> : null}
                     {canWrite ? <AdminActionButton action={`/api/admin/courses/${row.id}`} method="DELETE" label="حذف" variant="danger" confirm="این دوره برای همیشه حذف شود؟ اگر سابقه خرید یا ثبت‌نام داشته باشد حذف انجام نمی‌شود." successMessage="دوره حذف شد." /> : null}
                   </div>;

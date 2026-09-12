@@ -49,12 +49,12 @@ export function FreeSessionPage({ content }: { content?: PublicContent }) {
         <HomeTestimonials items={content?.testimonials} />
       </section>
 
-      <section className="free-session-faq home-faq" aria-labelledby="free-session-faq-title">
+      {content?.faqs?.length ? <section className="free-session-faq home-faq" aria-labelledby="free-session-faq-title">
         <div className="home-faq-inner">
           <h2 id="free-session-faq-title">سوالات متداول پیش مشاوره رایگان</h2>
           <HomeFaq items={content?.faqs} />
         </div>
-      </section>
+      </section> : null}
     </main>
   );
 }

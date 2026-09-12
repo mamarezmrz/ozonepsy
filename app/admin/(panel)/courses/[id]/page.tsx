@@ -59,7 +59,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         eyebrow="Course / CourseProduct"
         title={course.title}
         description={`وضعیت فعلی: ${currentStatusLabel}`}
-        action={<AdminButton href="/courses" variant="secondary">بازگشت به دوره‌ها</AdminButton>}
+        action={<AdminButton href="/admin/courses" variant="secondary">بازگشت به دوره‌ها</AdminButton>}
       />
 
       <section className="admin-panel-card admin-course-create-card">

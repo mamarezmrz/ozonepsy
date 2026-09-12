@@ -38,6 +38,8 @@ export async function generateMetadata({ params }: { params: Promise<{ section: 
   return page ? createPageMetadata(page.title, page.description) : createPageMetadata("صفحه پیدا نشد");
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function ListingPage({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
   const page = content[section];

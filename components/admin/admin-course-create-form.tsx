@@ -248,7 +248,7 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
         return;
       }
       dispatchAdminNotification(body.message ?? "دوره ایجاد شد.");
-      router.push("/courses");
+      router.push("/admin/courses");
       router.refresh();
     } catch {
       dispatchAdminNotification("ارتباط با سرور برقرار نشد.", "error");
@@ -315,7 +315,7 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
           </section>
         </div>
       </div>
-      <div className="admin-course-actions"><button type="submit" className="admin-button admin-button-primary" disabled={pending || uploadingCover}>{pending ? "در حال ذخیره…" : "ذخیره"}</button><button type="button" className="admin-button admin-button-secondary" onClick={() => router.push("/courses")} disabled={pending}>لغو تغییرات</button></div>
+      <div className="admin-course-actions"><button type="submit" className="admin-button admin-button-primary" disabled={pending || uploadingCover}>{pending ? "در حال ذخیره…" : "ذخیره"}</button><button type="button" className="admin-button admin-button-secondary" onClick={() => router.push("/admin/courses")} disabled={pending}>لغو تغییرات</button></div>
     </form>
   );
 }

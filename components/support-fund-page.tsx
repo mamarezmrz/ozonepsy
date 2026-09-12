@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
-import { HomeFaq } from "@/components/home-interactive";
 import { SiteNotification } from "@/components/site-notification";
 import { formatPersianNumber } from "@/lib/format";
 
@@ -65,12 +64,6 @@ export function SupportFundPage() {
         </section>
       </div>
 
-      <section className="support-fund-faq home-faq" aria-labelledby="support-fund-faq-title">
-        <div className="home-faq-inner">
-          <h2 id="support-fund-faq-title">سوالات متداول صندوق حمایتی</h2>
-          <HomeFaq />
-        </div>
-      </section>
     </main>
   );
 }
