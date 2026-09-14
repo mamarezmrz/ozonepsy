@@ -225,7 +225,8 @@ This set of fonts are used in this project under the license: (.....)
 .site-header-dropdown-trigger{gap:8px;border:0;background:transparent;padding:0;direction:rtl}
 .site-header-consultation-chevron{display:block;width:16px;height:16px;flex:0 0 16px;background:currentColor;mask:url("/icons/chevron-down.svg") center/contain no-repeat;-webkit-mask:url("/icons/chevron-down.svg") center/contain no-repeat;transition:transform .2s ease}
 .site-header-consultation-chevron.is-open{transform:rotate(180deg)}
-.site-header-submenu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;display:grid;width:224px;gap:4px;border:1px solid #d8e5e5;border-radius:16px;background:#fff;padding:8px;box-shadow:0 16px 36px rgba(53,88,89,.14);direction:rtl}
+.site-header-submenu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;display:grid;width:224px;max-height:0;gap:4px;visibility:hidden;overflow:hidden;border:0;border-radius:16px;background:#fff;padding:0;opacity:0;pointer-events:none;box-shadow:0 16px 36px rgba(53,88,89,.14);direction:rtl;transform:translateY(-6px);transition:max-height .26s ease,opacity .18s ease,transform .26s ease,visibility 0s linear .26s}
+.site-header-submenu.is-open{max-height:320px;visibility:visible;padding:8px;opacity:1;pointer-events:auto;transform:translateY(0);transition-delay:0s}
 .site-header-submenu-link{display:flex;min-height:44px;align-items:center;justify-content:flex-start;border-radius:10px;padding:8px 12px;color:#3b4040;font-size:16px;transition:background .2s ease,color .2s ease}
 .site-header-submenu-link:hover{background:#ebf7f7;color:#0f8b8d}
 .site-header-actions{display:flex;flex:0 0 auto;align-items:center;gap:18px;direction:rtl}
@@ -233,15 +234,21 @@ This set of fonts are used in this project under the license: (.....)
 .site-header-login:hover{color:#0f8b8d}
 .site-header-user-icon{display:block;width:20px;height:20px;flex:0 0 auto;background:currentColor;transition:background-color .2s ease;mask:url("/icons/header-user.svg") center/contain no-repeat;-webkit-mask:url("/icons/header-user.svg") center/contain no-repeat}
 .site-header-user-avatar{display:block;width:32px;height:32px;flex:0 0 auto;border-radius:999px;object-fit:cover}
-.site-header-menu-toggle{display:none;min-height:44px;min-width:44px;align-items:center;justify-content:center;border:1px solid #d8e5e5;border-radius:12px;background:#fff;color:#355859;font-size:20px}
+.site-header-menu-toggle{display:none;min-height:44px;min-width:44px;align-items:center;justify-content:center;border:0;border-radius:12px;background:transparent;color:#355859}
+.site-header-menu-icon{display:flex;width:24px;height:18px;flex-direction:column;align-items:stretch;justify-content:space-between}
+.site-header-menu-icon span{display:block;width:100%;height:2px;border-radius:999px;background:currentColor;transition:transform .22s ease,opacity .18s ease,background-color .2s ease}
+.site-header-menu-icon.is-open span:nth-child(1){transform:translateY(8px) rotate(45deg)}
+.site-header-menu-icon.is-open span:nth-child(2){opacity:0}
+.site-header-menu-icon.is-open span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
 @media (max-width:1279px) and (min-width:901px){.site-header-nav{margin-inline:16px}.site-header-nav-links{gap:16px}}
 @media (max-width:1099px) and (min-width:901px){.site-header-inner{gap:16px}.site-header-nav-links{gap:10px}.site-header-actions{gap:10px}.site-header-login{font-size:12px}}
 @media (max-width:900px){
+  html,body{overflow-x:hidden}
   .site-header{height:56px}
   .site-header-inner{height:56px;justify-content:space-between;gap:12px}
   .site-header-logo img{width:40px;height:40px}
-  .site-header-nav{display:none}
-  .site-header-nav.is-open{position:absolute;top:56px;right:16px;left:16px;display:block;max-height:calc(100dvh - 68px);margin:0;overflow-y:auto;overscroll-behavior:contain;border:1px solid #d8e5e5;border-radius:20px;background:#fff;padding:12px;box-shadow:0 16px 36px rgba(53,88,89,.14)}
+  .site-header-nav{position:fixed;top:56px;right:auto;bottom:0;left:0;display:block;width:min(320px,85vw);height:calc(100dvh - 56px);max-height:none;margin:0;visibility:hidden;overflow-y:auto;overscroll-behavior:contain;border:1px solid #d8e5e5;border-top:1px solid #d8e5e5;border-bottom:0;border-left:0;border-radius:0 24px 0 0;background:#fff;padding:24px 16px;box-shadow:12px 0 36px rgba(53,88,89,.14);opacity:0;pointer-events:none;transform:translateX(calc(-100% - 24px));transition:transform .28s ease,opacity .2s ease,visibility .28s ease}
+  .site-header-nav.is-open{visibility:visible;opacity:1;pointer-events:auto;transform:translateX(0)}
   .site-header-nav-links{display:grid;gap:4px}
   .site-header-nav-link,.site-header-dropdown-trigger{width:100%;min-height:48px;padding:10px 12px;font-size:16px}
   .site-header-nav-link{border-radius:10px}
@@ -252,8 +259,13 @@ This set of fonts are used in this project under the license: (.....)
   .site-header-submenu-link{min-height:44px;padding-inline:16px}
   .site-header-actions{gap:8px}
   .site-header-login{min-height:44px;font-size:13px}
-  .site-header-menu-toggle{display:inline-flex}
+  .site-header-menu-toggle{position:relative;z-index:61;display:inline-flex}
 }
+
+@media (prefers-reduced-motion:reduce){
+  .site-header-nav,.site-header-menu-icon span,.site-header-submenu{transition:none}
+}
+.site-header-menu-backdrop{position:fixed;inset:56px 0 0;z-index:39;background:rgba(53,88,89,.14);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
 
 /* Authentication modal */
 .auth-modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(53,88,89,0);opacity:0;pointer-events:none;transition:background-color .22s ease,opacity .22s ease;direction:rtl}
@@ -360,23 +372,27 @@ This set of fonts are used in this project under the license: (.....)
 /* `fill` images need a positioned frame so their cover crop stays responsive. */
 .home-group-photo,.home-course-image{position:relative}
 @media (max-width:560px){
-  .auth-modal{align-items:center;padding:12px}
-  .auth-modal-card{width:calc(100vw - 24px);max-height:calc(100vh - 24px);border-radius:28px;padding:24px 20px 24px}
+  html:has(.auth-modal.is-visible),body:has(.auth-modal.is-visible){overflow:hidden}
+  .auth-modal{align-items:center;width:100%;min-width:0;overflow-x:hidden;overflow-y:auto;padding:12px}
+  .auth-modal-card{width:min(100%,calc(100vw - 24px));max-width:calc(100vw - 24px);min-width:0;max-height:calc(100dvh - 24px);margin:auto;overflow-x:hidden;border-radius:28px;padding:72px 16px 20px}
   .auth-modal-card.is-login,.auth-modal-card.is-signup,.auth-modal-card.is-forgot{height:auto}
-  .auth-modal-logo{top:18px;right:20px;width:56px;height:56px}
-  .auth-modal-close{top:12px;left:12px}
-  .auth-modal-heading h2{font-size:27px}
+  .auth-modal-logo{top:16px;right:16px;width:48px;height:48px}
+  .auth-modal-close{top:16px;left:16px}
+  .auth-modal-heading{min-width:0;padding-top:0}
+  .auth-modal-heading h2{font-size:24px;line-height:1.5}
+  .auth-modal-heading p{font-size:13px;line-height:1.8}
   .auth-modal-form{gap:14px;margin-top:32px}
   .auth-modal-card.is-signup .auth-modal-form{margin-top:32px}
   .auth-modal-field{font-size:13px}
-  .auth-modal-field input,.auth-modal-select-wrap,.auth-modal-input-wrap input{height:48px;min-height:48px;font-size:14px}
+  .auth-modal-field,.auth-modal-input-wrap,.auth-modal-select-wrap,.auth-custom-select{width:100%;min-width:0}
+  .auth-modal-field input,.auth-modal-select-wrap,.auth-modal-input-wrap input{width:100%;max-width:100%;height:48px;min-height:48px;font-size:14px}
   .auth-custom-select,.auth-custom-select-trigger{height:48px;min-height:48px}
   .auth-modal-input-wrap input{padding-left:50px}
-  .auth-modal-bottom-row{gap:12px;margin-top:8px}
-  .auth-modal-submit{width:128px;height:48px;min-height:48px;font-size:15px}
-  .auth-modal-card.is-forgot .auth-modal-bottom-row{flex-wrap:wrap}
-  .auth-modal-card.is-forgot .auth-modal-submit{width:160px;min-width:160px;padding-inline:12px;font-size:14px}
-  .auth-modal-switch{gap:4px;font-size:12px}
+  .auth-modal-bottom-row{width:100%;min-width:0;align-items:stretch;flex-direction:column;gap:12px;margin-top:8px;direction:rtl}
+  .auth-modal-submit,.auth-modal-card.is-signup .auth-modal-submit,.auth-modal-card.is-forgot .auth-modal-submit{width:100%;min-width:0;height:48px;min-height:48px;padding-inline:12px;font-size:15px}
+  .auth-modal-card.is-forgot .auth-modal-bottom-row{flex-wrap:nowrap}
+  .auth-modal-switch,.auth-modal-back{width:100%;min-width:0;justify-content:center;white-space:normal;text-align:center;line-height:1.8}
+  .auth-modal-switch{gap:4px;flex-wrap:wrap;font-size:12px}
   .auth-modal-switch button{font-size:12px}
 }
 
@@ -489,6 +505,8 @@ This set of fonts are used in this project under the license: (.....)
   .courses-catalog .home-course-list{margin-top:24px}
   .courses-testimonials{padding-top:56px;padding-bottom:64px}
   .courses-faq{padding-top:56px;padding-bottom:64px}
+  .courses-faq .home-faq-inner h2{width:100%;margin-inline:auto;font-size:clamp(12px,4.8vw,22px);line-height:1.5;text-align:center;white-space:nowrap}
+  .courses-faq .home-faq-question{font-size:13px}
 }
 
 /* Individual consultation page */
@@ -763,6 +781,8 @@ This set of fonts are used in this project under the license: (.....)
   .consultation-testimonials-extra.is-open{max-height:1200px}
   .consultation-testimonials-actions{align-items:stretch;flex-direction:column;gap:8px;margin-top:24px}
   .consultation-testimonials-toggle,.consultation-new-review{width:100%}
+  .consultation-page .consultation-faq .home-faq-inner h2,
+  .group-therapy-page .group-therapy-faq .home-faq-inner h2{width:100%;margin-inline:auto;font-size:clamp(11px,calc((100vw - 32px) / 22),22px);line-height:1.5;text-align:center;white-space:nowrap}
 }
 
 /* Testimonials section from the home design. */
@@ -972,6 +992,67 @@ This set of fonts are used in this project under the license: (.....)
   .home-social-button:nth-child(2) svg{width:22px;height:22px}
 }
 
+/* Final mobile-only home layout adjustments. Keep the desktop composition unchanged. */
+@media (max-width:560px){
+  .home-hero-orb{display:none}
+  .home-hero-copy p{font-size:clamp(14px,4.4vw,16px);line-height:1.8;white-space:nowrap}
+
+  .home-category-grid{grid-template-columns:1fr;gap:12px}
+  .home-category-card{min-height:96px;flex-direction:row;align-items:center;gap:12px;padding:12px 16px}
+  .home-category-image{width:64px;height:64px;flex:0 0 64px}
+  .home-category-bottom{min-width:0;flex:1}
+  .home-category-card h3{font-size:17px;line-height:1.5}
+
+  .home-feature-grid{gap:28px}
+  .home-feature-card{display:flex;min-height:0;flex-direction:column;align-items:center;text-align:center}
+  .home-feature-icon{width:88px;height:88px;flex:0 0 88px;margin:0 auto 14px;font-size:36px}
+  .home-feature-card h3{width:100%;margin:0 0 6px;font-size:18px;line-height:1.5;text-align:center}
+  .home-feature-card p{display:block;width:100%;overflow:visible;font-size:14px;line-height:1.75;text-align:center}
+
+  .home-group-heading h2{font-size:22px;line-height:1.5;white-space:nowrap}
+  .home-group-photo img{object-position:center center;transform:none}
+  .home-group-points{grid-template-columns:1fr;gap:12px}
+
+  .home-courses-head{justify-content:center;text-align:center}
+  .home-courses-head h2{width:100%;font-size:24px;line-height:1.5;text-align:center;white-space:nowrap}
+  .home-course-list{display:grid;grid-template-columns:1fr;overflow:visible}
+  .home-course-card{display:flex;width:100%;min-width:0;height:auto;min-height:0;flex:0 0 auto;flex-direction:column;gap:0;padding:0}
+  .home-course-image{order:1;width:100%;height:180px;min-height:180px;border-radius:24px 24px 0 0}
+  .home-course-info{order:2;display:flex;width:100%;height:auto;min-width:0;min-height:0;flex:1;flex-direction:column;justify-content:flex-start;padding:18px 16px 16px}
+  .home-course-heading{display:block;direction:rtl}
+  .home-course-heading h3{display:block;min-width:0;line-height:1.5;text-align:right}
+  .home-course-tags{justify-content:center;margin-top:10px;flex-wrap:wrap}
+  .home-course-info p{display:-webkit-box;margin-top:10px!important;overflow:hidden;font-size:14px;line-height:1.75;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+  .home-course-footer{width:100%;align-items:center;justify-content:flex-start;gap:12px;margin-top:auto;padding-top:16px;border-top:0;flex-wrap:wrap}
+  .home-course-price{display:block;position:static;width:100%;margin-top:8px;text-align:left;font-size:16px;line-height:1.4;white-space:nowrap}
+  .home-course-actions{display:grid;width:100%;min-width:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .home-course-action{width:100%;padding:8px 10px;font-size:12px;white-space:nowrap}
+
+  .home-service-steps-head h2{text-align:center}
+  .home-service-steps-link{margin-inline:auto}
+  .home-service-step{display:flex;flex-direction:column;align-items:center;gap:0;text-align:center}
+  .home-service-step:not(:last-child)::after{display:none}
+  .home-service-step-marker{margin:0 auto}
+  .home-service-step h3{margin:12px 0 4px;text-align:center}
+  .home-service-step p{text-align:center}
+
+  .home-testimonial-heading p{font-size:12px;line-height:1.8;white-space:nowrap}
+
+  .home-social-copy{width:100%;text-align:center}
+  .home-social-copy h2{font-size:clamp(14px,4.4vw,16px);line-height:2.2;text-align:center;white-space:nowrap}
+  .home-social-buttons{justify-content:center}
+  .home-social-carousel{position:relative;display:block;width:min(288px,100%);margin-inline:auto;overflow:hidden}
+  .home-social-track{position:absolute;top:0;left:calc((100% - 220px)/2);transform:translateX(calc(-244px - var(--social-shift)))}
+
+  .home-footer-steps{text-align:center}
+  .home-footer-steps .home-footer-heading{text-align:center}
+  .home-footer-step-list{font-size:12px;text-align:center}
+  .home-footer-step-list li{white-space:nowrap}
+  .home-footer-steps .home-footer-cta{display:flex;width:max-content;margin-inline:auto}
+  .home-footer-socials{justify-content:center}
+  .home-footer-bottom{padding-inline:8px;font-size:clamp(10px,3.2vw,11px);white-space:nowrap}
+}
+
 /* Shared breadcrumb for internal pages. */
 .page-breadcrumb{position:sticky;top:80px;z-index:30;height:32px;background:rgba(232,237,237,.96);color:#676b6b;font-size:14px;backdrop-filter:blur(8px);transition:transform .24s ease;will-change:transform}
 .page-breadcrumb.is-hidden{transform:translateY(calc(-100% - 80px))}
@@ -1117,6 +1198,7 @@ This set of fonts are used in this project under the license: (.....)
   .contact-details h1{font-size:28px}
   .contact-details-grid{grid-template-columns:1fr;gap:24px;margin-top:20px}
   .contact-social-row{align-items:stretch;gap:10px;flex-direction:column}
+  .contact-social-row>span{align-self:center;text-align:center}
   .contact-social-row .contact-social-list{min-width:0}
   .contact-social-list{gap:8px}
   .contact-social-button{font-size:12px}
@@ -1125,7 +1207,7 @@ This set of fonts are used in this project under the license: (.....)
   .contact-form-section h2{font-size:28px}
   .contact-form-section>p{font-size:14px}
   .contact-form{margin-top:32px}
-  .contact-faq{padding:56px 0 64px}
+  .contact-faq{min-height:232px;padding:56px 0 32px}
 }
 
 /* Free session page */
@@ -1177,7 +1259,14 @@ This set of fonts are used in this project under the license: (.....)
   .free-session-copy h1{font-size:28px}
   .free-session-copy p{font-size:14px;line-height:1.9}
   .free-session-form>button[type=submit]{width:100%}
-  .free-session-faq{padding-top:56px;padding-bottom:64px}
+  .free-session-testimonials .home-testimonial-heading h2{font-size:clamp(18px,5.8vw,22px);line-height:1.5;white-space:nowrap}
+  .free-session-testimonials{overflow:visible}
+  .free-session-testimonials .home-testimonial-heading{width:calc(100% - 24px);max-width:100%;overflow:visible}
+  .free-session-testimonials .home-testimonial-heading p{display:block;width:100%;max-width:100%;min-width:0;height:auto;margin:12px auto 0;padding:0;color:#676b6b;font-size:13px;line-height:1.9;text-align:center;white-space:normal;overflow:visible;overflow-wrap:break-word;word-break:normal}
+  .free-session-faq{min-height:232px;padding-top:56px;padding-bottom:32px}
+  .free-session-faq .home-faq-inner h2{width:100%;margin-inline:auto;font-size:clamp(11px,calc((100vw - 32px) / 22),22px);line-height:1.5;text-align:center;white-space:nowrap}
+  .free-session-faq .home-faq-question{height:auto;min-height:52px;align-items:flex-start;padding:12px 0;font-size:13px;line-height:1.8;white-space:normal}
+  .free-session-faq .home-faq-question>span:last-child{display:block;min-width:0;flex:1;overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:break-word;word-break:normal}
 }
 
 /* Pricing page */
@@ -1264,12 +1353,18 @@ This set of fonts are used in this project under the license: (.....)
   .pricing-offer-group>h3,.pricing-course-group>h3{font-size:22px}
   .pricing-offer-grid{grid-template-columns:1fr}
   .pricing-offer-card{min-height:250px}
-  .pricing-course-row{grid-template-columns:1fr;min-height:0;gap:16px;padding:16px}
-  .pricing-course-row-image{width:100%;height:180px;min-height:180px}
-  .pricing-course-row-content{height:auto;min-height:190px}
-  .pricing-course-bottom{gap:12px}
-  .pricing-course-row-actions{justify-content:flex-start}
-  .pricing-faq{padding-top:56px;padding-bottom:64px}
+  .pricing-course-row{display:flex;width:100%;min-width:0;min-height:0;flex-direction:column;gap:0;padding:0}
+  .pricing-course-row-image{order:1;width:100%;height:180px;min-height:180px;border-radius:24px 24px 0 0}
+  .pricing-course-row-content{order:2;display:flex;width:100%;height:auto;min-width:0;min-height:220px;flex:1;flex-direction:column;padding:18px 16px 16px}
+  .pricing-course-row-heading{display:block;transform:none;direction:rtl}
+  .pricing-course-row-content h4{display:block;min-width:0;font-size:18px;line-height:1.5}
+  .pricing-course-row-price{display:block;width:100%;margin-top:8px;font-size:16px;line-height:1.4;text-align:left;white-space:nowrap}
+  .pricing-course-bottom{display:flex;width:100%;min-height:0;flex:1;flex-direction:column;gap:0;margin-top:10px}
+  .pricing-course-points{display:-webkit-box;overflow:hidden;margin:0;font-size:14px;line-height:1.75;text-overflow:ellipsis;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+  .pricing-course-row-actions{display:grid;width:100%;min-width:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:auto}
+  .pricing-course-row-actions .pricing-buy-button,.pricing-course-row-actions .pricing-details-link{width:100%;min-width:0;height:40px;margin:0;padding:8px 10px;font-size:12px;white-space:nowrap}
+  .pricing-faq .home-faq-inner h2{width:100%;margin-inline:auto;font-size:clamp(11px,calc((100vw - 32px) / 22),22px);line-height:1.5;text-align:center;white-space:nowrap}
+  .pricing-faq{min-height:0;padding-top:56px;padding-bottom:32px}
 }
 
 /* Support fund page */
@@ -1288,16 +1383,17 @@ This set of fonts are used in this project under the license: (.....)
 .support-fund-total-value strong{font-size:34px;font-weight:800}
 .support-fund-form-section{margin-top:72px}
 .support-fund-form-section h2,.support-fund-countries h2{font-size:32px}
-.support-fund-form{display:grid;grid-template-areas:"submit amount-label name-label" "submit amount-input name-input";grid-template-columns:160px 1fr 1fr;gap:8px 20px;margin-top:32px;direction:ltr}
+.support-fund-form{display:grid;grid-template-areas:"submit amount name";grid-template-columns:160px 1fr 1fr;gap:8px 20px;margin-top:32px;direction:ltr}
+.support-fund-field{display:grid;gap:8px;align-content:start}
+.support-fund-name-field{grid-area:name}
+.support-fund-amount-group{grid-area:amount}
 .support-fund-form label{color:var(--oz-text-800);font-size:14px;text-align:right;direction:rtl}
-.support-fund-form label:first-of-type{grid-area:name-label}
-.support-fund-form label:nth-of-type(2){grid-area:amount-label}
 .support-fund-form input{width:100%;height:48px;border:0;border-radius:12px;background:var(--oz-bg-200);padding:10px 14px;color:var(--oz-text-900);outline:0}
 .support-fund-form input[type=number]{appearance:textfield;-moz-appearance:textfield}
 .support-fund-form input[type=number]::-webkit-inner-spin-button,.support-fund-form input[type=number]::-webkit-outer-spin-button{margin:0;appearance:none;-webkit-appearance:none}
 .support-fund-form input:focus{box-shadow:0 0 0 3px rgba(15,139,141,.18)}
-.support-fund-form>input{grid-area:name-input;direction:rtl}
-.support-fund-amount-field{position:relative;grid-area:amount-input}
+.support-fund-field>input{direction:rtl}
+.support-fund-amount-field{position:relative}
 .support-fund-amount-field span{position:absolute;left:16px;top:50%;z-index:1;color:var(--oz-primary-600);font-size:22px;line-height:1;transform:translateY(-50%)}
 .support-fund-amount-field input{padding-left:42px}
 .support-fund-form button{grid-area:submit;align-self:end;height:48px;border:0;border-radius:16px;background:var(--oz-secondary-350);padding:0 16px;color:var(--oz-text-900);font-size:14px;transition:background-color .2s ease,transform .2s ease}
@@ -1324,6 +1420,8 @@ This set of fonts are used in this project under the license: (.....)
   .support-fund-intro p,.support-fund-countries p{font-size:15px;line-height:2}
   .support-fund-total{margin-top:44px}
   .support-fund-form-section{margin-top:56px}
+  .support-fund-form{grid-template-areas:"name" "amount" "submit";grid-template-columns:1fr;gap:16px;margin-top:24px}
+  .support-fund-form button{width:max-content;min-width:132px;margin-top:12px}
   .support-fund-countries{margin-top:56px;padding-bottom:64px}
 }
 
@@ -1334,13 +1432,14 @@ This set of fonts are used in this project under the license: (.....)
   .support-fund-hero-logo{left:16px;bottom:14px;width:52px;height:52px}
   .support-fund-intro{margin-top:28px}
   .support-fund-intro h1,.support-fund-total h2,.support-fund-form-section h2,.support-fund-countries h2{font-size:28px}
+  .support-fund-total h2{font-size:clamp(16px,calc((100vw - 32px) / 16),28px);white-space:nowrap}
   .support-fund-intro p,.support-fund-countries p{font-size:14px;line-height:1.9}
   .support-fund-total{margin-top:40px}
   .support-fund-total-value{min-height:76px;margin-top:18px;border-radius:18px;font-size:20px}
   .support-fund-total-value strong{font-size:28px}
   .support-fund-form-section{margin-top:48px}
-  .support-fund-form{display:grid;grid-template-areas:none;grid-template-columns:1fr;gap:8px;margin-top:24px}
-  .support-fund-form label,.support-fund-form>input,.support-fund-amount-field,.support-fund-form button{grid-area:auto}
+  .support-fund-form{grid-template-areas:"name" "amount" "submit";grid-template-columns:1fr;gap:8px;margin-top:24px}
+  .support-fund-amount-field{grid-area:auto}
   .support-fund-form label:nth-of-type(2){margin-top:12px}
   .support-fund-form button{width:max-content;min-width:132px;margin-top:12px}
   .support-fund-country-list{grid-template-columns:repeat(4,1fr);gap:20px 10px;margin-top:32px}

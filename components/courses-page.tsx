@@ -39,13 +39,12 @@ export function PsychologyCourseCatalog({ title = "دوره‌های اُزون"
             <article key={product.id} className="home-course-card">
               <div className="home-course-info">
                 <div>
-                  <h3>{product.title}</h3>
+                  <div className="home-course-heading"><h3>{product.title}</h3><span className="home-course-price"><span className="home-course-currency-symbol">$</span>{(product.priceMinor / 100).toFixed(2)} <small className="text-xs font-normal">({product.currency})</small></span></div>
                   {product.tags.length ? <div className="home-course-tags">{product.tags.map((tag) => <span className="home-course-tag" key={tag}>{tag}</span>)}</div> : null}
                   <CourseDescription description={product.description} clamp className="mt-4 text-sm leading-7 text-[#676b6b]" />
                 </div>
                 <div className="home-course-footer">
                   <div className="home-course-actions"><Link href={`/checkout/${product.id}`} className="home-course-action home-course-action-primary">خرید</Link><Link href={`/courses/${product.slug}`} className="home-course-action home-course-action-secondary">جزئیات دوره</Link></div>
-                  <span className="home-course-price"><span className="home-course-currency-symbol">$</span>{(product.priceMinor / 100).toFixed(2)} <small className="text-xs font-normal">({product.currency})</small></span>
                 </div>
               </div>
               <div className="home-course-image"><Image src={asset(`image-${20 + (index % 3)}.png`)} alt={product.title} fill quality={100} sizes="(max-width: 560px) 304px, 160px" /></div>

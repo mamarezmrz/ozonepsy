@@ -22,7 +22,7 @@ const supportedCountries = [
   { file: "flags/usa.svg", label: "آمریکا" },
 ] as const;
 
-export function SupportFundPage() {
+export function SupportFundPage({ totalMinor }: { totalMinor: number }) {
   return (
     <main className="support-fund-page">
       <div className="support-fund-page-inner">
@@ -46,7 +46,7 @@ export function SupportFundPage() {
 
         <section className="support-fund-total" aria-labelledby="support-fund-total-title">
           <h2 id="support-fund-total-title">مجموع کمک‌های جمع‌آوری شده</h2>
-          <div className="support-fund-total-value"><strong>{formatPersianNumber(2345)}</strong><span>دلار</span></div>
+          <div className="support-fund-total-value"><strong>{formatPersianNumber(totalMinor / 100)}</strong><span>دلار</span></div>
         </section>
 
         <SupportFundForm />
@@ -112,12 +112,16 @@ function SupportFundForm() {
       <section className="support-fund-form-section" aria-labelledby="support-fund-form-title">
         <h2 id="support-fund-form-title">فرم حمایت</h2>
         <form className="support-fund-form" noValidate onSubmit={handleSubmit}>
-          <label htmlFor="support-donor-name">نام <span>(اختیاری)</span></label>
-          <input id="support-donor-name" name="donorName" autoComplete="name" />
-          <label htmlFor="support-amount">مبلغ حمایت خود را وارد کنید</label>
-          <div className="support-fund-amount-field">
-            <span aria-hidden="true">$</span>
-            <input id="support-amount" name="amount" type="number" inputMode="decimal" min="1" max="1000000" step="0.01" required dir="ltr" />
+          <div className="support-fund-field support-fund-name-field">
+            <label htmlFor="support-donor-name">نام <span>(اختیاری)</span></label>
+            <input id="support-donor-name" name="donorName" autoComplete="name" />
+          </div>
+          <div className="support-fund-field support-fund-amount-group">
+            <label htmlFor="support-amount">مبلغ حمایت خود را وارد کنید</label>
+            <div className="support-fund-amount-field">
+              <span aria-hidden="true">$</span>
+              <input id="support-amount" name="amount" type="number" inputMode="decimal" min="1" max="1000000" step="0.01" required dir="ltr" />
+            </div>
           </div>
           <button type="submit" disabled={isSubmitting}>{isSubmitting ? "لطفاً صبر کنید" : "ثبت مبلغ حمایت"}</button>
         </form>

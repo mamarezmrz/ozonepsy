@@ -17,6 +17,7 @@ import { getPublicConsultationCases } from "@/lib/individual-consultation-conten
 import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 import { getPublishedProducts } from "@/lib/public/catalog";
 import { getPublicSpecialists } from "@/lib/public/specialists";
+import { getPublicSupportFundTotal } from "@/lib/support-fund";
 import { groupFaqItems } from "@/lib/consultation-categories";
 
 const content: Record<string, { title: string; description: string }> = {
@@ -53,7 +54,8 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
     return <><SiteHeader /><ContactPage content={publicContent} /><SiteFooter /></>;
   }
   if (section === "support-fund") {
-    return <><SiteHeader /><SupportFundPage /><SiteFooter /></>;
+    const totalMinor = await getPublicSupportFundTotal();
+    return <><SiteHeader /><SupportFundPage totalMinor={totalMinor} /><SiteFooter /></>;
   }
   if (section === "free-session") {
     return <><SiteHeader /><FreeSessionPage content={publicContent} /><SiteFooter /></>;

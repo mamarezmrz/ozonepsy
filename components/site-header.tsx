@@ -142,11 +142,14 @@ export function SiteHeader({
   useEffect(() => {
     if (!menuOpen) return;
 
-    const previousOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, [menuOpen]);
 
@@ -182,15 +185,13 @@ export function SiteHeader({
                 <span>حوزه‌های مشاوره</span>
                 <span className={`site-header-consultation-chevron${consultationsOpen ? " is-open" : ""}`} aria-hidden="true" />
               </button>
-              {consultationsOpen && (
-                <div id="consultations-submenu" className="site-header-submenu">
-                  {consultationLinks.map(([label, href]) => (
-                    <Link key={href} href={href} className="site-header-submenu-link focus-ring" onClick={closeMenu}>
-                      <span>{label}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <div id="consultations-submenu" className={`site-header-submenu${consultationsOpen ? " is-open" : ""}`} aria-hidden={!consultationsOpen}>
+                {consultationLinks.map(([label, href]) => (
+                  <Link key={href} href={href} className="site-header-submenu-link focus-ring" onClick={closeMenu}>
+                    <span>{label}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
             {navigationLinks.map(([label, href]) => (
               <Link key={href} href={href} className="site-header-nav-link focus-ring" onClick={closeMenu}>
@@ -223,11 +224,12 @@ export function SiteHeader({
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <span aria-hidden="true">☰</span>
+            <span className={`site-header-menu-icon${menuOpen ? " is-open" : ""}`} aria-hidden="true"><span /><span /><span /></span>
           </button>
         </div>
       </div>
       </header>
+      {menuOpen && <div className="site-header-menu-backdrop" aria-hidden="true" />}
       {showBreadcrumb && pathname !== "/" && (
         <nav className={`page-breadcrumb${!headerVisible && !menuOpen && !consultationsOpen ? " is-hidden" : ""}`} aria-label="مسیر صفحه">
           <div className="page-breadcrumb-inner container-oz">
