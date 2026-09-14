@@ -116,9 +116,6 @@ export function SiteHeader({
     const url = new URL(window.location.href);
     if (url.searchParams.get("auth") !== "forgot") return;
 
-    url.searchParams.delete("auth");
-    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
-
     const openTimeout = window.setTimeout(() => {
       setAuthModalMode("forgot");
       setAuthModalOpen(true);
