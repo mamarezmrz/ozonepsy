@@ -6,6 +6,9 @@ import { adminErrorResponse } from "@/lib/admin/errors";
 import { parseAdminListQuery } from "@/lib/admin/query";
 import { listAdminUsers } from "@/lib/admin/users";
 import { UserStatus } from "@/lib/generated/prisma/enums";
+import { hasSameOrigin } from "@/lib/admin/security";
+import { createAdminPublicUser } from "@/lib/admin/users";
+import { adminPublicUserCreateSchema } from "@/lib/admin/validation";
 
 export async function GET(request: Request) {
   if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
@@ -22,3 +25,16 @@ export async function GET(request: Request) {
   }
 }
 
+export async function POST(request: Request) {
+  if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
+  if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
+  try {
+    const session = await requireAdminSession();
+    requireAdminPermissionFromSession(session, "users.update");
+    const input = adminPublicUserCreateSchema.parse(await request.json());
+    const data = await createAdminPublicUser(session.userId, input);
+    return NextResponse.json({ ok: true, message: "کاربر جدید ایجاد شد.", data }, { status: 201 });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
+}

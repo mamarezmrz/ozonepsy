@@ -61,7 +61,9 @@ function mediaUrl(id: string | null, visibility: string | undefined) {
 
 function getCourseTags(course: { curriculum: unknown } | null | undefined) {
   if (!course?.curriculum || typeof course.curriculum !== "object" || Array.isArray(course.curriculum)) return [];
-  const categorySlugs = (course.curriculum as { categorySlugs?: unknown }).categorySlugs;
+  const curriculum = course.curriculum as { tags?: unknown; categorySlugs?: unknown };
+  if (Array.isArray(curriculum.tags)) return [...new Set(curriculum.tags.filter((tag): tag is string => typeof tag === "string").map((tag) => tag.trim()).filter(Boolean))];
+  const categorySlugs = curriculum.categorySlugs;
   if (!Array.isArray(categorySlugs)) return [];
   return [...new Set(categorySlugs.filter((slug): slug is string => typeof slug === "string").map((slug) => courseCategoryLabels[slug]).filter(Boolean))];
 }

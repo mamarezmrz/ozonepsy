@@ -52,8 +52,9 @@ export default async function DashboardSection({ params }: { params: Promise<{ p
   if (page === "sessions") {
     const upcoming = data.individualSessions.flatMap((session) => session.appointments.upcoming);
     const completed = data.individualSessions.flatMap((session) => session.appointments.completed);
-    const credit = data.individualSessions.length
-      ? data.individualSessions.reduce((totals, session) => ({
+    const creditedSessions = data.individualSessions.filter((session) => !session.isStandalone);
+    const credit = creditedSessions.length
+      ? creditedSessions.reduce((totals, session) => ({
           total: totals.total + session.total,
           completed: totals.completed + session.completed,
           remaining: totals.remaining + session.remaining,

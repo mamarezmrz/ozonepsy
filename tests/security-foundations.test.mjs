@@ -4,10 +4,13 @@ import { isDemoPaymentEnabled } from "../lib/payments/demo-gate.ts";
 import { sanitizeOriginalName, validateImageBytes } from "../lib/media/validation.ts";
 
 test("demo payment gate is disabled in production and outside allow-list", () => {
-  const previous = { node: process.env.NODE_ENV, enabled: process.env.DEMO_PAYMENT_ENABLED, allowed: process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS };
+  const previous = { node: process.env.NODE_ENV, enabled: process.env.DEMO_PAYMENT_ENABLED, allowed: process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS, emails: process.env.DEMO_PAYMENT_ALLOWED_EMAILS };
   try {
     process.env.NODE_ENV = "production"; process.env.DEMO_PAYMENT_ENABLED = "true";
     assert.equal(isDemoPaymentEnabled(), false);
+    process.env.DEMO_PAYMENT_ALLOWED_EMAILS = "qa@example.com, ADMIN@example.com ";
+    assert.equal(isDemoPaymentEnabled("user@example.com"), false);
+    assert.equal(isDemoPaymentEnabled(" Admin@example.com "), true);
     process.env.NODE_ENV = "development"; process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS = "test";
     assert.equal(isDemoPaymentEnabled(), false);
     process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS = "development,test";
@@ -16,6 +19,7 @@ test("demo payment gate is disabled in production and outside allow-list", () =>
     if (previous.node === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previous.node;
     if (previous.enabled === undefined) delete process.env.DEMO_PAYMENT_ENABLED; else process.env.DEMO_PAYMENT_ENABLED = previous.enabled;
     if (previous.allowed === undefined) delete process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS; else process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS = previous.allowed;
+    if (previous.emails === undefined) delete process.env.DEMO_PAYMENT_ALLOWED_EMAILS; else process.env.DEMO_PAYMENT_ALLOWED_EMAILS = previous.emails;
   }
 });
 

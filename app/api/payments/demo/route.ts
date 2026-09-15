@@ -17,9 +17,6 @@ const paymentInputSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!isDemoPaymentEnabled()) {
-    return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
-  }
   if (!hasSameOrigin(request)) {
     return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });
   }
@@ -27,6 +24,9 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ code: "UNAUTHORIZED", message: "برای تکمیل خرید ابتدا وارد حساب کاربری شوید." }, { status: 401 });
+  }
+  if (!isDemoPaymentEnabled(user.email)) {
+    return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   }
 
   let input: unknown;

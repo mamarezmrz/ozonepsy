@@ -1,3 +1,6 @@
+import { coupleFaqItems, groupFaqItems, individualFaqItems, teenagerFaqItems } from "@/lib/consultation-categories";
+import type { FaqPageKey } from "@/lib/public/faq-pages";
+
 export const defaultFaqs = [
   { question: "چطور مشاور مناسب خودم را پیدا کنم؟", answer: "می‌توانید از میان حوزه‌های مشاوره شروع کنید یا از تیم اُزون برای انتخاب مشاور کمک بگیرید." },
   { question: "جلسات مشاوره چگونه برگزار می‌شوند؟", answer: "جلسات به‌صورت آنلاین و در زمان هماهنگ‌شده با مشاور برگزار می‌شوند." },
@@ -5,6 +8,15 @@ export const defaultFaqs = [
   { question: "آیا اطلاعات جلسات محرمانه است؟", answer: "حریم خصوصی و امنیت گفت‌وگوهای شما برای ما یک اصل اساسی است." },
   { question: "چطور هزینه جلسات را پرداخت کنم؟", answer: "هر خدمت به‌صورت مستقل خریداری می‌شود و پرداخت از طریق درگاه امن انجام می‌گیرد." },
 ] as const;
+
+export function getDefaultFaqsForPage(pageKey: FaqPageKey) {
+  const categoryFaqs = pageKey === "consultation-individual" ? individualFaqItems
+    : pageKey === "consultation-couples" ? coupleFaqItems
+      : pageKey === "consultation-teenagers" ? teenagerFaqItems
+        : pageKey === "group-therapy" ? groupFaqItems
+          : defaultFaqs;
+  return categoryFaqs.map(({ question, answer }) => ({ question, answer }));
+}
 
 export const defaultTestimonials = [
   { name: "لیلا", avatar: "profile-1.png", text: "من از مشاوره با آقای حسینی بسیار خوشحالم. او با دقت به مشکلاتم گوش می‌دهد و همیشه راهکارهای مفیدی ارائه می‌کند. در هر جلسه احساس می‌کنم که پیشرفت بیشتری دارم و اعتماد به نفسم به طور قابل توجهی افزایش یافته است." },

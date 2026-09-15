@@ -21,7 +21,7 @@ export default async function IndividualTopicPage({ params }: { params: Promise<
   const stored = await getPublicIndividualConsultationTopic(slug);
   const topic = stored.topic ?? (!stored.blocked ? getConsultationTopic(slug) : undefined);
   if (!topic) notFound();
-  const publicContent = await getPublicContent();
+  const publicContent = await getPublicContent("consultation-topic");
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { AppointmentStatus, SessionUsageStatus } from "@/lib/generated/prisma/enums";
+import { AppointmentStatus, ProductKind, ProductStatus, SessionUsageStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { AdminServiceError } from "@/lib/admin/errors";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
@@ -7,6 +7,14 @@ import type { AdminSessionView } from "@/lib/admin/session";
 
 function scopeWhere(session?: AdminSessionView) {
   return session?.roles.includes("INSTRUCTOR") && !session.roles.some((role) => role === "ADMIN" || role === "SUPER_ADMIN") ? { specialist: { userId: session.userId } } : {};
+}
+
+export async function listAdminSessionProducts() {
+  return prisma.product.findMany({
+    where: { kind: { in: [ProductKind.CONSULTATION, ProductKind.PACKAGE] }, status: ProductStatus.PUBLISHED },
+    orderBy: { title: "asc" },
+    select: { id: true, title: true },
+  });
 }
 
 export async function listAdminAppointments(query: AdminListQuery, filters: { status?: AppointmentStatus; specialistId?: string; from?: Date; to?: Date }, session?: AdminSessionView) {

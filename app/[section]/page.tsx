@@ -18,7 +18,6 @@ import { getPublishedReviewsForProductSlug } from "@/lib/reviews";
 import { getPublishedProducts } from "@/lib/public/catalog";
 import { getPublicSpecialists } from "@/lib/public/specialists";
 import { getPublicSupportFundTotal } from "@/lib/support-fund";
-import { groupFaqItems } from "@/lib/consultation-categories";
 
 const content: Record<string, { title: string; description: string }> = {
   courses: { title: "دوره‌های روانشناسی", description: "یادگیری مهارت‌هایی که در زندگی روزمره همراهتان می‌مانند." },
@@ -44,7 +43,8 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
   const { section } = await params;
   const page = content[section];
   if (!page) notFound();
-  const publicContent = await getPublicContent();
+  const faqPageKey = section === "group-therapy" ? "group-therapy" : section === "support-fund" || section === "free-session" || section === "pricing" || section === "courses" || section === "contact" ? section : "home";
+  const publicContent = await getPublicContent(faqPageKey);
 
   if (section === "about") {
     return <><SiteHeader /><AboutPage /><SiteFooter /></>;
@@ -72,7 +72,7 @@ export default async function ListingPage({ params }: { params: Promise<{ sectio
       getPublicConsultationCases("group-therapy"),
       getPublishedProducts("group"),
     ]);
-    return <><SiteHeader /><GroupTherapyPage reviews={reviews} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} groupProducts={groupProducts} faqItems={groupFaqItems} /><SiteFooter /></>;
+    return <><SiteHeader /><GroupTherapyPage reviews={reviews} dynamicBenefits={dynamicBenefits} dynamicCases={dynamicCases} groupProducts={groupProducts} faqItems={publicContent.faqs} /><SiteFooter /></>;
   }
   if (section === "partners") {
     const specialists = await getPublicSpecialists();

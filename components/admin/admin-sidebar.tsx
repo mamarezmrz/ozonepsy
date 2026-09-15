@@ -17,6 +17,7 @@ const links = [
   { href: "/individual-consultation", label: "مشاوره فردی", permission: "products.read" },
   { href: "/sessions", label: "جلسات", permission: "sessions.read" },
   { href: "/reviews", label: "نظرات", permission: "reviews.read" },
+  { href: "/content/faq", label: "سوالات متداول", permission: "content.read" },
   { href: "/consultation-benefits", label: "مزایای مشاوره", permission: "content.read" },
   { href: "/consultation-issues", label: "مشکلات حوزه‌های مشاوره", permission: "content.read" },
   { href: "/audit-logs", label: "گزارش فعالیت", permission: "audit.read" },

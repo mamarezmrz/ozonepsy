@@ -4,6 +4,7 @@ import { AdminServiceError } from "@/lib/admin/errors";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
 import { pageMeta, paginationOffset, type AdminListQuery } from "@/lib/admin/query";
 import type { AdminSessionView } from "@/lib/admin/session";
+import { listAdminCourseTags as listStoredCourseTags } from "@/lib/admin/course-tags";
 
 const courseWhere = { kind: ProductKind.COURSE } as const;
 
@@ -36,13 +37,17 @@ export type AdminCourseCreateInput = {
   deliveryMode: CourseDeliveryMode;
   accessDays?: number | null;
   coverMediaId?: string | null;
-  categorySlugs?: string[];
+  tags?: string[];
   instructorName?: string;
   durationSessions?: number | null;
   demoMediaId?: string | null;
   demoVideoDuration?: number | null;
   sessions?: Array<{ title: string; videoMediaId?: string | null; videoDuration?: number | null }>;
 };
+
+export async function listAdminCourseTags() {
+  return listStoredCourseTags();
+}
 
 function normalizeCourseSessions(input: AdminCourseCreateInput) {
   const sessionCount = input.durationSessions;
@@ -142,7 +147,7 @@ export async function createAdminCourse(actorId: string, input: AdminCourseCreat
   const sessions = normalizeCourseSessions(input);
   const curriculum = {
     coverImageMode: "BRANDED",
-    categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
+    tags: [...new Set((input.tags ?? []).map((tag) => tag.trim()).filter(Boolean))],
     instructorName: input.instructorName?.trim() || null,
     durationSessions: input.durationSessions ?? null,
     demoMediaId: input.demoMediaId ?? null,
@@ -150,6 +155,8 @@ export async function createAdminCourse(actorId: string, input: AdminCourseCreat
     sessions: sessions.map((session, index) => ({ order: index, title: session.title, videoMediaId: session.videoMediaId, videoDuration: session.videoDuration })),
   };
   return prisma.$transaction(async (tx) => {
+    const tagNames = curriculum.tags.map((name) => ({ name }));
+    if (tagNames.length) await tx.courseTag.createMany({ data: tagNames, skipDuplicates: true });
     if (input.coverMediaId) {
       const media = await tx.mediaAsset.findFirst({ where: { id: input.coverMediaId, status: "ACTIVE" }, select: { id: true } });
       if (!media) throw new AdminServiceError("VALIDATION_ERROR", "تصویر کاور معتبر نیست.");
@@ -199,6 +206,8 @@ export async function updateAdminCourse(actorId: string, productId: string, inpu
   if (!data.title || !data.slug || !data.description || data.priceMinor < 0) throw new AdminServiceError("VALIDATION_ERROR", "اطلاعات دوره کامل یا معتبر نیست.");
   const sessions = normalizeCourseSessions(input);
   return prisma.$transaction(async (tx) => {
+    const tagNames = [...new Set((input.tags ?? []).map((tag) => tag.trim()).filter(Boolean))].map((name) => ({ name }));
+    if (tagNames.length) await tx.courseTag.createMany({ data: tagNames, skipDuplicates: true });
     if (input.coverMediaId) {
       const media = await tx.mediaAsset.findFirst({ where: { id: input.coverMediaId, status: "ACTIVE" }, select: { id: true } });
       if (!media) throw new AdminServiceError("VALIDATION_ERROR", "تصویر کاور معتبر نیست.");
@@ -213,7 +222,7 @@ export async function updateAdminCourse(actorId: string, productId: string, inpu
     const previousCurriculum = before.course?.curriculum && typeof before.course.curriculum === "object" && !Array.isArray(before.course.curriculum) ? before.course.curriculum as Record<string, unknown> : {};
     const curriculum = {
       coverImageMode: previousCurriculum.coverImageMode === "PLAIN" ? "PLAIN" : "BRANDED",
-      categorySlugs: (input.categorySlugs ?? []).map((slug) => slug.trim()).filter(Boolean),
+      tags: [...new Set((input.tags ?? []).map((tag) => tag.trim()).filter(Boolean))],
       instructorName: input.instructorName?.trim() || null,
       durationSessions: input.durationSessions ?? null,
       demoMediaId: input.demoMediaId ?? null,

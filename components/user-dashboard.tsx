@@ -162,7 +162,7 @@ function PopulatedDashboard({ data }: { data: DashboardData }) {
         <PanelHeading title="جلسات فردی" href="/dashboard/sessions" linkLabel="جزئیات بیشتر" />
         <div className="user-dashboard-session-grid">
           {primarySession ? <IndividualSessionCard session={primarySession} /> : <div className="user-dashboard-inline-empty">تا کنون جلسه‌ای نداشته‌اید</div>}
-          {primarySession ? <UsageCard session={primarySession} /> : <div className="user-dashboard-inline-empty">اعتباری برای نمایش وجود ندارد</div>}
+          {primarySession?.isStandalone ? <div className="user-dashboard-inline-empty">این جلسه به‌صورت مستقل توسط اُزون زمان‌بندی شده است</div> : primarySession ? <UsageCard session={primarySession} /> : <div className="user-dashboard-inline-empty">اعتباری برای نمایش وجود ندارد</div>}
         </div>
       </section>
 

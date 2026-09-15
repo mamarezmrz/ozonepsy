@@ -1,24 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
 import { dispatchAdminNotification } from "@/components/admin/admin-notification-host";
 import { CustomSelect } from "@/components/custom-select";
-import { AdminMultiSelect } from "@/components/admin/admin-multi-select";
+import { AdminConfirmDialog } from "@/components/admin/admin-mutation-form";
 
-type CategoryOption = { id: string; title: string; slug: string };
 type VideoDraft = { mediaId: string | null; duration: number | null; fileName: string };
 type SessionDraft = { key: number; title: string; video: VideoDraft };
-type ApiResponse = { ok?: boolean; message?: string; data?: { id?: string }; fieldErrors?: Record<string, string> };
+type ApiResponse = { ok?: boolean; message?: string; data?: { id?: string; name?: string }; fieldErrors?: Record<string, string> };
 export type AdminCourseFormValues = {
   title?: string;
   slug?: string;
   description?: string;
   priceMinor?: number;
   currency?: string;
-  categoryId?: string | null;
-  categorySlugs?: string[];
+  tags?: string[];
   coverMediaId?: string | null;
   instructorName?: string | null;
   durationSessions?: number | null;
@@ -28,13 +26,6 @@ export type AdminCourseFormValues = {
   sessions?: Array<{ title: string; videoMediaId?: string | null; videoDuration?: number | null; videoName?: string }>;
 };
 const emptyVideo: VideoDraft = { mediaId: null, duration: null, fileName: "" };
-const courseCategoryOptions = [
-  { value: "individual-consultation", label: "مشاوره فردی" },
-  { value: "couples-and-relationships", label: "زوج و رابطه" },
-  { value: "children-and-adolescents", label: "کودک و نوجوان" },
-  { value: "group-therapy", label: "گروه درمانی" },
-] as const;
-
 function normalizeSlug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-");
 }
@@ -112,12 +103,116 @@ function VideoUploadField({ label, value, visibility, onChange, onError }: { lab
   return <label className="admin-form-field"><span>{label}</span><span className="admin-course-video-field"><span dir={value.fileName ? "ltr" : undefined}>{pending ? "در حال بارگذاری…" : value.fileName || "برای آپلود ویدئو کلیک کنید"}</span>{value.duration !== null ? <small dir="ltr">{formatVideoDuration(value.duration)}</small> : null}<input type="file" accept="video/mp4,video/webm,video/ogg,.mp4,.webm,.ogv" onChange={handleChange} disabled={pending} /></span></label>;
 }
 
-export function AdminCourseCreateForm({ categories, values = {}, courseId }: { categories: CategoryOption[]; values?: AdminCourseFormValues; courseId?: string }) {
+function AdminCourseTags({ values, existingTags, onChange }: { values: string[]; existingTags: string[]; onChange: (tags: string[]) => void }) {
+  const [input, setInput] = useState("");
+  const [availableTags, setAvailableTags] = useState(() => [...new Set(existingTags)]);
+  const [open, setOpen] = useState(false);
+  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const normalizedInput = normalizeTag(input).toLocaleLowerCase("fa");
+  const filteredTags = normalizedInput ? availableTags.filter((tag) => normalizeTag(tag).toLocaleLowerCase("fa").startsWith(normalizedInput)) : availableTags;
+  const exactMatch = availableTags.some((tag) => normalizeTag(tag).toLocaleLowerCase("fa") === normalizedInput);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  function toggle(tag: string) {
+    const selected = values.some((value) => normalizeTag(value).toLocaleLowerCase("fa") === normalizeTag(tag).toLocaleLowerCase("fa"));
+    if (selected) onChange(values.filter((value) => normalizeTag(value).toLocaleLowerCase("fa") !== normalizeTag(tag).toLocaleLowerCase("fa")));
+    else if (values.length < 20) onChange([...values, tag]);
+  }
+
+  async function addTag() {
+    const name = normalizeTag(input);
+    if (!name || filteredTags.length || exactMatch || pending || values.length >= 20) return;
+    setPending(true);
+    try {
+      const response = await fetch("/api/admin/course-tags", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+      const body = await readApiResponse(response);
+      if (!response.ok || !body.ok || !body.data?.name) throw new Error(body.message ?? "افزودن تگ انجام نشد.");
+      const createdName = body.data.name;
+      setAvailableTags((current) => current.some((tag) => normalizeTag(tag).toLocaleLowerCase("fa") === normalizeTag(createdName).toLocaleLowerCase("fa")) ? current : [...current, createdName].sort((left, right) => left.localeCompare(right, "fa")));
+      if (!values.some((tag) => normalizeTag(tag).toLocaleLowerCase("fa") === normalizeTag(createdName).toLocaleLowerCase("fa"))) onChange([...values, createdName]);
+      setInput("");
+      setOpen(true);
+      dispatchAdminNotification(body.message ?? "تگ اضافه شد.");
+    } catch (error) {
+      dispatchAdminNotification(error instanceof Error ? error.message : "افزودن تگ انجام نشد.", "error");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function deleteTag() {
+    if (!tagToDelete || pending) return;
+    setPending(true);
+    try {
+      const response = await fetch("/api/admin/course-tags", { method: "DELETE", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: tagToDelete }) });
+      const body = await readApiResponse(response);
+      if (!response.ok || !body.ok) throw new Error(body.message ?? "حذف تگ انجام نشد.");
+      const deletedName = tagToDelete;
+      setAvailableTags((current) => current.filter((tag) => normalizeTag(tag).toLocaleLowerCase("fa") !== normalizeTag(deletedName).toLocaleLowerCase("fa")));
+      onChange(values.filter((tag) => normalizeTag(tag).toLocaleLowerCase("fa") !== normalizeTag(deletedName).toLocaleLowerCase("fa")));
+      setTagToDelete(null);
+      dispatchAdminNotification(body.message ?? "تگ حذف شد.");
+    } catch (error) {
+      dispatchAdminNotification(error instanceof Error ? error.message : "حذف تگ انجام نشد.", "error");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <div className="admin-course-tags-control" ref={rootRef}>
+    <button type="button" className="auth-custom-select-trigger admin-course-tags-trigger" aria-expanded={open} aria-haspopup="listbox" onClick={() => setOpen((current) => !current)}>
+      <span className={values.length ? "" : "is-placeholder"}>{values.length ? values.join("، ") : "انتخاب یا ساخت تگ"}</span>
+      <Image src="/icons/chevron-down.svg" alt="" width={16} height={16} className={open ? "is-open" : ""} />
+    </button>
+    {open ? <div className="auth-custom-select-menu admin-course-tags-menu">
+      <div className="admin-course-tags-search-row">
+        <div className="auth-custom-select-search-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" /><path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg><input type="search" value={input} maxLength={80} placeholder="جست‌وجوی تگ" aria-label="جست‌وجوی تگ" onChange={(event) => setInput(event.target.value)} /></div>
+        <button type="button" className="admin-button admin-button-secondary" disabled={!normalizedInput || filteredTags.length > 0 || exactMatch || pending || values.length >= 20} onClick={addTag}>افزودن تگ</button>
+      </div>
+      <div className="auth-custom-select-options admin-course-tags-options" role="listbox" aria-label="تگ‌های دوره" aria-multiselectable="true">
+        {filteredTags.length ? filteredTags.map((tag) => {
+          const selected = values.some((value) => normalizeTag(value).toLocaleLowerCase("fa") === normalizeTag(tag).toLocaleLowerCase("fa"));
+          return <div className="admin-course-tag-option-row" key={tag}>
+            <button type="button" role="option" aria-selected={selected} className={`auth-custom-select-option${selected ? " is-selected" : ""}`} onClick={() => toggle(tag)}><span>{tag}</span><span className="admin-multi-select-checkbox" aria-hidden="true">{selected ? "✓" : ""}</span></button>
+            <button type="button" className="admin-course-tag-delete" aria-label={`حذف تگ ${tag}`} disabled={pending} onClick={() => setTagToDelete(tag)}>×</button>
+          </div>;
+        }) : <p className="auth-custom-select-empty">{normalizedInput ? "تگی با این عبارت پیدا نشد؛ برای ساخت آن «افزودن تگ» را بزنید." : "هنوز تگی ساخته نشده است."}</p>}
+      </div>
+    </div> : null}
+    {values.length ? <div className="admin-course-tag-list">{values.map((tag) => <span key={tag}>{tag}<button type="button" aria-label={`برداشتن تگ ${tag} از این دوره`} onClick={() => toggle(tag)}>×</button></span>)}</div> : <small className="admin-course-cover-hint">می‌توانید چند تگ را هم‌زمان انتخاب کنید.</small>}
+    {tagToDelete ? <AdminConfirmDialog title="حذف تگ" description={`تگ «${tagToDelete}» از فهرست و دوره‌هایی که به آن وصل است حذف می‌شود. ادامه می‌دهید؟`} onCancel={() => pending ? undefined : setTagToDelete(null)}>
+      <div className="admin-form-actions"><button type="button" className="admin-button admin-button-secondary" onClick={() => setTagToDelete(null)} disabled={pending}>انصراف</button><button type="button" className="admin-button admin-button-danger" onClick={deleteTag} disabled={pending}>{pending ? "در حال حذف…" : "حذف تگ"}</button></div>
+    </AdminConfirmDialog> : null}
+  </div>;
+}
+
+function normalizeTag(value: string) {
+  return value.trim().replace(/\s+/g, " ").replace(/ي/g, "ی").replace(/ك/g, "ک");
+}
+
+export function AdminCourseCreateForm({ existingTags = [], values = {}, courseId }: { existingTags?: string[]; values?: AdminCourseFormValues; courseId?: string }) {
   const router = useRouter();
   const [title, setTitle] = useState(values.title ?? "");
   const [slug, setSlug] = useState(values.slug ?? "");
   const [description, setDescription] = useState(values.description ?? "");
-  const [categorySlugs, setCategorySlugs] = useState<string[]>(values.categorySlugs ?? []);
+  const [tags, setTags] = useState<string[]>(values.tags ?? []);
   const [priceMajor, setPriceMajor] = useState(values.priceMinor === undefined ? "0" : String(values.priceMinor / 100));
   const [currency, setCurrency] = useState(values.currency === "EUR" ? "EUR" : "USD");
   const [instructorName, setInstructorName] = useState(values.instructorName ?? "");
@@ -231,8 +326,8 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
           description: description.trim(),
           priceMinor: Math.round((Number(priceMajor) || 0) * 100),
           currency: currency.trim().toUpperCase() || "USD",
-          categoryId: categories.find((category) => category.slug === categorySlugs[0])?.id ?? null,
-          categorySlugs,
+          categoryId: null,
+          tags,
           deliveryMode: "RECORDED",
           coverMediaId,
           instructorName: instructorName.trim(),
@@ -277,13 +372,14 @@ export function AdminCourseCreateForm({ categories, values = {}, courseId }: { c
                   </label>
                   {coverPreviewUrl ? <button type="button" className="admin-button admin-button-danger" onClick={removeCover}>حذف تصویر</button> : null}
                 </div>
+                <p className="admin-course-cover-hint">پیشنهاد: ۱۲۰۰ × ۱۲۰۰ پیکسل · JPG، PNG یا WebP</p>
               </div>
             </div>
             <div className="admin-course-form-grid">
               <label className="admin-form-field admin-form-field-full"><span>عنوان دوره</span><input value={title} onChange={(event) => setTitle(event.target.value)} required /></label>
               <label className="admin-form-field admin-form-field-full admin-course-slug-field"><span>اسلاگ دوره</span><input dir="ltr" value={slug} onChange={(event) => setSlug(normalizeSlug(event.target.value))} placeholder="مثلاً anxiety-course" required /></label>
               <label className="admin-form-field admin-form-field-full"><span>توضیحات دوره</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} required /></label>
-              <label className="admin-form-field admin-form-field-full"><span>موضوعات مرتبط (حوزه‌ها)</span><AdminMultiSelect options={courseCategoryOptions} values={categorySlugs} onChange={setCategorySlugs} placeholder="حوزه‌ها را انتخاب کنید" ariaLabel="حوزه‌های مرتبط دوره" /></label>
+              <label className="admin-form-field admin-form-field-full"><span>موضوعات مرتبط (تگ‌ها)</span><AdminCourseTags values={tags} existingTags={existingTags} onChange={setTags} /></label>
               <label className="admin-form-field"><span>مبلغ دوره</span><input type="number" min="0" step="0.01" value={priceMajor} onChange={(event) => setPriceMajor(event.target.value)} required /></label>
               <label className="admin-form-field"><span>واحد پولی</span><CustomSelect options={[{ value: "USD", label: "دلار" }, { value: "EUR", label: "یورو" }]} value={currency} onChange={setCurrency} placeholder="انتخاب واحد پولی" ariaLabel="واحد پولی" searchable={false} className="admin-custom-select" /></label>
             </div>

@@ -13,6 +13,7 @@ export type IndividualSessionItem = {
   time: string;
   therapist: string;
   dateTime?: string;
+  meetingUrl?: string;
 };
 
 function SessionsCreditCard({ total, completed, remaining }: { total: number; completed: number; remaining: number }) {
@@ -51,6 +52,7 @@ function SessionCard({ session, selected }: { session: IndividualSessionItem; se
         <time>{toPersianDigits(session.time)}</time>
       </div>
       <p>{session.therapist}</p>
+      {session.meetingUrl ? <a className="individual-session-meeting-link" href={session.meetingUrl} target="_blank" rel="noopener noreferrer" dir="ltr">ورود به جلسه</a> : null}
     </article>
   );
 }

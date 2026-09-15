@@ -2,6 +2,7 @@ import {
   AppointmentStatus,
   EntitlementStatus,
   OrderStatus,
+  ProductKind,
   SessionUsageStatus,
   SupportContributionStatus,
 } from "@/lib/generated/prisma/enums";
@@ -25,9 +26,10 @@ export type DashboardSession = {
   nextAppointment?: string;
   nextAppointmentLink?: string;
   nextAppointmentTimestamp?: number;
+  isStandalone?: boolean;
   appointments: {
-    upcoming: Array<{ id: string; date: string; time: string; therapist: string; dateTime: string }>;
-    completed: Array<{ id: string; date: string; time: string; therapist: string; dateTime: string }>;
+    upcoming: Array<{ id: string; date: string; time: string; therapist: string; dateTime: string; meetingUrl?: string }>;
+    completed: Array<{ id: string; date: string; time: string; therapist: string; dateTime: string; meetingUrl?: string }>;
   };
 };
 
@@ -250,6 +252,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     _sum: { amountMinor: true },
   });
 
+  const standaloneAppointments = await prisma.appointment.findMany({
+    where: {
+      userId,
+      entitlementId: null,
+      status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.RESCHEDULED, AppointmentStatus.COMPLETED] },
+      product: { kind: { in: [ProductKind.CONSULTATION, ProductKind.PACKAGE] } },
+    },
+    orderBy: { startsAt: "asc" },
+    select: { id: true, status: true, startsAt: true, meetingUrl: true, specialist: { select: { displayName: true } }, product: { select: { title: true } } },
+  });
+
   const groupEntitlementIds = user.entitlements
     .filter((entitlement) => entitlement.product.kind === "GROUP")
     .map((entitlement) => entitlement.id);
@@ -347,13 +360,40 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         nextAppointmentTimestamp: upcomingAppointments[0]?.startsAt.getTime(),
         appointments: {
           upcoming: upcomingAppointments
-            .map((appointment) => ({ id: appointment.id, date: formatSessionDate(appointment.startsAt), time: formatSessionTime(appointment.startsAt), therapist: appointment.specialist?.displayName || "متخصص اُزون", dateTime: appointment.startsAt.toISOString() })),
+            .map((appointment) => ({ id: appointment.id, date: formatSessionDate(appointment.startsAt), time: formatSessionTime(appointment.startsAt), therapist: appointment.specialist?.displayName || "متخصص اُزون", dateTime: appointment.startsAt.toISOString(), meetingUrl: appointment.meetingUrl || undefined })),
           completed: entitlement.appointments
             .filter((appointment) => appointment.status === AppointmentStatus.COMPLETED)
-            .map((appointment) => ({ id: appointment.id, date: formatSessionDate(appointment.startsAt), time: formatSessionTime(appointment.startsAt), therapist: appointment.specialist?.displayName || "متخصص اُزون", dateTime: appointment.startsAt.toISOString() })),
+            .map((appointment) => ({ id: appointment.id, date: formatSessionDate(appointment.startsAt), time: formatSessionTime(appointment.startsAt), therapist: appointment.specialist?.displayName || "متخصص اُزون", dateTime: appointment.startsAt.toISOString(), meetingUrl: appointment.meetingUrl || undefined })),
         },
       });
     }
+  }
+
+  const now = Date.now();
+  for (const appointment of standaloneAppointments) {
+    const isUpcoming = (appointment.status === AppointmentStatus.SCHEDULED || appointment.status === AppointmentStatus.RESCHEDULED) && appointment.startsAt.getTime() > now;
+    const isCompleted = appointment.status === AppointmentStatus.COMPLETED;
+    if (!isUpcoming && !isCompleted) continue;
+    const appointmentView = {
+      id: appointment.id,
+      date: formatSessionDate(appointment.startsAt),
+      time: formatSessionTime(appointment.startsAt),
+      therapist: appointment.specialist?.displayName || "متخصص اُزون",
+      dateTime: appointment.startsAt.toISOString(),
+      meetingUrl: appointment.meetingUrl || undefined,
+    };
+    individualSessions.push({
+      id: appointment.id,
+      title: appointment.product.title,
+      total: 0,
+      completed: 0,
+      remaining: 0,
+      isStandalone: true,
+      nextAppointment: isUpcoming ? formatAppointmentDate(appointment.startsAt) : undefined,
+      nextAppointmentLink: isUpcoming ? appointment.meetingUrl || undefined : undefined,
+      nextAppointmentTimestamp: isUpcoming ? appointment.startsAt.getTime() : undefined,
+      appointments: { upcoming: isUpcoming ? [appointmentView] : [], completed: isCompleted ? [appointmentView] : [] },
+    });
   }
 
   individualSessions.sort((left, right) => (left.nextAppointmentTimestamp ?? Number.POSITIVE_INFINITY) - (right.nextAppointmentTimestamp ?? Number.POSITIVE_INFINITY));

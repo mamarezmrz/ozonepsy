@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { countries } from "../countries.ts";
 
 export const adminLoginSchema = z.object({
   email: z.string().trim().email("ایمیل معتبر نیست.").max(320),
@@ -39,6 +40,43 @@ export const adminStatusChangeSchema = z.object({
   reason: z.string().trim().min(1, "دلیل تغییر وضعیت را وارد کنید.").max(1000),
 });
 
+const validCountry = z.string().trim().max(120).refine((value) => value === "" || (countries as readonly string[]).includes(value), "کشور انتخاب‌شده معتبر نیست.");
+const adminPublicUserProfileSchema = z.object({
+  email: z.string().trim().email("ایمیل معتبر نیست.").max(320).transform((value) => value.toLowerCase()),
+  firstName: z.string().trim().max(100).default(""),
+  lastName: z.string().trim().max(100).default(""),
+  phone: z.string().trim().max(40).default(""),
+  country: validCountry.default(""),
+});
+
+const adminUserPasswordSchema = z.string().min(12, "رمز باید حداقل ۱۲ کاراکتر باشد.").max(200).refine((value) => !/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(value), "استفاده از حروف فارسی یا عربی در رمز مجاز نیست.");
+export const adminPublicUserCreateSchema = z.object({
+  email: z.string().trim().email("ایمیل معتبر نیست.").max(320).transform((value) => value.toLowerCase()),
+  fullName: z.string().trim().min(1, "نام و نام خانوادگی را وارد کنید.").max(200),
+  phone: z.string().trim().min(1, "شماره تلفن را وارد کنید.").max(40),
+  country: validCountry.refine((value) => value.length > 0, "کشور را انتخاب کنید."),
+  password: adminUserPasswordSchema,
+  confirmPassword: adminUserPasswordSchema,
+}).refine((value) => value.password === value.confirmPassword, { message: "رمز و تکرار آن یکسان نیستند.", path: ["confirmPassword"] })
+  .transform(({ fullName, ...value }) => {
+    const [firstName = "", ...lastNameParts] = fullName.split(/\s+/);
+    return { ...value, firstName, lastName: lastNameParts.join(" ") };
+  });
+
+export const adminPublicUserUpdateSchema = adminPublicUserProfileSchema
+  .omit({ firstName: true, lastName: true })
+  .extend({ fullName: z.string().trim().max(200).default("") })
+  .transform(({ fullName, ...value }) => {
+  const [firstName = "", ...lastNameParts] = fullName.split(/\s+/);
+  return { ...value, firstName, lastName: lastNameParts.join(" ") };
+});
+
+export const adminPublicUserPasswordSchema = z.object({
+  password: adminUserPasswordSchema,
+  confirmPassword: adminUserPasswordSchema,
+  reason: z.string().trim().min(1, "دلیل تغییر رمز را وارد کنید.").max(1000),
+}).refine((value) => value.password === value.confirmPassword, { message: "رمز و تکرار آن یکسان نیستند.", path: ["confirmPassword"] });
+
 export const adminInviteAcceptSchema = z.object({
   password: z.string().min(12, "رمز ورود باید حداقل ۱۲ کاراکتر باشد.").max(200),
   firstName: z.string().trim().max(100).default(""),
@@ -61,7 +99,7 @@ const optionalCourseDuration = z.preprocess((value) => value === "" ? null : val
 
 export const adminCourseCreateSchema = adminCourseSchema.extend({
   coverMediaId: optionalCourseMediaId,
-  categorySlugs: z.array(z.string().trim().min(1).max(120)).max(4).default([]),
+  tags: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
   instructorName: z.string().trim().max(200).default(""),
   durationSessions: z.preprocess((value) => value === "" ? null : value, z.coerce.number().int().positive().nullable().optional()),
   demoMediaId: optionalCourseMediaId,
@@ -139,16 +177,29 @@ export const adminEntitlementSessionsSchema = z.object({
   reason: z.string().trim().min(1, "دلیل تغییر تعداد جلسات را وارد کنید.").max(1000),
 });
 
-export const adminAppointmentCreateSchema = z.object({
+const adminAppointmentCreateFields = z.object({
   startsAt: z.coerce.date(),
   endsAt: z.preprocess((value) => value === "" || value === undefined ? null : value, z.coerce.date().nullable()),
   meetingUrl: z.preprocess((value) => value === "" || value === undefined ? null : value, z.string().trim().url("لینک جلسه معتبر نیست.").max(2000).nullable()),
   reason: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.string().trim().max(1000).optional()),
-}).refine((value) => !value.endsAt || value.endsAt > value.startsAt, { message: "زمان پایان باید بعد از زمان شروع باشد.", path: ["endsAt"] })
+});
+
+function hasValidAppointmentUrl(meetingUrl: string | null) {
+  if (!meetingUrl) return true;
+  try { return ["http:", "https:"].includes(new URL(meetingUrl).protocol); } catch { return false; }
+}
+
+export const adminAppointmentCreateSchema = adminAppointmentCreateFields.refine((value) => !value.endsAt || value.endsAt > value.startsAt, { message: "زمان پایان باید بعد از زمان شروع باشد.", path: ["endsAt"] })
   .refine((value) => {
-    if (!value.meetingUrl) return true;
-    try { return ["http:", "https:"].includes(new URL(value.meetingUrl).protocol); } catch { return false; }
+    return hasValidAppointmentUrl(value.meetingUrl);
   }, { message: "لینک جلسه باید با http یا https شروع شود.", path: ["meetingUrl"] });
+
+export const adminUserAppointmentCreateSchema = adminAppointmentCreateFields.extend({ productId: z.string().uuid("نوع جلسه معتبر نیست.") })
+  .refine((value) => !value.endsAt || value.endsAt > value.startsAt, { message: "زمان پایان باید بعد از زمان شروع باشد.", path: ["endsAt"] })
+  .refine((value) => hasValidAppointmentUrl(value.meetingUrl), { message: "لینک جلسه باید با http یا https شروع شود.", path: ["meetingUrl"] });
+
+export const adminCourseTagCreateSchema = z.object({ name: z.string().trim().min(1, "نام تگ را وارد کنید.").max(80).transform((value) => value.replace(/\s+/g, " ")) });
+export const adminCourseTagDeleteSchema = z.object({ name: z.string().trim().min(1).max(80) });
 
 export const adminReviewStatusSchema = z.object({
   status: z.enum(["PENDING", "PUBLISHED", "HIDDEN"]),
@@ -163,6 +214,12 @@ export const adminFaqSchema = z.object({
   question: z.string().trim().min(1).max(2000),
   answer: z.string().trim().min(1).max(10000),
   sortOrder: z.coerce.number().int().min(0).max(100000).default(0),
+  pageKey: z.enum(["home", "pricing", "courses", "contact", "support-fund", "free-session", "group-therapy", "consultation-individual", "consultation-couples", "consultation-teenagers", "group-therapy-detail", "consultation-topic"]).optional(),
+});
+
+export const adminFaqReorderSchema = z.object({
+  pageKey: z.enum(["home", "pricing", "courses", "contact", "support-fund", "free-session", "group-therapy", "consultation-individual", "consultation-couples", "consultation-teenagers", "group-therapy-detail", "consultation-topic"]),
+  ids: z.array(z.string().uuid()).min(1).max(100).refine((ids) => new Set(ids).size === ids.length, "شناسه‌ی سوال تکراری است."),
 });
 
 export const adminTestimonialSchema = z.object({

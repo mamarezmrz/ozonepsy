@@ -234,9 +234,8 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
     });
   };
 
-  const previewLesson = courseLessons.find((lesson) => lesson.isPreview && lesson.mediaUrl);
-  const previewVideo = product.demoVideoUrl ?? previewLesson?.mediaUrl ?? null;
-  const previewTitle = product.demoVideoUrl ? "دموی دوره" : previewLesson?.title ?? "دموی دوره";
+  const previewVideo = product.demoVideoUrl;
+  const previewTitle = "دموی دوره";
 
   return (
     <main className="course-detail-page">
@@ -289,7 +288,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
             <CourseDescription description={product.description} className="course-detail-body-description" />
           </div>
 
-          <section className="course-detail-section course-detail-demo" aria-labelledby="course-demo-title">
+          {previewVideo ? <section className="course-detail-section course-detail-demo" aria-labelledby="course-demo-title">
             <h2 id="course-demo-title">دموی دوره</h2>
             <button type="button" className="course-demo-preview focus-ring" onClick={() => previewVideo && openVideo(previewVideo, previewTitle)} disabled={!previewVideo} aria-label="پخش دموی دوره">
               <Image
@@ -302,7 +301,7 @@ export function CourseDetailPage({ product, userEmail, hasCourseAccess, reviews 
               <span className="course-demo-overlay" aria-hidden="true" />
               <span className="course-demo-play" aria-hidden="true"><span /></span>
             </button>
-          </section>
+          </section> : null}
 
           <section className="course-detail-section course-detail-outline" aria-labelledby="course-outline-title">
             <h2 id="course-outline-title">سرفصل‌ها</h2>

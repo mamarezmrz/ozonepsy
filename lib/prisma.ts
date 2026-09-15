@@ -27,17 +27,22 @@ function isCurrentPrismaClient(client: PrismaClient | undefined): client is Pris
     individualConsultationCaseSection?: unknown;
     individualConsultationTopic?: unknown;
     groupTherapySession?: unknown;
+    courseTag?: unknown;
     _runtimeDataModel?: { models?: Record<string, { fields?: Array<{ name: string }> }> };
   };
   const groupFields = candidate._runtimeDataModel?.models?.GroupTherapyProduct?.fields?.map((field) => field.name) ?? [];
+  const faqFields = candidate._runtimeDataModel?.models?.Faq?.fields?.map((field) => field.name) ?? [];
   const hasCurrentGroupModel = groupFields.length
     ? ["instructorName", "durationSessions", "meetingUrl", "sessions"].every((field) => groupFields.includes(field))
     : typeof candidate.groupTherapySession !== "undefined";
+  const hasCurrentFaqModel = faqFields.includes("pageKey");
 
   return typeof candidate.consultationBenefitsSection !== "undefined"
     && typeof candidate.individualConsultationCaseSection !== "undefined"
     && typeof candidate.individualConsultationTopic !== "undefined"
-    && hasCurrentGroupModel;
+    && typeof candidate.courseTag !== "undefined"
+    && hasCurrentGroupModel
+    && hasCurrentFaqModel;
 }
 
 function getCurrentPrismaClient() {

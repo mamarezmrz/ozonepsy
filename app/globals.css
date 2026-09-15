@@ -2067,6 +2067,7 @@ This set of fonts are used in this project under the license: (.....)
 .individual-session-card-topline{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#3b4040;font-size:15px;line-height:1.7;direction:rtl}
 .individual-session-card-topline time:first-child{white-space:nowrap}
 .individual-session-card p{margin:18px 0 0;color:#676b6b;font-size:14px;line-height:1.7}
+.individual-session-meeting-link{align-self:flex-start;margin-top:10px;color:#0f8b8d;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .individual-sessions-empty-state{display:flex;min-height:350px;align-items:center;justify-content:center;flex-direction:column;padding:24px 20px;text-align:center}
 .individual-sessions-panel.is-empty-panel .individual-sessions-empty-state{min-height:0;flex:1}
 .individual-sessions-empty-state img{width:180px;height:auto}
@@ -3477,12 +3478,14 @@ This set of fonts are used in this project under the license: (.....)
 }
 
 .admin-button-primary {
-  background: var(--admin-accent);
+  background: #b85b28;
+  color: #fff;
 }
 
 .admin-button-primary:hover,
 .admin-button-primary:focus-visible {
-  background: #e99a69;
+  background: #a94f22;
+  color: #fff;
 }
 
 .admin-button-secondary {
@@ -3923,11 +3926,34 @@ This set of fonts are used in this project under the license: (.....)
 .admin-course-sessions-section { width: 100%; }
 .admin-course-editor-section h2 { margin: 0; color: var(--admin-text); font-size: 17px; line-height: 1.6; }
 .admin-course-editor-section > p { margin: -8px 0 0; color: var(--admin-muted); font-size: 11px; line-height: 1.9; }
-.admin-course-cover-box { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 16px; align-items: center; border: 1px solid #e6eeee; border-radius: 16px; background: #fff; padding: 14px; }
-.admin-course-cover-preview { position: relative; aspect-ratio: 16 / 7; min-height: 150px; overflow: hidden; border-radius: 14px; background: #f1f5f5; }
+.admin-course-cover-box { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr); gap: 16px; align-items: center; border: 1px solid #e6eeee; border-radius: 16px; background: #fff; padding: 14px; }
+.admin-course-cover-preview { position: relative; width: 100%; aspect-ratio: 1 / 1; min-height: 0; overflow: hidden; border-radius: 14px; background: #f1f5f5; }
 .admin-course-cover-preview img { width: 100%; height: 100%; object-fit: cover; }
-.admin-course-cover-empty { display: grid; height: 100%; min-height: 150px; place-items: center; color: var(--admin-muted); font-size: 12px; }
+.admin-course-cover-empty { display: grid; height: 100%; place-items: center; color: var(--admin-muted); font-size: 12px; }
 .admin-course-cover-controls { display: grid; gap: 10px; }
+.admin-course-cover-hint { margin: 0; color: var(--admin-muted); font-size: 11px; line-height: 1.8; }
+.admin-course-tags-control { position: relative; display: grid; gap: 9px; }
+.admin-course-tags-trigger { width: 100%; }
+.admin-course-tags-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-course-tags-menu { z-index: 40; }
+.admin-course-tags-search-row { display: flex; align-items: center; gap: 8px; }
+.admin-course-tags-search-row .auth-custom-select-search-wrap { flex: 1; min-width: 0; }
+.admin-course-tags-search-row .admin-button { min-height: 42px; flex: 0 0 auto; white-space: nowrap; }
+.admin-course-tag-option-row { display: grid; grid-template-columns: minmax(0,1fr) 34px; align-items: center; gap: 4px; }
+.admin-course-tag-option-row .auth-custom-select-option { min-width: 0; }
+.admin-course-tag-delete { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #bd6060; cursor: pointer; font: inherit; font-size: 20px; line-height: 1; }
+.admin-course-tag-delete:hover:not(:disabled) { background: #fff0f0; color: #a43e3e; }
+.admin-course-tag-delete:disabled { cursor: wait; opacity: .55; }
+.admin-course-tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
+.admin-course-tag-list > span { display: inline-flex; min-height: 30px; align-items: center; gap: 7px; border: 1px solid #c8e4e4; border-radius: 10px; background: var(--admin-primary-soft); padding: 4px 10px; color: var(--admin-primary); font: inherit; font-size: 11px; }
+.admin-course-tag-list button { display: inline-grid; width: 18px; height: 18px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; font: inherit; }
+.admin-user-edit-stack { display: grid; gap: 22px; margin-top: 24px; border-top: 1px solid #e5eded; padding-top: 20px; }
+.admin-user-edit-stack section { display: grid; gap: 12px; }
+.admin-user-edit-stack h4 { margin: 0; color: var(--admin-text); font-size: 14px; }
+.admin-faq-default-preview { margin-top: 18px; border-top: 1px solid #e5eded; padding-top: 14px; color: var(--admin-muted); font-size: 12px; }
+.admin-faq-default-preview summary { cursor: pointer; }
+.admin-faq-default-preview ol { display: grid; gap: 6px; }
+.admin-user-edit-stack .admin-form-stack { display: grid; gap: 14px; }
 .admin-course-cover-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .admin-course-session-input { display: flex; min-height: 48px; align-items: center; gap: 4px; overflow: hidden; border-radius: 14px; background: #e9eded; padding: 0 4px 0 8px; direction: rtl; transition: background-color .2s ease, box-shadow .2s ease; }
 .admin-course-session-input:focus-within { background: #e4f0f0; box-shadow: 0 0 0 3px rgb(15 139 141 / 14%); }
@@ -4887,6 +4913,8 @@ This set of fonts are used in this project under the license: (.....)
     grid-template-columns: 1fr;
   }
 
+  .admin-course-cover-preview { width: min(100%, 320px); }
+
   .admin-course-session-row {
     grid-template-columns: 40px minmax(0, 1fr) 40px;
   }
@@ -5021,4 +5049,68 @@ This set of fonts are used in this project under the license: (.....)
   .admin-metric-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.admin-faq-panel { display: grid; gap: 22px; }
+.admin-faq-manager { display: grid; gap: 20px; min-width: 0; }
+.admin-faq-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e4eded; padding-bottom: 16px; }
+.admin-faq-tab { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; border: 1px solid #e1eaea; border-radius: 12px; background: #fff; padding: 0 14px; color: var(--admin-muted); font-size: 12px; text-decoration: none; transition: color .16s ease, background .16s ease, border-color .16s ease; }
+.admin-faq-tab:hover { border-color: #9bcfce; color: var(--admin-primary); }
+.admin-faq-tab.is-active { border-color: var(--admin-primary); background: var(--admin-primary-soft); color: var(--admin-primary); font-weight: 700; }
+.admin-faq-list { display: grid; gap: 12px; min-width: 0; }
+.admin-faq-item { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 14px; align-items: start; border: 1px solid #e5eeee; border-radius: 16px; background: #fff; padding: 16px; }
+.admin-faq-item-number { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: var(--admin-primary-soft); color: var(--admin-primary); font-size: 13px; font-weight: 700; }
+.admin-faq-item-copy { min-width: 0; }
+.admin-faq-item-copy h3 { margin: 2px 0 8px; color: var(--admin-text); font-size: 14px; font-weight: 700; line-height: 1.8; }
+.admin-faq-item-copy p { margin: 0; color: var(--admin-muted); font-size: 12px; line-height: 1.9; white-space: pre-wrap; }
+.admin-faq-item-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.admin-faq-icon-button { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 1px solid #dceaea; border-radius: 11px; background: #fff; color: var(--admin-primary); cursor: pointer; transition: border-color .16s ease, background-color .16s ease, transform .16s ease; }
+.admin-faq-icon-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #9bcfce; background: var(--admin-primary-soft); }
+.admin-faq-icon-button:disabled { cursor: wait; opacity: .55; }
+.admin-faq-icon-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.admin-faq-drag-handle { cursor: grab; touch-action: none; color: var(--admin-muted); }
+.admin-faq-drag-handle:active, .admin-faq-drag-handle[aria-pressed="true"] { cursor: grabbing; border-color: #9bcfce; background: var(--admin-primary-soft); color: var(--admin-primary); }
+.admin-faq-drag-handle svg { fill: currentColor; stroke: none; }
+.admin-faq-item { transition: box-shadow .18s ease, border-color .18s ease; }
+.admin-faq-item.is-dragging { position: relative; z-index: 1; border-color: #8bc9c7; box-shadow: 0 12px 28px rgb(30 95 95 / 13%); }
+.admin-faq-delete-button { color: #d75c5c; }
+.admin-faq-delete-button:hover:not(:disabled) { border-color: #f0b5b5; background: #fff4f3; color: #c84040; }
+.admin-faq-empty { border: 1px dashed #d7e5e5; border-radius: 14px; background: #f8fbfb; padding: 22px; color: var(--admin-muted); font-size: 13px; text-align: center; }
+.admin-faq-default-note { display: grid; justify-items: start; gap: 12px; border: 1px dashed #d7e5e5; border-radius: 14px; background: #f8fbfb; padding: 16px; }
+.admin-faq-default-note p { margin: 0; color: var(--admin-muted); font-size: 12px; line-height: 1.9; }
+.admin-faq-add-area { border-top: 1px solid #e5eeee; padding-top: 16px; }
+.admin-faq-add-button { min-width: 132px; }
+.admin-faq-add-form { display: grid; gap: 14px; border: 1px solid #dceaea; border-radius: 16px; background: #f8fbfb; padding: 16px; }
+.admin-faq-add-form .admin-form-field textarea { min-height: 112px; resize: vertical; }
+.admin-faq-add-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-faq-footer { display: flex; justify-content: flex-end; border-top: 1px solid #e5eeee; padding-top: 16px; }
+.admin-faq-confirm-modal { width: min(100%, 480px); }
+.admin-faq-delete-copy { overflow: hidden; display: -webkit-box; margin: 0; color: var(--admin-muted); font-size: 13px; line-height: 1.9; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.admin-faq-confirm-delete { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; border: 1px solid #f1caca; border-radius: 11px; background: #fff1f0; padding: 0 15px; color: #bf4141; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; transition: background .16s ease, border-color .16s ease; }
+.admin-faq-confirm-delete:hover:not(:disabled) { border-color: #e9aaaa; background: #ffe5e3; }
+.admin-faq-confirm-delete:disabled { cursor: wait; opacity: .6; }
+.admin-faq-modal-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgb(29 48 49 / 38%); padding: 24px; backdrop-filter: blur(5px); animation: admin-faq-overlay-in .18s ease both; }
+.admin-faq-modal { width: min(100%, 620px); border: 1px solid #e1eaea; border-radius: 22px; background: #fff; box-shadow: 0 24px 80px rgb(28 52 53 / 22%); padding: 22px; animation: admin-faq-modal-in .22s cubic-bezier(.2,.8,.2,1) both; }
+.admin-faq-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.admin-faq-modal-header > div { display: grid; gap: 5px; }
+.admin-faq-modal-header span { color: var(--admin-primary); font-size: 11px; font-weight: 700; }
+.admin-faq-modal-header h2 { margin: 0; color: var(--admin-text); font-size: 18px; }
+.admin-faq-modal-header > button { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 10px; background: #f1f5f5; color: var(--admin-muted); cursor: pointer; font: inherit; font-size: 23px; line-height: 1; }
+.admin-faq-modal-header > button:hover:not(:disabled) { background: #e7eeee; color: var(--admin-text); }
+.admin-faq-modal-header > button:disabled { cursor: wait; opacity: .5; }
+.admin-faq-modal .admin-faq-add-form { border: 0; background: transparent; padding: 0; }
+@keyframes admin-faq-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes admin-faq-modal-in { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+@media (max-width: 700px) {
+  .admin-faq-tabs { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain; padding: 0 0 12px; scrollbar-width: thin; }
+  .admin-faq-tab { flex: 0 0 auto; }
+  .admin-faq-item { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 12px; }
+  .admin-faq-item-number { width: 30px; height: 30px; }
+  .admin-faq-item-actions { grid-column: 2; justify-content: flex-start; }
+  .admin-faq-footer { justify-content: stretch; }
+  .admin-faq-footer .admin-button { width: 100%; }
+  .admin-faq-add-form { padding: 12px; }
+  .admin-faq-modal-backdrop { padding: 12px; }
+  .admin-faq-modal { border-radius: 18px; padding: 16px; }
 }

@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function GroupTherapySessionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [product, publicContent] = await Promise.all([getPublishedGroupTherapyBySlug(slug), getPublicContent()]);
+  const [product, publicContent] = await Promise.all([getPublishedGroupTherapyBySlug(slug), getPublicContent("group-therapy-detail")]);
   if (!product) notFound();
 
   return (

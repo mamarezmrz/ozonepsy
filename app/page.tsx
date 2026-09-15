@@ -29,7 +29,7 @@ const serviceSteps = [
 ];
 
 export default async function Home() {
-  const publicContent = await getPublicContent();
+  const publicContent = await getPublicContent("home");
   const courseProducts = await getPublishedProducts("course", { limit: 3, sort: "newest" });
   return <>
     <SiteHeader />

@@ -68,7 +68,7 @@ const individualCases = [
 
 const individualCasesDescription = "مشاوره فردی به هر آن چیزی که برای توسعه فردی، درمان اختلالات روانی و ارتقاء سلامت روان نیاز است، می‌پردازد. این مشاوره به صورت محرمانه بین شما و تراپیست مورد نظر انجام می‌شود.";
 
-const individualFaqItems: ConsultationCategoryFaq[] = [
+export const individualFaqItems: ConsultationCategoryFaq[] = [
   { question: "چطور می‌فهمم مشاوره فردی برای من مناسبه یا نه؟", answer: "پاسخ سوال" },
   { question: "آیا میشه فقط یک جلسه مشاوره گرفت یا باید حتماً دوره‌ای باشه؟", answer: "پاسخ سوال" },
   { question: "چند جلسه لازم هست برای رفع یک مشکل معمولی؟", answer: "پاسخ سوال" },
@@ -77,7 +77,7 @@ const individualFaqItems: ConsultationCategoryFaq[] = [
   { question: "چطور می‌تونم بهترین روانشناس رو برای خودم انتخاب کنم؟", answer: "پاسخ سوال" },
 ];
 
-const coupleFaqItems: ConsultationCategoryFaq[] = [
+export const coupleFaqItems: ConsultationCategoryFaq[] = [
   { question: "آیا مشاوره فقط برای وقتی است که کار به جدایی کشیده باشد؟", answer: "پاسخ سوال" },
   { question: "مشاوره زوجی واقعاً می‌تونه جلوی طلاق رو بگیره؟", answer: "پاسخ سوال" },
   { question: "مشاوره واقعاً طرف هیچ‌کدوم رو نمی‌گیره؟", answer: "پاسخ سوال" },
@@ -86,7 +86,7 @@ const coupleFaqItems: ConsultationCategoryFaq[] = [
   { question: "چند جلسه لازمه تا تغییر حس بشه؟", answer: "پاسخ سوال" },
 ];
 
-const teenagerFaqItems: ConsultationCategoryFaq[] = [
+export const teenagerFaqItems: ConsultationCategoryFaq[] = [
   { question: "مشاوره فقط برای بچه‌هایی که مشکل جدی دارن لازمه؟", answer: "پاسخ سوال" },
   { question: "مشاوره می‌تونه روی مشکلات درسی یا تمرکز هم تأثیر بذاره؟", answer: "پاسخ سوال" },
   { question: "آیا این جلسات به بهبود رابطه والدین با فرزند هم کمک می‌کنه؟", answer: "پاسخ سوال" },

@@ -4,7 +4,7 @@ import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { AdminCourseCreateForm, type AdminCourseFormValues } from "@/components/admin/admin-course-create-form";
 import { requireAdminPagePermission } from "@/lib/admin/page";
 import { getAdminCourse } from "@/lib/admin/courses";
-import { listActiveAdminCategories } from "@/lib/admin/categories";
+import { listAdminCourseTags } from "@/lib/admin/courses";
 import { ProductStatus } from "@/lib/generated/prisma/enums";
 
 export const metadata: Metadata = { title: "جزئیات دوره" };
@@ -24,19 +24,19 @@ function statusLabel(status: ProductStatus) {
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdminPagePermission("courses.read");
   const { id } = await params;
-  const [course, categories] = await Promise.all([getAdminCourse(id, session), listActiveAdminCategories()]);
+  const [course, existingTags] = await Promise.all([getAdminCourse(id, session), listAdminCourseTags()]);
   const canWrite = session.permissions.includes("courses.write");
   const canPublish = session.permissions.includes("courses.publish");
   const curriculum = asCurriculum(course.course.curriculum);
-  const curriculumCategorySlugs = stringArray(curriculum.categorySlugs);
+  const curriculumTags = stringArray(curriculum.tags);
+  const legacyTags = stringArray(curriculum.categorySlugs).map((slug) => ({ "individual-consultation": "مشاوره فردی", "couples-and-relationships": "زوج و رابطه", "children-and-adolescents": "کودک و نوجوان", "group-therapy": "گروه درمانی" })[slug]).filter((tag): tag is string => Boolean(tag));
   const formValues: AdminCourseFormValues = {
     title: course.title,
     slug: course.slug,
     description: course.description,
     priceMinor: course.priceMinor,
     currency: course.currency,
-    categoryId: course.categoryId,
-    categorySlugs: curriculumCategorySlugs.length ? curriculumCategorySlugs : course.category?.slug ? [course.category.slug] : [],
+    tags: curriculumTags.length ? curriculumTags : legacyTags.length ? legacyTags : course.category?.title ? [course.category.title] : [],
     coverMediaId: course.coverMediaId,
     instructorName: typeof curriculum.instructorName === "string" ? curriculum.instructorName : "",
     durationSessions: typeof curriculum.durationSessions === "number" ? curriculum.durationSessions : null,
@@ -67,11 +67,11 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           <h3>ویرایش دوره</h3>
           <AdminStatusBadge tone={course.status === ProductStatus.PUBLISHED ? "success" : course.status === ProductStatus.DRAFT ? "warning" : "neutral"}>{currentStatusLabel}</AdminStatusBadge>
         </div>
-        {canWrite ? <AdminCourseCreateForm categories={categories} values={formValues} courseId={course.id} /> : (
+        {canWrite ? <AdminCourseCreateForm existingTags={existingTags} values={formValues} courseId={course.id} /> : (
           <dl className="admin-detail-list">
             <div><dt>Slug</dt><dd dir="ltr">{course.slug}</dd></div>
             <div><dt>توضیحات</dt><dd className="admin-course-description">{course.description}</dd></div>
-            <div><dt>دسته‌بندی</dt><dd>{course.category?.title || "—"}</dd></div>
+            <div><dt>تگ‌ها</dt><dd>{formValues.tags?.join("، ") || "—"}</dd></div>
             <div><dt>قیمت</dt><dd dir="ltr">{(course.priceMinor / 100).toLocaleString("fa-IR")} {course.currency}</dd></div>
           </dl>
         )}

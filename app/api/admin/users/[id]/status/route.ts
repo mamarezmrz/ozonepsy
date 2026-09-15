@@ -9,7 +9,7 @@ import { UserStatus } from "@/lib/generated/prisma/enums";
 import { z } from "zod";
 
 const userStatusSchema = z.object({
-  status: z.enum([UserStatus.ACTIVE, UserStatus.SUSPENDED, UserStatus.ARCHIVED]),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.SUSPENDED]),
   reason: z.string().trim().min(1, "دلیل تغییر وضعیت الزامی است.").max(1000),
 });
 

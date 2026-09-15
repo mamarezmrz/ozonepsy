@@ -26,7 +26,7 @@ export default async function ConsultationTopicByCategoryPage({ params }: { para
   if (!pageKey) notFound();
   const stored = await getPublicConsultationTopic(slug, pageKey);
   if (!stored.topic) notFound();
-  const publicContent = await getPublicContent();
+  const publicContent = await getPublicContent("consultation-topic");
 
   return (
     <>

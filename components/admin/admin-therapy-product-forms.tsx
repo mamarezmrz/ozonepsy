@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { CustomSelect } from "@/components/custom-select";
 import { AdminDatePicker } from "@/components/admin/admin-date-picker";
 import { dispatchAdminNotification } from "@/components/admin/admin-notification-host";
@@ -100,6 +100,7 @@ function CoverField({ mediaId, onChange }: { mediaId: string | null; onChange: (
         <label className="admin-button admin-button-secondary admin-course-file-input">{pending ? "در حال بارگذاری…" : "انتخاب تصویر"}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleChange} disabled={pending} /></label>
         {previewUrl ? <button type="button" className="admin-button admin-button-danger" onClick={remove}>حذف تصویر</button> : null}
       </div>
+      <p className="admin-course-cover-hint">پیشنهاد: ۱۲۰۰ × ۱۲۰۰ پیکسل · JPG، PNG یا WebP</p>
     </div>
   </div>;
 }
@@ -139,7 +140,7 @@ export function AdminGroupTherapyForm({ values = {}, productId }: { values?: Gro
   const [instructorName, setInstructorName] = useState(values.instructorName ?? "");
   const [meetingUrl, setMeetingUrl] = useState(values.meetingUrl ?? "");
   const [durationSessions, setDurationSessions] = useState(values.durationSessions == null ? "" : String(values.durationSessions));
-  const [nextSessionKey, setNextSessionKey] = useState((values.sessions?.length ?? 0) + 1);
+  const nextSessionKey = useRef((values.sessions?.length ?? 0) + 1);
   const [sessions, setSessions] = useState<GroupSessionDraft[]>(() => (values.sessions ?? []).map((session, index) => ({ key: index + 1, title: session.title ?? "", startsAt: localDateTime(session.startsAt) })));
   const [pending, setPending] = useState(false);
 
@@ -153,26 +154,28 @@ export function AdminGroupTherapyForm({ values = {}, productId }: { values?: Gro
       dispatchAdminNotification("تعداد جلسات باید بین ۱ تا ۱۰۰ باشد.", "error");
       return;
     }
-    setSessions((current) => {
-      if (current.length >= count) return current.slice(0, count);
-      const additions = Array.from({ length: count - current.length }, () => ({ key: nextSessionKey, title: "", startsAt: "" }));
-      setNextSessionKey((key) => key + additions.length);
-      return [...current, ...additions];
-    });
+    if (sessions.length >= count) {
+      setSessions(sessions.slice(0, count));
+      return;
+    }
+    const additionsCount = count - sessions.length;
+    const firstNewKey = nextSessionKey.current;
+    const additions = Array.from({ length: additionsCount }, (_, index) => ({ key: firstNewKey + index, title: "", startsAt: "" }));
+    nextSessionKey.current += additionsCount;
+    setSessions([...sessions, ...additions]);
   }
 
   function addSession() {
-    setSessions((current) => [...current, { key: nextSessionKey, title: "", startsAt: "" }]);
-    setNextSessionKey((key) => key + 1);
-    setDurationSessions((current) => String((Number(current) || 0) + 1));
+    const next = [...sessions, { key: nextSessionKey.current, title: "", startsAt: "" }];
+    nextSessionKey.current += 1;
+    setSessions(next);
+    setDurationSessions(String(next.length));
   }
 
   function removeSession(key: number) {
-    setSessions((current) => {
-      const next = current.filter((session) => session.key !== key);
-      setDurationSessions(String(next.length));
-      return next;
-    });
+    const next = sessions.filter((session) => session.key !== key);
+    setSessions(next);
+    setDurationSessions(String(next.length));
   }
 
   function updateSession(key: number, field: "title" | "startsAt", value: string) {

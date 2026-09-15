@@ -18,6 +18,15 @@ export function AdminShell({ session, children }: { session: AdminSessionView; c
     };
   }, [mobileNavOpen]);
 
+  useEffect(() => {
+    const preventNumberWheelChange = (event: WheelEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLInputElement && target.type === "number" && document.activeElement === target) event.preventDefault();
+    };
+    document.addEventListener("wheel", preventNumberWheelChange, { capture: true, passive: false });
+    return () => document.removeEventListener("wheel", preventNumberWheelChange, true);
+  }, []);
+
   return (
     <div className={`admin-shell${mobileNavOpen ? " is-mobile-nav-open" : ""}`} dir="rtl">
       <AdminNotificationHost />
