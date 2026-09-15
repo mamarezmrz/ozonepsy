@@ -9,7 +9,7 @@ import {
   DEFAULT_ADMIN_SESSION_TTL_SECONDS,
   type AdminRole,
 } from "@/lib/admin/constants";
-import { AdminAuthorizationError, isAdminRole } from "@/lib/admin/authorization";
+import { AdminAuthorizationError, getEffectiveAdminPermissions, isAdminRole } from "@/lib/admin/authorization";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
 
 const adminRoleNames = ADMIN_ROLES as unknown as RoleName[];
@@ -106,11 +106,12 @@ function toAdminSessionView(session: {
 
   if (roles.length === 0) return null;
 
-  const permissions = Array.from(
+  const assignedPermissions = Array.from(
     new Set(
       session.user.roles.flatMap(({ role }) => role.rolePermissions.map(({ permission }) => permission.key)),
     ),
   );
+  const permissions = getEffectiveAdminPermissions({ roles, permissions: assignedPermissions });
 
   return {
     id: session.id,

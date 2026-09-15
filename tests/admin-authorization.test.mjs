@@ -4,6 +4,7 @@ import {
   AdminAuthorizationError,
   canManageAdminTarget,
   canManageAdmins,
+  getEffectiveAdminPermissions,
   hasAdminPermission,
   hasAdminRole,
   requireAdminPermissionFromSession,
@@ -12,7 +13,7 @@ import {
 
 const superAdmin = {
   roles: ["SUPER_ADMIN"],
-  permissions: ["admins.manage", "dashboard.view"],
+  permissions: ["dashboard.view"],
 };
 
 const admin = {
@@ -23,6 +24,9 @@ const admin = {
 test("admin authorization accepts granted roles and permissions", () => {
   assert.equal(hasAdminRole(superAdmin, "SUPER_ADMIN"), true);
   assert.equal(hasAdminPermission(superAdmin, "admins.manage"), true);
+  assert.equal(hasAdminPermission(superAdmin, "courses.write"), true);
+  assert.equal(getEffectiveAdminPermissions(superAdmin).includes("settings.manage"), true);
+  assert.equal(hasAdminPermission({ roles: ["ADMIN"], permissions: ["categories.read"] }, "categories.read"), false);
   assert.equal(canManageAdmins(superAdmin), true);
   assert.equal(canManageAdmins(admin), false);
 });

@@ -1,4 +1,4 @@
-import { ADMIN_ROLES, type AdminPermissionKey, type AdminRole } from "./constants.ts";
+import { ADMIN_PERMISSION_KEYS, ADMIN_ROLES, type AdminPermissionKey, type AdminRole } from "./constants.ts";
 
 export type AdminAuthorizationView = {
   roles: AdminRole[];
@@ -18,8 +18,16 @@ export function isAdminRole(role: string): role is AdminRole {
   return (ADMIN_ROLES as readonly string[]).includes(role);
 }
 
+export function getEffectiveAdminPermissions(session: AdminAuthorizationView): string[] {
+  const knownPermissions = ADMIN_PERMISSION_KEYS as readonly string[];
+  if (session.roles.includes("SUPER_ADMIN")) return [...knownPermissions];
+  return session.permissions.filter((permission) => knownPermissions.includes(permission));
+}
+
 export function hasAdminPermission(session: AdminAuthorizationView, permission: AdminPermissionKey | string) {
-  return session.permissions.includes(permission);
+  const knownPermissions = ADMIN_PERMISSION_KEYS as readonly string[];
+  if (!knownPermissions.includes(permission)) return false;
+  return session.roles.includes("SUPER_ADMIN") || session.permissions.includes(permission);
 }
 
 export function hasAdminRole(session: AdminAuthorizationView, role: AdminRole) {

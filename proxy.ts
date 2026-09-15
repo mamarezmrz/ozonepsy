@@ -26,7 +26,6 @@ const temporaryAdminPathPrefixes = [
   "/specialists",
   "/sessions",
   "/reviews",
-  "/categories",
   "/consultation-benefits",
   "/consultation-issues",
   "/audit-logs",
