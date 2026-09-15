@@ -70,7 +70,8 @@ function FreeSessionForm() {
     setNotification(null);
     setCountryError(false);
 
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const selectedCountry = String(form.get("country") ?? "");
     if (!selectedCountry) {
       setCountryError(true);
@@ -97,7 +98,7 @@ function FreeSessionForm() {
       }
 
       setNotification({ message: result.message ?? "درخواست شما با موفقیت ثبت شد.", tone: "success" });
-      event.currentTarget.reset();
+      formElement.reset();
       setCountry("");
     } catch {
       setNotification({ message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", tone: "error" });

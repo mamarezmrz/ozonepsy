@@ -38,7 +38,7 @@ function SessionsCreditCard({ total, completed, remaining }: { total: number; co
           ? "برای شرکت در جلسه نیاز است که هزینه‌ی جلسه قبل را پرداخت کنید. برای این کار می‌توانید یکی از پکیج‌های جلسات فردی را خریداری کنید."
           : "می‌توانید هزینه‌ی این جلسه را بعد از انجام شدن پرداخت کنید."}
       </p>
-      <Link href="/consultations" className="individual-sessions-buy-button">خرید پکیج</Link>
+      <Link href="/pricing" className="individual-sessions-buy-button">خرید پکیج</Link>
     </aside>
   );
 }

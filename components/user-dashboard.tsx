@@ -86,7 +86,7 @@ function UsageCard({ session }: { session: DashboardSession }) {
         <strong>اعتبار باقی‌مانده</strong>
         <b>{toPersianDigits(session.remaining)} جلسه</b>
       </div>
-      <Link href="/consultations" className="user-dashboard-card-link">خرید پکیج<span className="user-dashboard-arrow" aria-hidden="true" /></Link>
+      <Link href="/pricing" className="user-dashboard-card-link">خرید پکیج<span className="user-dashboard-arrow" aria-hidden="true" /></Link>
     </article>
   );
 }

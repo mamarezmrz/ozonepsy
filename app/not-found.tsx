@@ -25,7 +25,6 @@ export default function NotFound() {
             </p>
             <div className="not-found-actions">
               <Link href="/" className="not-found-primary">بازگشت به خانه</Link>
-              <Link href="/consultations" className="not-found-secondary">مشاهده حوزه‌های مشاوره</Link>
             </div>
           </div>
         </div>

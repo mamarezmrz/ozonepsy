@@ -13,7 +13,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const groupProducts = await getPublishedProducts("group");
   const paths = [
     "/",
-    "/consultations",
     "/courses",
     "/group-therapy",
     "/therapists",

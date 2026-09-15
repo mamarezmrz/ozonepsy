@@ -145,7 +145,7 @@ function reviewPage(product: { kind: string; slug: string; title: string } | nul
   if (product.kind === "COURSE") return { pageTitle: product.title, pageHref: `/courses/${product.slug}` };
   if (product.kind === "GROUP") return { pageTitle: product.title, pageHref: "/group-therapy" };
   if (product.kind === "CONSULTATION") return { pageTitle: product.title, pageHref: "/consultations/individual" };
-  return { pageTitle: product.title, pageHref: "/consultations" };
+  return { pageTitle: product.title, pageHref: "/pricing" };
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {

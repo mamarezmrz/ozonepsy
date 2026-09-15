@@ -27,7 +27,6 @@ const navigationLinks = [
 ] as const;
 
 const breadcrumbLabels: Record<string, string> = {
-  "/consultations": "حوزه‌های مشاوره",
   "/courses": "دوره‌های روانشناسی",
   "/group-therapy": "گروه درمانی",
   "/therapists": "مشاوران اُزون",
