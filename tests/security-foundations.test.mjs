@@ -3,14 +3,15 @@ import assert from "node:assert/strict";
 import { isDemoPaymentEnabled } from "../lib/payments/demo-gate.ts";
 import { sanitizeOriginalName, validateImageBytes } from "../lib/media/validation.ts";
 
-test("demo payment gate is disabled in production and outside allow-list", () => {
+test("demo payment gate is open to signed-in users in production by default and can be disabled", () => {
   const previous = { node: process.env.NODE_ENV, enabled: process.env.DEMO_PAYMENT_ENABLED, allowed: process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS, emails: process.env.DEMO_PAYMENT_ALLOWED_EMAILS };
   try {
-    process.env.NODE_ENV = "production"; process.env.DEMO_PAYMENT_ENABLED = "true";
+    process.env.NODE_ENV = "production"; delete process.env.DEMO_PAYMENT_ENABLED; delete process.env.DEMO_PAYMENT_ALLOWED_EMAILS;
     assert.equal(isDemoPaymentEnabled(), false);
-    process.env.DEMO_PAYMENT_ALLOWED_EMAILS = "qa@example.com, ADMIN@example.com ";
-    assert.equal(isDemoPaymentEnabled("user@example.com"), false);
-    assert.equal(isDemoPaymentEnabled(" Admin@example.com "), true);
+    assert.equal(isDemoPaymentEnabled("any-user@example.com"), true);
+    process.env.DEMO_PAYMENT_ENABLED = "false";
+    assert.equal(isDemoPaymentEnabled("any-user@example.com"), false);
+    delete process.env.DEMO_PAYMENT_ENABLED;
     process.env.NODE_ENV = "development"; process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS = "test";
     assert.equal(isDemoPaymentEnabled(), false);
     process.env.DEMO_PAYMENT_ALLOWED_ENVIRONMENTS = "development,test";
