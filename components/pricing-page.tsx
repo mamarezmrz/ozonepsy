@@ -121,7 +121,7 @@ function PricingOfferGroup({
               {offer.discountPercent ? <div className="pricing-discount">{offer.discountPercent.toLocaleString("fa-IR")}% تخفیف</div> : null}
             </div>
             <h4>{offer.title}</h4>
-            <p className="pricing-offer-description">{offer.description}</p>
+            <p className="pricing-offer-description"><span className="pricing-offer-description-text">{offer.description}</span></p>
             <Link href={`/checkout/${offer.id}`} className="pricing-buy-button">خرید</Link>
           </article>
         ))}
