@@ -45,7 +45,7 @@ function GroupTherapyCard({ card, expanded, onToggle }: { card: DashboardGroupTh
         </div>
 
         <div className="group-therapy-dashboard-card-actions">
-          <Link href={card.href} className="group-therapy-dashboard-session-link">لینک جلسه</Link>
+          {card.meetingUrl ? <a href={card.meetingUrl} target="_blank" rel="noopener noreferrer" className="group-therapy-dashboard-session-link">لینک جلسه</a> : <button type="button" className="group-therapy-dashboard-session-link" disabled aria-disabled="true">لینک جلسه</button>}
           <button type="button" className="group-therapy-dashboard-expand-button" aria-expanded={expanded} onClick={onToggle}>
             {expanded ? "بستن جلسات" : "مشاهده جلسات"}
             <span className={`group-therapy-dashboard-expand-icon${expanded ? " is-open" : ""}`} aria-hidden="true" />

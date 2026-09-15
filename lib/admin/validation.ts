@@ -81,9 +81,13 @@ const adminProductBaseSchema = z.object({
 export const adminGroupTherapySchema = adminProductBaseSchema.extend({
   coverMediaId: optionalCourseMediaId,
   instructorName: z.string().trim().max(200).optional().default(""),
+  meetingUrl: z.preprocess((value) => value === "" || value === undefined ? null : typeof value === "string" ? value.trim() : value, z.string().trim().url("لینک جلسه معتبر نیست.").max(2000).nullable()),
   durationSessions: z.preprocess((value) => value === "" || value === null ? null : value, z.coerce.number().int().positive().nullable().optional()),
   sessions: z.array(z.object({ title: z.string().trim().min(1).max(240), startsAt: z.coerce.date() })).max(100).default([]),
-});
+}).refine((value) => {
+  if (!value.meetingUrl) return true;
+  try { return ["http:", "https:"].includes(new URL(value.meetingUrl).protocol); } catch { return false; }
+}, { message: "لینک جلسه باید با http یا https شروع شود.", path: ["meetingUrl"] });
 
 export const adminIndividualConsultationSchema = adminProductBaseSchema.extend({
   durationMinutes: z.coerce.number().int().positive().max(1440).default(50),

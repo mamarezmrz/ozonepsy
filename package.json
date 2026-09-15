@@ -6,6 +6,7 @@
     "predev": "prisma generate",
     "dev": "next dev --webpack",
     "build": "prisma generate && next build --webpack",
+    "prestart": "prisma migrate deploy",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

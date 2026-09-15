@@ -14,6 +14,7 @@ export type AdminGroupTherapyInput = {
   currency: string;
   coverMediaId?: string | null;
   instructorName?: string;
+  meetingUrl?: string | null;
   durationSessions?: number | null;
   sessions: Array<{ title: string; startsAt: Date }>;
 };
@@ -56,6 +57,7 @@ type ManagedSection = keyof typeof kindBySection;
 type AdminGroupTherapyDetailRow = {
   instructorName: string | null;
   durationSessions: number | null;
+  meetingUrl: string | null;
   sessionId: string | null;
   sessionTitle: string | null;
   sessionStartsAt: Date | string | null;
@@ -67,6 +69,7 @@ async function getGroupTherapyDetails(productId: string) {
     SELECT
       g."instructorName" AS "instructorName",
       g."durationSessions" AS "durationSessions",
+      g."meetingUrl" AS "meetingUrl",
       s."id" AS "sessionId",
       s."title" AS "sessionTitle",
       s."startsAt" AS "sessionStartsAt",
@@ -80,6 +83,7 @@ async function getGroupTherapyDetails(productId: string) {
   return {
     instructorName: details?.instructorName ?? null,
     durationSessions: details?.durationSessions ?? null,
+    meetingUrl: details?.meetingUrl ?? null,
     sessions: rows.filter((row) => row.sessionId && row.sessionTitle && row.sessionStartsAt !== null).map((row) => ({
       id: row.sessionId as string,
       title: row.sessionTitle as string,
@@ -141,6 +145,7 @@ async function persistGroupTherapyDetails(
   client: RawPrismaClient,
   productId: string,
   instructorName: string | null,
+  meetingUrl: string | null,
   durationSessions: number,
   sessions: Array<{ title: string; startsAt: Date }>,
 ) {
@@ -148,10 +153,11 @@ async function persistGroupTherapyDetails(
   // running dev server can temporarily hold an older Prisma data model after
   // a schema change, while the database itself already has these columns.
   await client.$executeRaw`
-    INSERT INTO "GroupTherapyProduct" ("productId", "instructorName", "durationSessions")
-    VALUES (${productId}, ${instructorName}, ${durationSessions})
+    INSERT INTO "GroupTherapyProduct" ("productId", "instructorName", "meetingUrl", "durationSessions")
+    VALUES (${productId}, ${instructorName}, ${meetingUrl}, ${durationSessions})
     ON CONFLICT ("productId") DO UPDATE SET
       "instructorName" = EXCLUDED."instructorName",
+      "meetingUrl" = EXCLUDED."meetingUrl",
       "durationSessions" = EXCLUDED."durationSessions"
   `;
 
@@ -225,7 +231,7 @@ export async function createAdminGroupTherapy(actorId: string, input: AdminGroup
       select: { id: true, slug: true, title: true, status: true },
     });
     await persistProductDiscount(tx, product.id, discountPercent);
-    await persistGroupTherapyDetails(tx, product.id, input.instructorName?.trim() || null, sessions.length, sessions);
+    await persistGroupTherapyDetails(tx, product.id, input.instructorName?.trim() || null, input.meetingUrl?.trim() || null, sessions.length, sessions);
     await recordAdminAuditWithClient(tx, { actorId, action: "GROUP_THERAPY_CREATED", targetType: "GROUP_THERAPY", targetId: product.id, afterState: product });
     return product;
   });
@@ -251,7 +257,7 @@ export async function updateAdminGroupTherapy(actorId: string, productId: string
       select: { id: true, slug: true, title: true, status: true },
     });
     await persistProductDiscount(tx, productId, discountPercent);
-    await persistGroupTherapyDetails(tx, productId, input.instructorName?.trim() || null, sessions.length, sessions);
+    await persistGroupTherapyDetails(tx, productId, input.instructorName?.trim() || null, input.meetingUrl?.trim() || null, sessions.length, sessions);
     await recordAdminAuditWithClient(tx, { actorId, action: "GROUP_THERAPY_UPDATED", targetType: "GROUP_THERAPY", targetId: productId, beforeState: before, afterState: updated });
     return updated;
   });

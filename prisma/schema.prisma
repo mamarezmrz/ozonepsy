@@ -306,6 +306,13 @@ model Category {
   @@index([status, updatedAt])
 }
 
+model CourseTag {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Specialist {
   id                   String                @id @default(uuid()) @db.Uuid
   slug                 String                @unique @db.VarChar(120)
@@ -382,6 +389,7 @@ model GroupTherapyProduct {
   schedulePolicy   String?
   instructorName   String?                @db.VarChar(200)
   durationSessions Int?
+  meetingUrl       String?                @db.VarChar(2000)
   product          Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
   sessions         GroupTherapySession[]
 }

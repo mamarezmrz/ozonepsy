@@ -31,7 +31,7 @@ function isCurrentPrismaClient(client: PrismaClient | undefined): client is Pris
   };
   const groupFields = candidate._runtimeDataModel?.models?.GroupTherapyProduct?.fields?.map((field) => field.name) ?? [];
   const hasCurrentGroupModel = groupFields.length
-    ? ["instructorName", "durationSessions", "sessions"].every((field) => groupFields.includes(field))
+    ? ["instructorName", "durationSessions", "meetingUrl", "sessions"].every((field) => groupFields.includes(field))
     : typeof candidate.groupTherapySession !== "undefined";
 
   return typeof candidate.consultationBenefitsSection !== "undefined"

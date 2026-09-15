@@ -18,6 +18,7 @@ export type GroupTherapyFormValues = {
   currency?: string;
   coverMediaId?: string | null;
   instructorName?: string | null;
+  meetingUrl?: string | null;
   durationSessions?: number | null;
   sessions?: Array<{ id?: string; title?: string; startsAt?: string | Date }>;
 };
@@ -110,6 +111,10 @@ function discountedPrice(priceMajor: string, discountPercent: string) {
   return ((price * (100 - discount)) / 100).toFixed(2);
 }
 
+function isHttpUrl(value: string) {
+  try { return ["http:", "https:"].includes(new URL(value).protocol); } catch { return false; }
+}
+
 function ProductFields({ values, kind, onChange }: { values: { title: string; slug: string; description: string; priceMajor: string; discountPercent: string; currency: string }; kind: "group" | "consultation"; onChange: (field: "title" | "slug" | "description" | "priceMajor" | "discountPercent" | "currency", value: string) => void }) {
   return <div className="admin-course-form-grid">
     <label className="admin-form-field admin-form-field-full"><span>عنوان {kind === "group" ? "گروه‌درمانی" : "مشاوره فردی"}</span><input value={values.title} onChange={(event) => onChange("title", event.target.value)} required /></label>
@@ -132,6 +137,7 @@ export function AdminGroupTherapyForm({ values = {}, productId }: { values?: Gro
   const [currency, setCurrency] = useState(values.currency === "EUR" ? "EUR" : "USD");
   const [coverMediaId, setCoverMediaId] = useState<string | null>(values.coverMediaId ?? null);
   const [instructorName, setInstructorName] = useState(values.instructorName ?? "");
+  const [meetingUrl, setMeetingUrl] = useState(values.meetingUrl ?? "");
   const [durationSessions, setDurationSessions] = useState(values.durationSessions == null ? "" : String(values.durationSessions));
   const [nextSessionKey, setNextSessionKey] = useState((values.sessions?.length ?? 0) + 1);
   const [sessions, setSessions] = useState<GroupSessionDraft[]>(() => (values.sessions ?? []).map((session, index) => ({ key: index + 1, title: session.title ?? "", startsAt: localDateTime(session.startsAt) })));
@@ -178,11 +184,12 @@ export function AdminGroupTherapyForm({ values = {}, productId }: { values?: Gro
     const sessionCount = Number(durationSessions);
     if (!title.trim() || !finalizeSlug(slug) || !description.trim()) { dispatchAdminNotification("عنوان، اسلاگ و توضیحات را کامل کنید.", "error"); return; }
     if (!instructorName.trim()) { dispatchAdminNotification("نام مدرس را وارد کنید.", "error"); return; }
+    if (meetingUrl.trim() && !isHttpUrl(meetingUrl.trim())) { dispatchAdminNotification("لینک جلسه را با http:// یا https:// وارد کنید.", "error"); return; }
     if (!Number.isInteger(sessionCount) || sessionCount < 1 || sessions.length !== sessionCount) { dispatchAdminNotification("تعداد جلسات و ردیف‌های جلسه باید یکسان و کامل باشند.", "error"); return; }
     if (sessions.some((session) => !session.title.trim() || !session.startsAt)) { dispatchAdminNotification("عنوان و تاریخ و ساعت همهٔ جلسات را کامل کنید.", "error"); return; }
     setPending(true);
     try {
-      const response = await fetch(productId ? `/api/admin/group-therapy/${productId}` : "/api/admin/group-therapy", { method: productId ? "PATCH" : "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: title.trim(), slug: finalizeSlug(slug), description: description.trim(), priceMinor: Math.round((Number(priceMajor) || 0) * 100), discountPercent: Number(discountPercent) || 0, currency, coverMediaId, instructorName: instructorName.trim(), durationSessions: sessionCount, sessions: sessions.map((session) => ({ title: session.title.trim(), startsAt: new Date(session.startsAt).toISOString() })) }) });
+      const response = await fetch(productId ? `/api/admin/group-therapy/${productId}` : "/api/admin/group-therapy", { method: productId ? "PATCH" : "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: title.trim(), slug: finalizeSlug(slug), description: description.trim(), priceMinor: Math.round((Number(priceMajor) || 0) * 100), discountPercent: Number(discountPercent) || 0, currency, coverMediaId, instructorName: instructorName.trim(), meetingUrl: meetingUrl.trim() || null, durationSessions: sessionCount, sessions: sessions.map((session) => ({ title: session.title.trim(), startsAt: new Date(session.startsAt).toISOString() })) }) });
       const body = await readResponse(response);
       if (!response.ok || !body.ok) { dispatchAdminNotification(body.message ?? "ذخیره گروه‌درمانی انجام نشد.", "error"); return; }
       dispatchAdminNotification(body.message ?? "گروه‌درمانی ذخیره شد.");
@@ -191,7 +198,7 @@ export function AdminGroupTherapyForm({ values = {}, productId }: { values?: Gro
   }
 
   return <form className="admin-course-create-form" onSubmit={submit} noValidate>
-    <section className="admin-course-editor-section admin-course-specs-section"><h2>مشخصات گروه‌درمانی</h2><p>این اطلاعات روی کارت و صفحهٔ جزئیات گروه‌درمانی نمایش داده می‌شود.</p><CoverField mediaId={coverMediaId} onChange={setCoverMediaId} /><ProductFields values={{ title, slug, description, priceMajor, discountPercent, currency }} kind="group" onChange={update} /></section>
+    <section className="admin-course-editor-section admin-course-specs-section"><h2>مشخصات گروه‌درمانی</h2><p>این اطلاعات روی کارت و صفحهٔ جزئیات گروه‌درمانی نمایش داده می‌شود.</p><CoverField mediaId={coverMediaId} onChange={setCoverMediaId} /><ProductFields values={{ title, slug, description, priceMajor, discountPercent, currency }} kind="group" onChange={update} /><div className="admin-course-form-grid"><label className="admin-form-field admin-form-field-full"><span>لینک جلسه (اختیاری)</span><input type="url" inputMode="url" dir="ltr" value={meetingUrl} onChange={(event) => setMeetingUrl(event.target.value)} placeholder="https://…" /></label></div></section>
     <section className="admin-course-editor-section"><h2>جزئیات گروه‌درمانی</h2><p>مدرس و تعداد جلسات این گروه را وارد کنید.</p><div className="admin-course-form-grid"><label className="admin-form-field"><span>نام مدرس</span><input value={instructorName} onChange={(event) => setInstructorName(event.target.value)} required /></label><label className="admin-form-field"><span>تعداد جلسات</span><div className="admin-course-session-input"><input type="number" min="1" max="100" step="1" value={durationSessions} onChange={(event) => setDurationSessions(event.target.value)} required /><button type="button" className="admin-course-build-sessions" onClick={buildSessions} disabled={!durationSessions}>ساخت جلسات</button></div></label></div></section>
     <section className="admin-course-editor-section admin-course-sessions-section"><div className="admin-course-section-heading"><div><h2>جلسات گروه‌درمانی</h2><p>برای هر جلسه عنوان، تاریخ و ساعت مشخص کنید.</p></div><span className="admin-course-session-count">{sessions.length.toLocaleString("fa-IR")} جلسه</span></div><div className="admin-course-session-list">{sessions.map((session, index) => <div className="admin-course-session-row group-therapy-admin-session-row" key={session.key}><span className="admin-course-session-number">{(index + 1).toLocaleString("fa-IR")}</span><label className="admin-form-field"><span>عنوان جلسه</span><input value={session.title} onChange={(event) => updateSession(session.key, "title", event.target.value)} /></label><label className="admin-form-field"><span>تاریخ و ساعت جلسه</span><AdminDatePicker name={`group-therapy-session-${session.key}`} defaultValue={session.startsAt} includeTime required ariaLabel={`تاریخ و ساعت جلسه ${index + 1}`} onChange={(value) => updateSession(session.key, "startsAt", value)} /></label><button type="button" className="admin-course-session-delete group-therapy-session-delete" onClick={() => removeSession(session.key)} aria-label={`حذف جلسه ${index + 1}`}>×</button></div>)}</div><button type="button" className="admin-button admin-button-secondary admin-course-add-session" onClick={addSession}>+ افزودن جلسه</button></section>
     <div className="admin-course-actions"><button type="submit" className="admin-button admin-button-primary" disabled={pending}>{pending ? "در حال ذخیره…" : "ذخیره"}</button><button type="button" className="admin-button admin-button-secondary" onClick={() => router.push("/admin/group-therapy")} disabled={pending}>لغو تغییرات</button></div>

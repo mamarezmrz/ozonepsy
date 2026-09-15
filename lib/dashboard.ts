@@ -48,6 +48,7 @@ export type DashboardGroupSession = {
 };
 
 export type DashboardGroupTherapyCard = DashboardCard & {
+  meetingUrl?: string;
   sessions: DashboardGroupSession[];
 };
 
@@ -170,6 +171,15 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
               title: true,
               description: true,
               kind: true,
+              groupTherapy: {
+                select: {
+                  meetingUrl: true,
+                  sessions: {
+                    orderBy: { order: "asc" },
+                    select: { id: true, title: true, startsAt: true },
+                  },
+                },
+              },
             },
           },
           appointments: {
@@ -287,17 +297,38 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       courses.push(card);
     } else if (product.kind === "GROUP") {
       const appointments = groupAppointmentsByEntitlement.get(entitlement.id) ?? [];
+      const scheduledGroupSessions = product.groupTherapy?.sessions ?? [];
+      const rawMeetingUrl = product.groupTherapy?.meetingUrl;
+      let meetingUrl: string | undefined;
+      if (rawMeetingUrl) {
+        try {
+          const parsedMeetingUrl = new URL(rawMeetingUrl);
+          if (["http:", "https:"].includes(parsedMeetingUrl.protocol)) meetingUrl = parsedMeetingUrl.toString();
+        } catch {
+          meetingUrl = undefined;
+        }
+      }
       groupTherapy.push({
         ...card,
-        sessions: appointments.map((appointment, index) => ({
-          id: appointment.id,
-          title: `جلسه ${toPersianDigits(index + 1)}`,
-          date: formatSessionDate(appointment.startsAt),
-          time: formatSessionTime(appointment.startsAt),
-          completed:
-            appointment.status === AppointmentStatus.COMPLETED ||
-            appointment.usage?.status === SessionUsageStatus.COMPLETED,
-        })),
+        meetingUrl,
+        sessions: scheduledGroupSessions.length
+          ? scheduledGroupSessions.map((session) => ({
+              id: session.id,
+              title: session.title,
+              date: formatSessionDate(session.startsAt),
+              time: formatSessionTime(session.startsAt),
+              completed: session.startsAt.getTime() < Date.now(),
+            }))
+          : appointments.map((appointment, index) => ({
+              id: appointment.id,
+              title: `جلسه ${toPersianDigits(index + 1)}`,
+              date: formatSessionDate(appointment.startsAt),
+              time: formatSessionTime(appointment.startsAt),
+              completed:
+                appointment.startsAt.getTime() < Date.now() ||
+                appointment.status === AppointmentStatus.COMPLETED ||
+                appointment.usage?.status === SessionUsageStatus.COMPLETED,
+            })),
       });
     } else {
       const upcomingAppointments = entitlement.appointments.filter((appointment) =>

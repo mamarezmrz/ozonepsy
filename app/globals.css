@@ -2098,17 +2098,18 @@ This set of fonts are used in this project under the license: (.....)
 .group-therapy-dashboard-panel.is-populated{min-height:calc(100dvh - 144px)}
 .group-therapy-dashboard-card-list{display:grid;gap:18px;margin-top:28px}
 .group-therapy-dashboard-card{min-width:0;border-radius:24px;background:#fff;padding:24px;box-shadow:0 8px 20px rgba(53,88,89,.08)}
-.group-therapy-dashboard-card-main{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:150px;align-items:start;column-gap:22px;direction:rtl}
+.group-therapy-dashboard-card-main{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:auto auto;min-height:150px;align-items:start;column-gap:22px;direction:rtl}
 .group-therapy-dashboard-card-image{position:relative;aspect-ratio:1;overflow:hidden;border-radius:18px;background:#e8eded}
 .group-therapy-dashboard-card-main>.group-therapy-dashboard-card-image{grid-column:1;grid-row:1 / -1;align-self:start}
 .group-therapy-dashboard-card-image img{object-fit:cover}
 .group-therapy-dashboard-card-copy{grid-column:2;grid-row:1;min-width:0;padding-top:2px;text-align:right;direction:rtl}
 .group-therapy-dashboard-card-copy h2{margin:0;color:#3b4040;font-size:22px;font-weight:400;line-height:1.6}
-.group-therapy-dashboard-card-copy p{display:-webkit-box;margin:12px 0 0;overflow:hidden;color:#676b6b;font-size:14px;line-height:2;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.group-therapy-dashboard-card-copy p{margin:12px 0 0;overflow:visible;color:#676b6b;font-size:14px;line-height:2}
 .group-therapy-dashboard-card-actions{grid-column:2;grid-row:2;display:flex;align-items:center;gap:24px;margin-top:12px;direction:ltr}
 .group-therapy-dashboard-session-link,.group-therapy-dashboard-expand-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border-radius:14px;padding:0 18px;font:inherit;font-size:14px;line-height:1.5;white-space:nowrap;cursor:pointer;transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
 .group-therapy-dashboard-session-link{border:1px solid #eba983;background:#eba983;color:#3b4040}
-.group-therapy-dashboard-session-link:hover,.group-therapy-dashboard-session-link:focus-visible{border-color:#e69a70;background:#e69a70;transform:translateY(-1px)}
+.group-therapy-dashboard-session-link:hover:not(:disabled),.group-therapy-dashboard-session-link:focus-visible:not(:disabled){border-color:#e69a70;background:#e69a70;transform:translateY(-1px)}
+.group-therapy-dashboard-session-link:disabled{cursor:not-allowed;opacity:.52;transform:none}
 .group-therapy-dashboard-expand-button{gap:7px;border:0;background:transparent;color:#cc6f39;padding-right:0;padding-left:0}
 .group-therapy-dashboard-expand-button:hover,.group-therapy-dashboard-expand-button:focus-visible{color:#a75a31;transform:translateY(-1px)}
 .group-therapy-dashboard-expand-icon{display:block;width:14px;height:14px;flex:0 0 14px;background:currentColor;mask:url("/icons/chevron-down.svg") center/contain no-repeat;-webkit-mask:url("/icons/chevron-down.svg") center/contain no-repeat;transition:transform .3s ease}
@@ -2117,11 +2118,11 @@ This set of fonts are used in this project under the license: (.....)
 .group-therapy-dashboard-expander.is-open{grid-template-rows:1fr;opacity:1;visibility:visible}
 .group-therapy-dashboard-expander-inner{min-height:0;overflow:hidden}
 .group-therapy-dashboard-session-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:22px;border-radius:18px;background:#fafcfc;padding:16px;direction:rtl}
-.group-therapy-dashboard-session{display:flex;min-width:0;min-height:44px;align-items:center;justify-content:space-between;gap:12px;border:1px solid #d8e5e5;border-radius:12px;background:#fff;padding:0 14px;color:#676b6b;font-size:12px;line-height:1.6;direction:rtl;transition:opacity .2s ease}
+.group-therapy-dashboard-session{display:flex;min-width:0;min-height:0;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;border:1px solid #d8e5e5;border-radius:12px;background:#fff;padding:10px 14px;color:#676b6b;font-size:12px;line-height:1.7;direction:rtl;transition:opacity .2s ease}
 .group-therapy-dashboard-session.is-completed{opacity:.48}
-.group-therapy-dashboard-session-title{display:flex;min-width:0;align-items:center;gap:7px;color:#3b4040;white-space:nowrap}
+.group-therapy-dashboard-session-title{display:flex;flex:1 1 100%;min-width:0;align-items:flex-start;gap:7px;color:#3b4040;white-space:normal;overflow-wrap:anywhere}
 .group-therapy-dashboard-session-check{display:block;width:16px;height:16px;flex:0 0 16px;background:#73bebf;mask:url("/icons/check-teal.svg") center/contain no-repeat;-webkit-mask:url("/icons/check-teal.svg") center/contain no-repeat}
-.group-therapy-dashboard-session time,.group-therapy-dashboard-session>span:last-child{white-space:nowrap}
+.group-therapy-dashboard-session time,.group-therapy-dashboard-session>span:last-child{white-space:normal;overflow-wrap:anywhere}
 .group-therapy-dashboard-no-sessions{margin:22px 0 0;border-radius:16px;background:#fafcfc;padding:20px;color:#9b9e9e;font-size:13px;line-height:1.8;text-align:center}
 
 @media (max-width:980px){
@@ -2161,16 +2162,17 @@ This set of fonts are used in this project under the license: (.....)
 @media (max-width:600px){
   .group-therapy-dashboard-card-list{gap:14px;margin-top:20px}
   .group-therapy-dashboard-card{border-radius:20px;padding:14px}
-  .group-therapy-dashboard-card-main{grid-template-columns:112px minmax(0,1fr);min-height:112px;column-gap:12px}
+  .group-therapy-dashboard-card-main{grid-template-columns:112px minmax(0,1fr);grid-template-rows:auto auto;min-height:0;column-gap:12px}
   .group-therapy-dashboard-card-image{border-radius:15px}
   .group-therapy-dashboard-card-copy h2{font-size:16px;line-height:1.55}
-  .group-therapy-dashboard-card-copy p{margin-top:6px;font-size:11px;line-height:1.7;-webkit-line-clamp:3}
+  .group-therapy-dashboard-card-copy p{display:block;margin-top:6px;overflow:visible;font-size:11px;line-height:1.7;-webkit-line-clamp:unset}
   .group-therapy-dashboard-card-actions{gap:16px;margin-top:10px}
   .group-therapy-dashboard-session-link,.group-therapy-dashboard-expand-button{min-height:36px;font-size:12px}
   .group-therapy-dashboard-session-link{padding-right:14px;padding-left:14px}
   .group-therapy-dashboard-session-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:14px;padding:10px}
-  .group-therapy-dashboard-session{min-height:40px;padding:0 10px;font-size:10px}
-  .group-therapy-dashboard-session-title{gap:5px}
+  .group-therapy-dashboard-session{height:auto;min-height:0;max-height:none;align-items:flex-start;flex-wrap:wrap;gap:6px 10px;overflow:visible;padding:8px 10px;font-size:10px}
+  .group-therapy-dashboard-session-title{flex:1 1 100%;height:auto;min-height:0;align-items:flex-start;gap:5px;overflow:visible;white-space:normal;overflow-wrap:anywhere}
+  .group-therapy-dashboard-session time,.group-therapy-dashboard-session>span:last-child{height:auto;white-space:normal;overflow-wrap:anywhere}
   .group-therapy-dashboard-session-check{width:14px;height:14px;flex-basis:14px}
 }
 
