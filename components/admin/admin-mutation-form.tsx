@@ -6,6 +6,9 @@ import { useState } from "react";
 import { dispatchAdminNotification } from "@/components/admin/admin-notification-host";
 
 type ApiBody = { ok?: boolean; message?: string; error?: string; fieldErrors?: Record<string, string> };
+type PreparedPayload = Record<string, unknown>;
+
+export class AdminMutationPrepareError extends Error {}
 
 export function AdminMutationForm({
   action,
@@ -17,6 +20,7 @@ export function AdminMutationForm({
   successRedirect,
   notification = false,
   successMessage,
+  preparePayload,
 }: {
   action: string;
   method?: "POST" | "PATCH" | "PUT";
@@ -27,6 +31,7 @@ export function AdminMutationForm({
   successRedirect?: string;
   notification?: boolean;
   successMessage?: string;
+  preparePayload?: (form: FormData) => Promise<PreparedPayload> | PreparedPayload;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -40,9 +45,9 @@ export function AdminMutationForm({
     setSuccess(null);
 
     const form = new FormData(event.currentTarget);
-    const payload = Object.fromEntries(form.entries());
 
     try {
+      const payload = preparePayload ? await preparePayload(form) : Object.fromEntries(form.entries());
       const response = await fetch(action, {
         method,
         credentials: "same-origin",
@@ -61,8 +66,8 @@ export function AdminMutationForm({
       else setSuccess(body.message ?? successMessage ?? "تغییرات با موفقیت ذخیره شد.");
       if (successRedirect) router.push(successRedirect);
       router.refresh();
-    } catch {
-      const message = "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
+    } catch (error) {
+      const message = error instanceof AdminMutationPrepareError ? error.message : "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
       if (notification) dispatchAdminNotification(message, "error");
       else setError(message);
     } finally {

@@ -10,12 +10,15 @@ export type ConsultationTopic = {
   signs: string[];
   signsNote?: string;
   why: string;
+  whyTitle?: string;
   whenToGetHelpTitle?: string;
   whenToGetHelp: string[];
+  whatHelpsTitle?: string;
   whatHelps: string | string[];
   approach: string[];
   approachTitle?: string;
   approachParagraphs?: string | string[];
+  customSections?: Array<{ id: string; title: string; description: string }>;
   hideShortQuestions?: boolean;
   shortQuestions: string | string[];
 };

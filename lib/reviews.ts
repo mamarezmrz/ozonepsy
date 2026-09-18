@@ -1,6 +1,9 @@
 import { ReviewStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
+import { createAdminNotification } from "@/lib/admin/notifications";
+import { sendAdminNotificationEmail } from "@/lib/auth/email";
+import { AdminNotificationType } from "@/lib/generated/prisma/enums";
 import { z } from "zod";
 
 const REVIEW_WINDOW_MS = 15 * 60 * 1000;
@@ -39,7 +42,7 @@ export class ReviewServiceError extends Error {
 export async function getPublishedReviewsForProductSlug(productSlug: string, take = 6): Promise<PublicReview[]> {
   const product = await prisma.product.findUnique({
     where: { slug: productSlug },
-    select: { id: true, status: true },
+    select: { id: true, status: true, title: true },
   });
 
   if (!product || product.status !== "PUBLISHED") return [];
@@ -66,7 +69,7 @@ export async function getPublishedReviewsForProductSlug(productSlug: string, tak
 export async function submitUserReview(userId: string, input: ReviewSubmissionInput, metadata: ReviewMetadata = {}) {
   const product = await prisma.product.findUnique({
     where: { slug: input.productSlug },
-    select: { id: true, status: true },
+    select: { id: true, status: true, title: true },
   });
 
   if (!product || product.status !== "PUBLISHED") {
@@ -94,7 +97,7 @@ export async function submitUserReview(userId: string, input: ReviewSubmissionIn
     throw new ReviewServiceError("CONFLICT", "این نظر را قبلاً برای همین صفحه ثبت کرده‌اید.");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const review = await prisma.$transaction(async (tx) => {
     const review = await tx.review.create({
       data: {
         userId,
@@ -118,6 +121,11 @@ export async function submitUserReview(userId: string, input: ReviewSubmissionIn
 
     return review;
   });
+  await Promise.all([
+    createAdminNotification({ type: AdminNotificationType.REVIEW_SUBMITTED, title: "نظر جدید ثبت شد", description: `یک نظر جدید برای «${product.title}» در انتظار بررسی است.`, href: "/reviews" }),
+    sendAdminNotificationEmail({ subject: "نظر جدید در اُزون", text: `یک نظر جدید برای «${product.title}» ثبت شده است و در انتظار بررسی است.` }),
+  ]);
+  return review;
 }
 
 export async function hideUserReview(userId: string, reviewId: string, metadata: ReviewMetadata = {}) {

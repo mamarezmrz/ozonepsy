@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin } from "@/lib/admin/security";
 import { requireAdminPermissionFromSession } from "@/lib/admin/authorization";
 import { requireAdminSession } from "@/lib/admin/session";
@@ -8,7 +7,6 @@ import { createAdminCourseTag, deleteAdminCourseTag } from "@/lib/admin/course-t
 import { adminCourseTagCreateSchema, adminCourseTagDeleteSchema } from "@/lib/admin/validation";
 
 export async function POST(request: Request) {
-  if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
   try {
     const session = await requireAdminSession();
@@ -21,7 +19,6 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
   try {
     const session = await requireAdminSession();

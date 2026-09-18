@@ -5,7 +5,7 @@ import { recordAdminAuditWithClient } from "@/lib/admin/audit";
 import { pageMeta, paginationOffset, type AdminListQuery } from "@/lib/admin/query";
 import { hashPassword } from "@/lib/auth/password";
 
-const adminRoleNames = [RoleName.ADMIN, RoleName.SUPER_ADMIN, RoleName.CONTENT_MANAGER, RoleName.SUPPORT, RoleName.INSTRUCTOR];
+const adminRoleNames = [RoleName.ADMIN, RoleName.SUPER_ADMIN, RoleName.CONTENT_MANAGER, RoleName.SUPPORT, RoleName.INSTRUCTOR, RoleName.THERAPIST];
 const publicUserWhere = {
   roles: {
     some: { role: { name: RoleName.USER } },
@@ -83,7 +83,7 @@ export async function getAdminUserDetail(userId: string) {
       profile: { select: { firstName: true, lastName: true, displayName: true, phone: true, country: true, avatarUrl: true } },
       roles: { where: { role: { name: RoleName.USER } }, select: { role: { select: { name: true } } } },
       entitlements: { orderBy: { createdAt: "desc" }, take: 8, select: { id: true, status: true, totalSessions: true, createdAt: true, product: { select: { title: true, kind: true } } } },
-      appointments: { orderBy: { startsAt: "desc" }, take: 8, select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, product: { select: { title: true } }, specialist: { select: { displayName: true } } } },
+      appointments: { orderBy: { startsAt: "desc" }, take: 8, select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, notes: true, product: { select: { title: true } }, specialist: { select: { displayName: true } } } },
     },
   });
 

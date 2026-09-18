@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-سایت عمومی روی `http://localhost:3000` و پنل Admin روی `http://admin.localhost:3000` در دسترس است. اگر پورت یا host توسعه تغییر کرد، مقدار `ADMIN_DEV_HOST` باید دقیقاً با host درخواست برابر باشد.
+سایت عمومی و پنل Admin روی یک دامنه در دسترس هستند؛ سایت در ریشه و پنل مدیریت در مسیر `/admin` قرار دارد. در توسعه، هر دو از `http://localhost:3000` استفاده می‌کنند.
 
 ## Bootstrap اولین Super Admin
 
@@ -48,15 +48,14 @@ npm run test:unit
 npm run build
 ```
 
-تست‌های فعلی روی authorization، host isolation، same-origin، query validation، demo-payment gate و media validation تمرکز دارند. برای integration/E2E باید database تست جداگانه و محیط اجرای مستقل فراهم شود.
+تست‌های فعلی روی authorization، path-based admin routing، same-origin، query validation، demo-payment gate و media validation تمرکز دارند. برای integration/E2E باید database تست جداگانه و محیط اجرای مستقل فراهم شود.
 
 ## تنظیمات مهم محیطی
 
 نام و توضیح envها در `.env.example` قرار دارد. مهم‌ترین موارد:
 
 - `DATABASE_URL`: اتصال PostgreSQL.
-- `ADMIN_HOST`: host پنل در Production؛ در Production نبودن آن پنل را fail-safe مسدود می‌کند.
-- `ADMIN_DEV_HOST`: host پنل در توسعه، به‌صورت پیش‌فرض `admin.localhost:3000`.
+- `PUBLIC_SITE_URL`: دامنه اصلی سایت؛ پنل مدیریت نیز در مسیر `/admin` همین دامنه قرار دارد.
 - `ADMIN_SESSION_TTL_SECONDS` و `ADMIN_IDLE_TTL_SECONDS`: طول عمر session Admin.
 - `ADMIN_LOGIN_RATE_LIMIT_*` و `AUTH_RATE_LIMIT_*`: محدودکننده‌ی ورود و فرم‌های auth.
 - `DEMO_PAYMENT_ENABLED` و `DEMO_PAYMENT_ALLOWED_ENVIRONMENTS`: پرداخت آزمایشی؛ Production همیشه مسدود است.
@@ -70,6 +69,4 @@ npm run build
 
 ## معماری Admin
 
-درخواست Admin ابتدا host را بررسی می‌کند و سپس در layout، route handler، permission helper و domain service احراز می‌شود. mutationهای حساس در transaction انجام می‌شوند و AuditLog همان transaction را همراهی می‌کند. `ADMIN` نمی‌تواند مدیریت Adminها یا permissionهای privileged را انجام دهد و محدودیت‌های `SUPER_ADMIN` در backend اعمال می‌شوند.
-
-مسیر public `/admin` برای expose کردن پنل استفاده نمی‌شود؛ پنل فقط از Admin host قابل دسترسی است.
+پنل مدیریت روی همان دامنه‌ی اصلی و در مسیر `/admin` قرار دارد و APIهای آن زیر `/api/admin` هستند. احراز هویت و مجوزها در layout، route handler، permission helper و domain service بررسی می‌شوند؛ مسیرها به hostname یا ساب‌دامین جداگانه وابسته نیستند. mutationهای حساس در transaction انجام می‌شوند و AuditLog همان transaction را همراهی می‌کند. `ADMIN` نمی‌تواند مدیریت Adminها یا permissionهای privileged را انجام دهد و محدودیت‌های `SUPER_ADMIN` در backend اعمال می‌شوند.

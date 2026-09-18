@@ -99,7 +99,7 @@ export function AdminConsultationBenefitsForm({ initialSections, readOnly = fals
             </div>
             <label className="admin-toggle">
               <input type="checkbox" checked={section.enabled} disabled={readOnly || pending} onChange={(event) => updateSection(section.pageKey, { enabled: event.target.checked })} />
-              <span>{section.enabled ? "نمایش سکشن" : "سکشن خاموش"}</span>
+              <span>{section.enabled ? "نمایش" : "خاموش"}</span>
             </label>
           </div>
 

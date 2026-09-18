@@ -41,9 +41,6 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
               { key: "title", label: "عنوان", render: (row) => <Link className="admin-table-link" href={`/admin/courses/${row.id}`}>{row.title}</Link> },
               { key: "slug", label: "Slug", render: (row) => <span dir="ltr">{row.slug}</span> },
               { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === ProductStatus.PUBLISHED ? "success" : row.status === ProductStatus.DRAFT ? "warning" : "neutral"}>{statusLabel(row.status)}</AdminStatusBadge> },
-              { key: "category", label: "دسته‌بندی", render: (row) => <span>{row.category?.title || "—"}</span> },
-              { key: "modules", label: "ماژول", render: (row) => <span>{row.moduleCount.toLocaleString("fa-IR")}</span> },
-              { key: "enrollments", label: "ثبت‌نام", render: (row) => <span>{row.enrollmentCount.toLocaleString("fa-IR")}</span> },
               {
                 key: "actions",
                 label: "عملیات",

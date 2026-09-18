@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin } from "@/lib/admin/security";
 import { requireAdminPermissionFromSession } from "@/lib/admin/authorization";
 import { requireAdminSession } from "@/lib/admin/session";
@@ -10,7 +9,6 @@ import { createAdminGroupTherapy, listAdminTherapyProducts } from "@/lib/admin/t
 import { ProductStatus } from "@/lib/generated/prisma/enums";
 
 export async function GET(request: Request) {
-  if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   try {
     const session = await requireAdminSession();
     requireAdminPermissionFromSession(session, "products.read");
@@ -23,7 +21,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });
   try {
     const session = await requireAdminSession();

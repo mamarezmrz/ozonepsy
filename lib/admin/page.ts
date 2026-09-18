@@ -5,7 +5,6 @@ import { requireAdminSession } from "@/lib/admin/session";
 
 export async function requireAdminPagePermission(permission: AdminPermissionKey) {
   const session = await requireAdminSession();
-  if (!hasAdminPermission(session, permission)) redirect("/forbidden");
+  if (!hasAdminPermission(session, permission)) redirect("/admin/forbidden");
   return session;
 }
-

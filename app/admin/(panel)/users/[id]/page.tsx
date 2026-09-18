@@ -9,7 +9,10 @@ import { AdminCountrySelect, AdminLatinPasswordInput } from "@/components/admin/
 import { AdminSelect } from "@/components/admin/admin-select";
 import { requireAdminPagePermission } from "@/lib/admin/page";
 import { getAdminUserDetail } from "@/lib/admin/users";
+import { AdminServiceError } from "@/lib/admin/errors";
 import { listAdminSessionProducts } from "@/lib/admin/appointments";
+import { listAdminSpecialistOptions } from "@/lib/admin/specialists";
+import { AdminDetailsButton } from "@/components/admin/admin-details-button";
 import { AppointmentStatus, EntitlementStatus, ProductKind, UserStatus } from "@/lib/generated/prisma/enums";
 
 export const metadata: Metadata = { title: "جزئیات کاربر" };
@@ -22,15 +25,19 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   let user;
   try {
     user = await getAdminUserDetail(id);
-  } catch { notFound(); }
+  } catch (error) {
+    if (error instanceof AdminServiceError && error.code === "NOT_FOUND") notFound();
+    throw error;
+  }
   const statusLabel = user.status === UserStatus.ACTIVE ? "فعال" : "تعلیق‌شده";
   const sessionEntitlements = user.entitlements.filter((entitlement) => entitlement.status !== EntitlementStatus.REVOKED && (entitlement.product.kind === ProductKind.CONSULTATION || entitlement.product.kind === ProductKind.PACKAGE));
   const canManageSessions = session.permissions.includes("sessions.manage");
   const canUpdateUser = session.permissions.includes("users.update");
   const sessionProducts = canManageSessions ? await listAdminSessionProducts() : [];
+  const specialistOptions = canManageSessions ? await listAdminSpecialistOptions() : [];
 
   return <div className="admin-page-stack">
-    <AdminPageHeader eyebrow="جزئیات کاربر عمومی" title={user.name} description={user.email} action={<AdminButton href="/users" variant="secondary">بازگشت به کاربران</AdminButton>} />
+    <AdminPageHeader eyebrow="جزئیات کاربر عمومی" title={user.name} description={user.email} action={<AdminButton href="/admin/users" variant="secondary">بازگشت به کاربران</AdminButton>} />
     <section className="admin-detail-grid admin-user-account-grid">
       <article className="admin-panel-card"><h3>اطلاعات حساب</h3><dl className="admin-detail-list"><div><dt>ایمیل</dt><dd dir="ltr">{user.email}</dd></div><div><dt>وضعیت</dt><dd><AdminStatusBadge tone={user.status === UserStatus.ACTIVE ? "success" : "warning"}>{statusLabel}</AdminStatusBadge></dd></div><div><dt>کشور</dt><dd>{user.profile?.country || "—"}</dd></div><div><dt>شماره تلفن</dt><dd dir="ltr">{user.profile?.phone || "—"}</dd></div><div><dt>تاریخ ثبت‌نام</dt><dd>{user.createdAt.toLocaleString("fa-IR")}</dd></div><div><dt>نقش عمومی</dt><dd>کاربر</dd></div></dl>{session.permissions.includes("users.suspend") ? <AdminUserActions userId={user.id} status={user.status} /> : null}
         {canUpdateUser ? <div className="admin-user-edit-stack">
@@ -60,6 +67,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
           <AdminMutationForm action={`/api/admin/entitlements/${entitlement.id}/appointments`} method="POST" submitLabel="برنامه‌ریزی جلسه" className="admin-user-session-form" notification successMessage="جلسه با موفقیت زمان‌بندی شد.">
             <div className="admin-user-session-form-grid"><label className="admin-form-field"><span>زمان شروع</span><AdminDatePicker name="startsAt" ariaLabel="زمان شروع جلسه" includeTime required /></label><label className="admin-form-field"><span>زمان پایان (اختیاری)</span><AdminDatePicker name="endsAt" ariaLabel="زمان پایان جلسه" includeTime /></label></div>
             <label className="admin-form-field"><span>لینک جلسه (اختیاری)</span><input type="url" name="meetingUrl" placeholder="https://…" inputMode="url" dir="ltr" /></label>
+            <label className="admin-form-field"><span>نام متخصص</span><AdminSelect name="specialistId" defaultValue="" ariaLabel="نام متخصص" options={[{ value: "", label: "بدون متخصص" }, ...specialistOptions.map((specialist) => ({ value: specialist.id, label: specialist.displayName }))]} /></label>
             <label className="admin-form-field"><span>یادداشت (اختیاری)</span><textarea name="reason" rows={3} placeholder="یادداشت داخلی برای زمان‌بندی جلسه" /></label>
           </AdminMutationForm>
         </div>
@@ -72,10 +80,11 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         <label className="admin-form-field"><span>نوع جلسه</span><AdminSelect name="productId" defaultValue={sessionProducts[0].id} ariaLabel="نوع جلسه" options={sessionProducts.map((product) => ({ value: product.id, label: product.title }))} /></label>
         <div className="admin-user-session-form-grid"><label className="admin-form-field"><span>زمان شروع</span><AdminDatePicker name="startsAt" ariaLabel="زمان شروع جلسه" includeTime required /></label><label className="admin-form-field"><span>زمان پایان (اختیاری)</span><AdminDatePicker name="endsAt" ariaLabel="زمان پایان جلسه" includeTime /></label></div>
         <label className="admin-form-field"><span>لینک جلسه (اختیاری)</span><input type="url" name="meetingUrl" placeholder="https://…" inputMode="url" dir="ltr" /></label>
+        <label className="admin-form-field"><span>نام متخصص</span><AdminSelect name="specialistId" defaultValue="" ariaLabel="نام متخصص" options={[{ value: "", label: "بدون متخصص" }, ...specialistOptions.map((specialist) => ({ value: specialist.id, label: specialist.displayName }))]} /></label>
         <label className="admin-form-field"><span>یادداشت (اختیاری)</span><textarea name="reason" rows={3} placeholder="یادداشت داخلی برای زمان‌بندی جلسه" /></label>
       </AdminMutationForm> : <p className="admin-muted-copy">برای ثبت جلسه، ابتدا یک محصول مشاورهٔ منتشرشده در پنل ایجاد کنید.</p>}
     </section> : null}
 
-    {user.appointments.length ? <section className="admin-panel-card"><h3>جلسات اخیر</h3><AdminDataTable rows={user.appointments} getRowKey={(row) => row.id} columns={[{ key: "product", label: "جلسه", render: (row) => <span>{row.product.title}</span> }, { key: "specialist", label: "متخصص", render: (row) => <span>{row.specialist?.displayName || "—"}</span> }, { key: "meetingUrl", label: "لینک جلسه", render: (row) => row.meetingUrl ? <a href={row.meetingUrl} target="_blank" rel="noopener noreferrer" className="admin-table-link">مشاهده</a> : <span>—</span> }, { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={appointmentStatusTone(row.status)}>{appointmentStatusLabel[row.status]}</AdminStatusBadge> }, { key: "date", label: "زمان", render: (row) => <span>{row.startsAt.toLocaleString("fa-IR-u-ca-gregory", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> }]} /></section> : null}
+    {user.appointments.length ? <section className="admin-panel-card"><h3>جلسات اخیر</h3><AdminDataTable rows={user.appointments} getRowKey={(row) => row.id} columns={[{ key: "product", label: "جلسه", render: (row) => <span>{row.product.title}</span> }, { key: "specialist", label: "متخصص", render: (row) => <span>{row.specialist?.displayName || "—"}</span> }, { key: "notes", label: "توضیحات", render: (row) => <AdminDetailsButton title={`توضیحات ${row.product.title}`} description={row.notes} /> }, { key: "meetingUrl", label: "لینک جلسه", render: (row) => row.meetingUrl ? <a href={row.meetingUrl} target="_blank" rel="noopener noreferrer" className="admin-table-link">مشاهده</a> : <span>—</span> }, { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={appointmentStatusTone(row.status)}>{appointmentStatusLabel[row.status]}</AdminStatusBadge> }, { key: "date", label: "زمان", render: (row) => <span>{row.startsAt.toLocaleString("fa-IR-u-ca-gregory", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> }]} /></section> : null}
   </div>;
 }

@@ -9,6 +9,8 @@ export async function listAdminPreconsultationRequests(query: AdminListQuery, st
   const where = search
     ? {
         OR: [
+          { fullName: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
           { country: { contains: search, mode: "insensitive" as const } },
           { phone: { contains: search, mode: "insensitive" as const } },
           { message: { contains: search, mode: "insensitive" as const } },
@@ -24,7 +26,7 @@ export async function listAdminPreconsultationRequests(query: AdminListQuery, st
       orderBy: { createdAt: query.direction },
       skip: paginationOffset(query),
       take: query.pageSize,
-      select: { id: true, country: true, phone: true, message: true, status: true, createdAt: true },
+      select: { id: true, fullName: true, email: true, country: true, phone: true, message: true, status: true, createdAt: true },
     }),
   ]);
 

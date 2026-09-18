@@ -124,7 +124,7 @@ function ProductFields({ values, kind, onChange }: { values: { title: string; sl
     <label className="admin-form-field"><span>مبلغ</span><input type="number" min="0" step="0.01" value={values.priceMajor} onChange={(event) => onChange("priceMajor", event.target.value)} required /></label>
     <label className="admin-form-field"><span>درصد تخفیف</span><input type="number" min="0" max="100" step="1" value={values.discountPercent} onChange={(event) => onChange("discountPercent", event.target.value)} /></label>
     <label className="admin-form-field"><span>مبلغ پس از تخفیف</span><input value={`${discountedPrice(values.priceMajor, values.discountPercent)} ${values.currency}`} readOnly aria-readonly="true" /></label>
-    <label className="admin-form-field"><span>واحد پولی</span><CustomSelect options={[{ value: "USD", label: "دلار" }, { value: "EUR", label: "یورو" }]} value={values.currency} onChange={(value) => onChange("currency", value)} placeholder="انتخاب واحد پولی" ariaLabel="واحد پولی" searchable={false} className="admin-custom-select" /></label>
+    <label className="admin-form-field"><span>واحد پولی</span><CustomSelect options={[{ value: "USD", label: "دلار آمریکا" }, { value: "CAD", label: "دلار کانادا" }, { value: "EUR", label: "یورو" }]} value={values.currency} onChange={(value) => onChange("currency", value)} placeholder="انتخاب واحد پولی" ariaLabel="واحد پولی" searchable={false} className="admin-custom-select" /></label>
   </div>;
 }
 
@@ -135,7 +135,7 @@ export function AdminGroupTherapyForm({ values = {}, productId }: { values?: Gro
   const [description, setDescription] = useState(values.description ?? "");
   const [priceMajor, setPriceMajor] = useState(values.priceMinor === undefined ? "0" : String(values.priceMinor / 100));
   const [discountPercent, setDiscountPercent] = useState(String(values.discountPercent ?? 0));
-  const [currency, setCurrency] = useState(values.currency === "EUR" ? "EUR" : "USD");
+  const [currency, setCurrency] = useState(values.currency === "EUR" || values.currency === "CAD" ? values.currency : "USD");
   const [coverMediaId, setCoverMediaId] = useState<string | null>(values.coverMediaId ?? null);
   const [instructorName, setInstructorName] = useState(values.instructorName ?? "");
   const [meetingUrl, setMeetingUrl] = useState(values.meetingUrl ?? "");
@@ -215,7 +215,7 @@ export function AdminIndividualConsultationForm({ values = {}, productId }: { va
   const [description, setDescription] = useState(values.description ?? "");
   const [priceMajor, setPriceMajor] = useState(values.priceMinor === undefined ? "0" : String(values.priceMinor / 100));
   const [discountPercent, setDiscountPercent] = useState(String(values.discountPercent ?? 0));
-  const [currency, setCurrency] = useState(values.currency === "EUR" ? "EUR" : "USD");
+  const [currency, setCurrency] = useState(values.currency === "EUR" || values.currency === "CAD" ? values.currency : "USD");
   const [durationMinutes, setDurationMinutes] = useState(String(values.durationMinutes ?? 50));
   const [includedSessions, setIncludedSessions] = useState(String(values.includedSessions ?? 1));
   const [pending, setPending] = useState(false);
@@ -233,13 +233,13 @@ export function AdminIndividualConsultationForm({ values = {}, productId }: { va
       const body = await readResponse(response);
       if (!response.ok || !body.ok) { dispatchAdminNotification(body.message ?? "ذخیره مشاوره فردی انجام نشد.", "error"); return; }
       dispatchAdminNotification(body.message ?? "مشاوره فردی ذخیره شد.");
-      router.push("/individual-consultation"); router.refresh();
+      router.push("/admin/individual-consultation"); router.refresh();
     } catch { dispatchAdminNotification("ارتباط با سرور برقرار نشد.", "error"); } finally { setPending(false); }
   }
 
   return <form className="admin-course-create-form" onSubmit={submit} noValidate>
     <section className="admin-course-editor-section admin-course-specs-section"><h2>مشخصات مشاوره فردی</h2><p>این اطلاعات در کارت قیمت‌گذاری و صفحهٔ خرید نمایش داده می‌شود.</p><ProductFields values={{ title, slug, description, priceMajor, discountPercent, currency }} kind="consultation" onChange={update} /></section>
     <section className="admin-course-editor-section"><h2>جزئیات مشاوره فردی</h2><p>مدت هر جلسه و تعداد جلسات پکیج را مشخص کنید.</p><div className="admin-course-form-grid"><label className="admin-form-field"><span>مدت هر جلسه (دقیقه)</span><input type="number" min="1" max="1440" step="1" value={durationMinutes} onChange={(event) => setDurationMinutes(event.target.value)} required /></label><label className="admin-form-field"><span>تعداد جلسات</span><input type="number" min="1" max="1000" step="1" value={includedSessions} onChange={(event) => setIncludedSessions(event.target.value)} required /></label></div></section>
-    <div className="admin-course-actions"><button type="submit" className="admin-button admin-button-primary" disabled={pending}>{pending ? "در حال ذخیره…" : "ذخیره"}</button><button type="button" className="admin-button admin-button-secondary" onClick={() => router.push("/individual-consultation")} disabled={pending}>لغو تغییرات</button></div>
+    <div className="admin-course-actions"><button type="submit" className="admin-button admin-button-primary" disabled={pending}>{pending ? "در حال ذخیره…" : "ذخیره"}</button><button type="button" className="admin-button admin-button-secondary" onClick={() => router.push("/admin/individual-consultation")} disabled={pending}>لغو تغییرات</button></div>
   </form>;
 }

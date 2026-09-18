@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin } from "@/lib/security/request";
 import { requireAdminPermissionFromSession } from "@/lib/admin/authorization";
 import { requireAdminSession } from "@/lib/admin/session";
@@ -9,12 +8,7 @@ import { adminIndividualConsultationTopicSchema } from "@/lib/admin/validation";
 
 export const runtime = "nodejs";
 
-function notFound() {
-  return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
-}
-
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  if (!isAdminHost(request.headers.get("host"))) return notFound();
   try {
     const session = await requireAdminSession();
     requireAdminPermissionFromSession(session, "content.read");
@@ -26,7 +20,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  if (!isAdminHost(request.headers.get("host"))) return notFound();
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });
   try {
     const session = await requireAdminSession();
@@ -43,7 +36,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  if (!isAdminHost(request.headers.get("host"))) return notFound();
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });
   try {
     const session = await requireAdminSession();

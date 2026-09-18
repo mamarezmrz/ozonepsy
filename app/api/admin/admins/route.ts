@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin } from "@/lib/admin/security";
 import { requireAdminPermissionFromSession } from "@/lib/admin/authorization";
 import { requireAdminSession } from "@/lib/admin/session";
@@ -8,12 +7,8 @@ import { parseAdminListQuery } from "@/lib/admin/query";
 import { adminInviteSchema } from "@/lib/admin/validation";
 import { createAdminInvite, listAdminUsers } from "@/lib/admin/admins";
 
-function hostGuard(request: Request) {
-  return isAdminHost(request.headers.get("host"));
-}
 
 export async function GET(request: Request) {
-  if (!hostGuard(request)) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   try {
     const session = await requireAdminSession();
     requireAdminPermissionFromSession(session, "admins.manage");
@@ -26,7 +21,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!hostGuard(request)) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
   try {
     const session = await requireAdminSession();

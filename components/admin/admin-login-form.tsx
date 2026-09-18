@@ -30,8 +30,7 @@ export function AdminLoginForm() {
       }
 
       const next = new URLSearchParams(window.location.search).get("next");
-      const adminPrefixedPath = window.location.pathname === "/admin" || window.location.pathname.startsWith("/admin/");
-      const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : adminPrefixedPath ? "/admin" : "/";
+      const safeNext = next && (next === "/admin" || next.startsWith("/admin/")) ? next : "/admin";
       window.location.assign(safeNext);
     } catch {
       setError("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");

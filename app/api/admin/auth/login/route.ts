@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
 import { loginAdmin, AdminAuthenticationError } from "@/lib/admin/service";
-import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin, getRequestMetadata } from "@/lib/admin/security";
 import { AdminValidationError, parseAdminLoginInput } from "@/lib/admin/validation";
 
-function requestIsForAdminHost(request: Request) {
-  return isAdminHost(request.headers.get("host"));
-}
-
 export async function POST(request: Request) {
-  if (!requestIsForAdminHost(request)) {
-    return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
-  }
 
   if (!hasSameOrigin(request)) {
     return NextResponse.json({ code: "FORBIDDEN", message: "درخواست معتبر نیست." }, { status: 403 });

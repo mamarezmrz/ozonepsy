@@ -32,7 +32,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
         <input type="hidden" name="sort" value={query.sort} />
       </AdminListToolbar>
       {data.rows.length ? <AdminDataTable rows={data.rows} getRowKey={(row) => row.id} columns={[
-        { key: "user", label: "کاربر", render: (row) => <Link className="admin-table-link" href={`/users/${row.user.id}`}>{row.user.profile?.displayName || row.user.email}</Link> },
+        { key: "user", label: "کاربر", render: (row) => <Link className="admin-table-link" href={`/admin/users/${row.user.id}`}>{row.user.profile?.displayName || row.user.email}</Link> },
         { key: "product", label: "محصول", render: (row) => <span>{row.product.title}</span> },
         { key: "specialist", label: "متخصص", render: (row) => <span>{row.specialist?.displayName || "—"}</span> },
         { key: "meetingUrl", label: "لینک جلسه", render: (row) => row.meetingUrl ? <a href={row.meetingUrl} target="_blank" rel="noopener noreferrer" className="admin-table-link">مشاهده</a> : <span>—</span> },

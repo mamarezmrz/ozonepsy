@@ -214,7 +214,7 @@ export function AdminCourseCreateForm({ existingTags = [], values = {}, courseId
   const [description, setDescription] = useState(values.description ?? "");
   const [tags, setTags] = useState<string[]>(values.tags ?? []);
   const [priceMajor, setPriceMajor] = useState(values.priceMinor === undefined ? "0" : String(values.priceMinor / 100));
-  const [currency, setCurrency] = useState(values.currency === "EUR" ? "EUR" : "USD");
+  const [currency, setCurrency] = useState(values.currency === "EUR" || values.currency === "CAD" ? values.currency : "USD");
   const [instructorName, setInstructorName] = useState(values.instructorName ?? "");
   const [durationSessions, setDurationSessions] = useState(values.durationSessions ? String(values.durationSessions) : "");
   const [demoVideo, setDemoVideo] = useState<VideoDraft>({ mediaId: values.demoMediaId ?? null, duration: values.demoVideoDuration ?? null, fileName: values.demoVideoName ?? (values.demoMediaId ? "ویدئوی بارگذاری‌شده" : "") });
@@ -381,7 +381,7 @@ export function AdminCourseCreateForm({ existingTags = [], values = {}, courseId
               <label className="admin-form-field admin-form-field-full"><span>توضیحات دوره</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} required /></label>
               <label className="admin-form-field admin-form-field-full"><span>موضوعات مرتبط (تگ‌ها)</span><AdminCourseTags values={tags} existingTags={existingTags} onChange={setTags} /></label>
               <label className="admin-form-field"><span>مبلغ دوره</span><input type="number" min="0" step="0.01" value={priceMajor} onChange={(event) => setPriceMajor(event.target.value)} required /></label>
-              <label className="admin-form-field"><span>واحد پولی</span><CustomSelect options={[{ value: "USD", label: "دلار" }, { value: "EUR", label: "یورو" }]} value={currency} onChange={setCurrency} placeholder="انتخاب واحد پولی" ariaLabel="واحد پولی" searchable={false} className="admin-custom-select" /></label>
+              <label className="admin-form-field"><span>واحد پولی</span><CustomSelect options={[{ value: "USD", label: "دلار آمریکا" }, { value: "CAD", label: "دلار کانادا" }, { value: "EUR", label: "یورو" }]} value={currency} onChange={setCurrency} placeholder="انتخاب واحد پولی" ariaLabel="واحد پولی" searchable={false} className="admin-custom-select" /></label>
             </div>
           </section>
 

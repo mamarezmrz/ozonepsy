@@ -12,6 +12,14 @@ const serviceSteps = [
   ["۴", "برگزاری جلسه", "با مشخص شدن مشاور و زمان جلسه، طبق زمان‌بندی مشخص شده جلسه‌تون برگزار می‌شه."],
 ] as const;
 
+function hasText(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value.some((item) => item.trim()) : Boolean(value?.trim());
+}
+
+function hasSectionContent(title: string | undefined, ...content: Array<string | string[] | undefined>) {
+  return hasText(title) || content.some((value) => value !== undefined && hasText(value));
+}
+
 export function ConsultationTopicPage({ topic, content }: { topic: ConsultationTopic; content?: PublicContent }) {
   const faqTopicTitle = topic.title.replace(/\s*\([^()]*\)\s*$/, "");
   const approachParagraphs = topic.approachParagraphs;
@@ -33,18 +41,19 @@ export function ConsultationTopicPage({ topic, content }: { topic: ConsultationT
         </figure> : null}
 
         <div className="consultation-topic-content">
-          <TopicSection title={topic.signsTitle ?? "نشانه‌های رایج (چند علامت کافی است)"}>
-            <ul>{topic.signs.map((item, index) => <li key={`sign-${index}`}>{item}</li>)}</ul>
+          {hasSectionContent(topic.signsTitle, topic.signs, topic.signsNote) ? <TopicSection title={topic.signsTitle?.trim() || "نشانه‌های رایج (چند علامت کافی است)"}>
+            {topic.signs.length ? <ul>{topic.signs.map((item, index) => <li key={`sign-${index}`}>{item}</li>)}</ul> : null}
             {topic.signsNote ? <p className="consultation-topic-note">{topic.signsNote}</p> : null}
-          </TopicSection>
-          <TopicSection title="چرا پیش می‌آید؟"><p>{topic.why}</p></TopicSection>
-          <TopicSection title={topic.whenToGetHelpTitle ?? "چه زمانی لازم است کمک بگیریم؟"}><ul>{topic.whenToGetHelp.map((item, index) => <li key={`help-${index}`}>{item}</li>)}</ul></TopicSection>
-          <TopicSection title="چه کارهایی معمولاً کمک می‌کند؟"><TopicParagraphs content={topic.whatHelps} /></TopicSection>
-          {hasApproachParagraphs ? (
-            <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><TopicParagraphs content={approachParagraphs ?? ""} /></TopicSection>
+          </TopicSection> : null}
+          {hasSectionContent(topic.whyTitle, topic.why) ? <TopicSection title={topic.whyTitle?.trim() || "چرا پیش می‌آید؟"}>{topic.why ? <p>{topic.why}</p> : null}</TopicSection> : null}
+          {hasSectionContent(topic.whenToGetHelpTitle, topic.whenToGetHelp) ? <TopicSection title={topic.whenToGetHelpTitle?.trim() || "چه زمانی لازم است کمک بگیریم؟"}>{topic.whenToGetHelp.length ? <ul>{topic.whenToGetHelp.map((item, index) => <li key={`help-${index}`}>{item}</li>)}</ul> : null}</TopicSection> : null}
+          {hasSectionContent(topic.whatHelpsTitle, topic.whatHelps) ? <TopicSection title={topic.whatHelpsTitle?.trim() || "چه کارهایی معمولاً کمک می‌کند؟"}><TopicParagraphs content={topic.whatHelps} /></TopicSection> : null}
+          {hasSectionContent(topic.approachTitle, approachParagraphs, topic.approach) ? (hasApproachParagraphs ? (
+            <TopicSection title={topic.approachTitle?.trim() || "اُزون: چطور کنار شما می‌ایستیم"}><TopicParagraphs content={approachParagraphs ?? ""} /></TopicSection>
           ) : (
-            <TopicSection title={topic.approachTitle ?? "اُزون: چطور کنار شما می‌ایستیم"}><ul>{topic.approach.map((item, index) => <li key={`approach-${index}`}>{item}</li>)}</ul></TopicSection>
-          )}
+            <TopicSection title={topic.approachTitle?.trim() || "اُزون: چطور کنار شما می‌ایستیم"}>{topic.approach.length ? <ul>{topic.approach.map((item, index) => <li key={`approach-${index}`}>{item}</li>)}</ul> : null}</TopicSection>
+          )) : null}
+          {topic.customSections?.map((section) => section.title.trim() || section.description.trim() ? <TopicSection key={section.id} title={section.title || ""}><p>{section.description}</p></TopicSection> : null)}
           {topic.hideShortQuestions ? null : <TopicSection title="پرسش‌های کوتاه"><TopicParagraphs content={topic.shortQuestions} /></TopicSection>}
         </div>
       </div>

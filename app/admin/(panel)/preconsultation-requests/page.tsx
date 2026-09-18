@@ -7,6 +7,7 @@ import { AdminSelect } from "@/components/admin/admin-select";
 import { AdminStatusBadge } from "@/components/admin/admin-ui";
 import { AdminPreconsultationStatusMenu } from "@/components/admin/admin-preconsultation-status-menu";
 import { PreconsultationRequestStatus } from "@/lib/generated/prisma/enums";
+import { AdminDetailsButton } from "@/components/admin/admin-details-button";
 
 export const metadata: Metadata = { title: "درخواست‌های پیش‌مشاوره" };
 
@@ -29,7 +30,7 @@ export default async function AdminPreconsultationRequestsPage({ searchParams }:
       <AdminPageHeader eyebrow="درخواست‌های دریافت‌شده از سایت" title="درخواست‌های پیش‌مشاوره" description="اطلاعات تماس و توضیحات ثبت‌شده را ببینید و برای پیگیری با متقاضی تماس بگیرید." />
       <section className="admin-panel-card">
         <AdminListToolbar>
-          <AdminSearchInput defaultValue={query.search} placeholder="جست‌وجو در کشور، شماره تماس یا توضیحات" />
+          <AdminSearchInput defaultValue={query.search} placeholder="جست‌وجو در نام، ایمیل، کشور یا شماره تماس" />
           <label className="admin-search-field"><span>وضعیت</span><AdminSelect name="status" defaultValue={status ?? ""} ariaLabel="وضعیت درخواست" options={[{ value: "", label: "همه" }, ...options]} /></label>
           <input type="hidden" name="sort" value={query.sort} />
         </AdminListToolbar>
@@ -38,9 +39,11 @@ export default async function AdminPreconsultationRequestsPage({ searchParams }:
           getRowKey={(row) => row.id}
           columns={[
             { key: "createdAt", label: "زمان ثبت", render: (row) => <time dateTime={row.createdAt.toISOString()}>{row.createdAt.toLocaleString("fa-IR", { dateStyle: "medium", timeStyle: "short" })}</time> },
+            { key: "fullName", label: "نام و نام خانوادگی", render: (row) => <span>{row.fullName || "—"}</span> },
+            { key: "email", label: "ایمیل", render: (row) => <span dir="ltr">{row.email || "—"}</span> },
             { key: "country", label: "کشور", render: (row) => <span>{row.country}</span> },
             { key: "phone", label: "شماره تماس", render: (row) => <span dir="ltr">{row.phone}</span> },
-            { key: "message", label: "توضیحات", render: (row) => <span className="admin-preconsultation-message">{row.message?.trim() || "—"}</span> },
+            { key: "message", label: "توضیحات", render: (row) => <AdminDetailsButton title={`درخواست ${row.fullName || "پیش‌مشاوره"}`} description={`ایمیل: ${row.email || "—"}\nکشور: ${row.country}\nشماره تماس: ${row.phone}\n\n${row.message?.trim() || "توضیحی ثبت نشده است."}`} /> },
             { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === PreconsultationRequestStatus.CANCELED ? "danger" : tones[row.status]}>{row.status === PreconsultationRequestStatus.CANCELED ? "لغوشده" : labels[row.status]}</AdminStatusBadge> },
             ...(canUpdate ? [{ key: "actions", label: "عملیات", render: (row: (typeof data.rows)[number]) => <AdminPreconsultationStatusMenu requestId={row.id} currentStatus={row.status} options={options} /> }] : []),
           ]}

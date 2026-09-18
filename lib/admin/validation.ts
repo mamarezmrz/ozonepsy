@@ -50,6 +50,7 @@ const adminPublicUserProfileSchema = z.object({
 });
 
 const adminUserPasswordSchema = z.string().min(12, "رمز باید حداقل ۱۲ کاراکتر باشد.").max(200).refine((value) => !/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(value), "استفاده از حروف فارسی یا عربی در رمز مجاز نیست.");
+const adminSpecialistPasswordField = z.string().min(12, "رمز متخصص باید حداقل ۱۲ کاراکتر باشد.").max(128).refine((value) => !/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(value), "استفاده از حروف فارسی یا عربی در رمز مجاز نیست.");
 export const adminPublicUserCreateSchema = z.object({
   email: z.string().trim().email("ایمیل معتبر نیست.").max(320).transform((value) => value.toLowerCase()),
   fullName: z.string().trim().min(1, "نام و نام خانوادگی را وارد کنید.").max(200),
@@ -88,7 +89,7 @@ export const adminCourseSchema = z.object({
   slug: z.string().trim().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "شناسه دوره معتبر نیست."),
   description: z.string().trim().min(1),
   priceMinor: z.coerce.number().int().min(0),
-  currency: z.string().trim().length(3).default("USD"),
+  currency: z.string().trim().toUpperCase().refine((value) => ["USD", "CAD", "EUR"].includes(value), "واحد پولی معتبر نیست.").default("USD"),
   categoryId: z.preprocess((value) => value === "" ? null : value, z.string().uuid().nullable().optional()),
   deliveryMode: z.enum(["RECORDED", "LIVE"]).default("RECORDED"),
   accessDays: z.preprocess((value) => value === "" ? null : value, z.coerce.number().int().positive().nullable().optional()),
@@ -113,7 +114,7 @@ const adminProductBaseSchema = z.object({
   description: z.string().trim().min(1),
   priceMinor: z.coerce.number().int().min(0),
   discountPercent: z.coerce.number().int().min(0).max(100).default(0),
-  currency: z.string().trim().length(3).transform((value) => value.toUpperCase()),
+  currency: z.string().trim().toUpperCase().refine((value) => ["USD", "CAD", "EUR"].includes(value), "واحد پولی معتبر نیست."),
 });
 
 export const adminGroupTherapySchema = adminProductBaseSchema.extend({
@@ -143,14 +144,78 @@ export const adminReorderSchema = z.object({ ids: z.array(z.string().uuid()).min
 export const adminCategorySchema = z.object({ slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/), title: z.string().trim().min(1).max(200), description: z.string().trim().max(4000).optional() });
 export const adminCategoryStatusSchema = z.object({ status: z.enum(["ACTIVE", "ARCHIVED"]), reason: z.string().trim().min(1).max(1000) });
 
+const specialistContentListSchema = z.array(z.string().trim().min(1).max(4000)).max(50).default([]);
+const specialistProfileSectionSchema = z.object({
+  id: z.string().trim().min(1).max(120),
+  title: z.string().trim().max(240),
+  description: z.string().trim().max(20000),
+});
+
+function parseSpecialistContentList(value: unknown) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [value];
+  } catch {
+    return value.split(/\r?\n/).filter(Boolean);
+  }
+}
+
+function parseSpecialistProfileSections(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : value;
+  } catch {
+    return value;
+  }
+}
+
 export const adminSpecialistSchema = z.object({
-  slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "شناسه متخصص معتبر نیست."),
+  slug: z.preprocess((value) => value === "" ? undefined : value, z.string().trim().max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "شناسه متخصص معتبر نیست.").optional()),
   displayName: z.string().trim().min(1).max(200),
   specialty: z.string().trim().max(200).optional(),
+  aboutTitle: z.string().trim().max(240).optional(),
+  aboutDescription: z.string().trim().max(20000).optional(),
+  specialtiesTitle: z.string().trim().max(240).optional(),
+  specialtiesItems: z.preprocess((value) => parseSpecialistContentList(value), specialistContentListSchema),
+  educationTitle: z.string().trim().max(240).optional(),
+  educationItems: z.preprocess((value) => parseSpecialistContentList(value), specialistContentListSchema),
+  responsibilitiesTitle: z.string().trim().max(240).optional(),
+  responsibilitiesItems: z.preprocess((value) => parseSpecialistContentList(value), specialistContentListSchema),
+  booksTitle: z.string().trim().max(240).optional(),
+  booksItems: z.preprocess((value) => parseSpecialistContentList(value), specialistContentListSchema),
+  quoteTitle: z.string().trim().max(240).optional(),
+  quote: z.string().trim().max(20000).optional(),
+  profileSections: z.preprocess(parseSpecialistProfileSections, z.array(specialistProfileSectionSchema).max(50).optional()),
+  phone: z.string().trim().max(40).optional(),
+  country: z.string().trim().max(120).optional(),
+  email: z.preprocess((value) => value === "" ? undefined : value, z.string().trim().email("ایمیل متخصص معتبر نیست.").max(320).optional()),
   bio: z.string().trim().max(10000).optional(),
+  profileMediaId: z.preprocess((value) => value === "" ? null : value, z.string().uuid().nullable().optional()),
   imageUrl: z.preprocess((value) => value === "" ? null : value, z.string().trim().url().max(1000).nullable().optional()),
   userId: z.preprocess((value) => value === "" ? null : value, z.string().uuid().nullable().optional()),
+  initialPassword: z.preprocess((value) => value === "" || value === undefined ? undefined : value, adminSpecialistPasswordField.optional()),
+  initialPasswordConfirmation: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.string().max(128).optional()),
+  accountActive: z.preprocess((value) => value === undefined ? undefined : value === true || value === "true" || value === "on", z.boolean().optional()),
+}).superRefine((value, context) => {
+  if ((value.initialPassword || value.initialPasswordConfirmation) && value.initialPassword !== value.initialPasswordConfirmation) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["initialPasswordConfirmation"], message: "رمز اولیه و تکرار آن یکسان نیستند." });
+  }
+  if (value.profileSections !== undefined && !value.profileSections.some((section) => section.title.trim() || section.description.trim())) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["profileSections"], message: "حداقل یک بخش محتوایی متخصص را کامل کنید." });
+  }
 });
+
+export const adminSpecialistPasswordSchema = z.object({
+  password: adminSpecialistPasswordField,
+  confirmPassword: z.string().max(128),
+  reason: z.string().trim().min(1, "دلیل تغییر رمز را وارد کنید.").max(1000),
+}).refine((value) => value.password === value.confirmPassword, { message: "رمز جدید و تکرار آن یکسان نیستند.", path: ["confirmPassword"] });
 
 export const adminSpecialistStatusSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE"]),
@@ -181,6 +246,7 @@ const adminAppointmentCreateFields = z.object({
   startsAt: z.coerce.date(),
   endsAt: z.preprocess((value) => value === "" || value === undefined ? null : value, z.coerce.date().nullable()),
   meetingUrl: z.preprocess((value) => value === "" || value === undefined ? null : value, z.string().trim().url("لینک جلسه معتبر نیست.").max(2000).nullable()),
+  specialistId: z.preprocess((value) => value === "" || value === undefined ? null : value, z.string().uuid("متخصص معتبر نیست.").nullable()),
   reason: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.string().trim().max(1000).optional()),
 });
 
@@ -277,6 +343,12 @@ export const adminIndividualConsultationCasesSchema = z.object({
 });
 
 const adminTopicListSchema = z.array(z.string().trim().max(4000)).max(50);
+const adminTopicCustomSectionsSchema = z.array(z.object({ id: z.string().trim().min(1).max(100), title: z.string().trim().max(240), description: z.string().trim().max(20000) })).max(20).superRefine((sections, context) => {
+  sections.forEach((section, index) => {
+    if (!section.title && !section.description) return;
+    if (!section.title || !section.description) context.addIssue({ code: z.ZodIssueCode.custom, path: [index], message: "عنوان و توضیحات بخش جدید را کامل کنید." });
+  });
+});
 
 export const adminIndividualConsultationTopicSchema = z.object({
   title: z.string().trim().min(1).max(240),
@@ -285,13 +357,16 @@ export const adminIndividualConsultationTopicSchema = z.object({
   signsTitle: z.string().trim().max(240),
   signs: adminTopicListSchema,
   signsNote: z.string().trim().max(4000),
-  why: z.string().trim().min(1).max(20000),
+  why: z.string().trim().max(20000),
+  whyTitle: z.string().trim().max(240).default("چرا پیش می‌آید؟"),
   whenToGetHelpTitle: z.string().trim().max(240),
   whenToGetHelp: adminTopicListSchema,
+  whatHelpsTitle: z.string().trim().max(240).default("چه کارهایی معمولاً کمک می‌کند؟"),
   whatHelps: adminTopicListSchema,
   approachTitle: z.string().trim().max(240),
   approachParagraphs: adminTopicListSchema,
   approach: adminTopicListSchema,
+  customSections: adminTopicCustomSectionsSchema.default([]),
   hideShortQuestions: z.boolean(),
   shortQuestions: adminTopicListSchema,
   imageMode: z.enum(["multiply", "normal", "multiply-no-branding", "normal-no-branding"]),

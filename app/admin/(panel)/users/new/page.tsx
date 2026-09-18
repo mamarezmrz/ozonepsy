@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: "ساخت کاربر" };
 export default async function NewUserPage() {
   await requireAdminPagePermission("users.update");
   return <div className="admin-page-stack">
-    <AdminPageHeader eyebrow="مدیریت کاربران" title="ساخت کاربر" description="یک حساب کاربری عمومی بسازید. رمز اولیه را امن و مستقیم به خود کاربر تحویل دهید." action={<AdminButton href="/users" variant="secondary">بازگشت</AdminButton>} />
+    <AdminPageHeader eyebrow="مدیریت کاربران" title="ساخت کاربر" description="یک حساب کاربری عمومی بسازید. رمز اولیه را امن و مستقیم به خود کاربر تحویل دهید." action={<AdminButton href="/admin/users" variant="secondary">بازگشت</AdminButton>} />
     <section className="admin-panel-card">
-      <AdminMutationForm action="/api/admin/users" successRedirect="/users" submitLabel="ساخت کاربر" notification successMessage="کاربر جدید ایجاد شد.">
+      <AdminMutationForm action="/api/admin/users" successRedirect="/admin/users" submitLabel="ساخت کاربر" notification successMessage="کاربر جدید ایجاد شد.">
         <div className="admin-course-form-grid">
           <label className="admin-form-field"><span>نام و نام خانوادگی</span><input name="fullName" autoComplete="name" required /></label>
           <label className="admin-form-field"><span>شماره تلفن</span><input name="phone" autoComplete="tel" dir="ltr" required /></label>

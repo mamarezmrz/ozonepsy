@@ -85,6 +85,8 @@ function FreeSessionForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          fullName: form.get("fullName"),
+          email: form.get("email"),
           country: selectedCountry,
           phone: form.get("phone"),
           message: form.get("message"),
@@ -117,6 +119,12 @@ function FreeSessionForm() {
         />
       )}
       <form className="free-session-form" noValidate onSubmit={handleSubmit}>
+        <label htmlFor="free-session-full-name">نام و نام خانوادگی</label>
+        <input id="free-session-full-name" name="fullName" type="text" autoComplete="name" required />
+
+        <label htmlFor="free-session-email">ایمیل</label>
+        <input id="free-session-email" name="email" type="email" autoComplete="email" dir="ltr" required />
+
         <label htmlFor="free-session-country">کشور خود را انتخاب کنید</label>
         <CustomSelect
           options={countryOptions}
@@ -136,7 +144,7 @@ function FreeSessionForm() {
         <input id="free-session-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" required />
 
         <label htmlFor="free-session-message">توضیح مختصری در مورد دلیل مراجعه‌تان بنویسید</label>
-        <textarea id="free-session-message" name="message" rows={4} />
+        <textarea id="free-session-message" name="message" rows={4} required />
 
         <button type="submit" disabled={isSubmitting}>{isSubmitting ? "لطفاً صبر کنید" : "ثبت درخواست"}</button>
       </form>

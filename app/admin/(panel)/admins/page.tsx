@@ -20,7 +20,7 @@ export default async function AdminsPage({ searchParams }: { searchParams: Promi
     <AdminPageHeader eyebrow="دسترسی و امنیت" title="مدیریت ادمین‌ها" description="دعوت، نقش و وضعیت دسترسی مدیران سیستم را مدیریت کنید." />
     <AdminListToolbar action={null}><AdminSearchInput defaultValue={query.search} placeholder="ایمیل یا نام ادمین…" /></AdminListToolbar>
     <section className="admin-panel-card"><AdminDataTable rows={data.rows} getRowKey={(row) => row.id} columns={[
-      { key: "name", label: "نام", render: (row) => <AdminButton href={`/admins/${row.id}`} variant="secondary">{row.name}</AdminButton> },
+      { key: "name", label: "نام", render: (row) => <AdminButton href={`/admin/admins/${row.id}`} variant="secondary">{row.name}</AdminButton> },
       { key: "email", label: "ایمیل", render: (row) => <span dir="ltr">{row.email}</span> },
       { key: "roles", label: "نقش", render: (row) => <span>{row.roles.map((role) => ADMIN_ROLE_LABELS[role as AdminRole] ?? role).join("، ")}</span> },
       { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={row.status === UserStatus.ACTIVE ? "success" : "danger"}>{row.status === UserStatus.ACTIVE ? "فعال" : "غیرفعال"}</AdminStatusBadge> },

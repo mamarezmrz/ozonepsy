@@ -43,7 +43,7 @@ export default async function ContentPage({ params, searchParams }: { params: Pr
   const status = Object.values(ContentStatus).includes(statusValue as ContentStatus) ? statusValue as ContentStatus : undefined;
   const data = await listAdminContent(type, query, status);
   const currentParams = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
-  const newHref = "/content/testimonials/new";
+  const newHref = "/admin/content/testimonials/new";
 
   return <div className="admin-page-stack">
     <AdminPageHeader eyebrow="محتوای ساختاریافته" title="نظرات مشتریان" description="محتوای مورد استفاده در بخش‌های عمومی سایت را مدیریت کنید." action={canWrite ? <AdminButton href={newHref}>محتوای جدید</AdminButton> : undefined} />
@@ -54,7 +54,7 @@ export default async function ContentPage({ params, searchParams }: { params: Pr
         <input type="hidden" name="sort" value={query.sort} />
       </AdminListToolbar>
       {data.rows.length ? <AdminDataTable rows={data.rows as Array<{ id: string; name: string; body: string; status: ContentStatus; sortOrder: number; updatedAt: Date }>} getRowKey={(row) => row.id} columns={[
-        { key: "name", label: "نام", render: (row) => <Link className="admin-table-link" href={`/content/testimonials/${row.id}`}>{row.name}</Link> },
+        { key: "name", label: "نام", render: (row) => <Link className="admin-table-link" href={`/admin/content/testimonials/${row.id}`}>{row.name}</Link> },
         { key: "body", label: "متن", render: (row) => <span className="admin-clamp-text">{row.body}</span> },
         { key: "status", label: "وضعیت", render: (row) => <AdminStatusBadge tone={tone(row.status)}>{labels[row.status]}</AdminStatusBadge> },
         { key: "actions", label: "عملیات", render: (row) => canWrite ? <AdminActionButton action={`/api/admin/content/testimonials/${row.id}`} method="PATCH" body={{ status: row.status === ContentStatus.PUBLISHED ? ContentStatus.DRAFT : ContentStatus.PUBLISHED }} reasonRequired label={row.status === ContentStatus.PUBLISHED ? "پیش‌نویس" : "انتشار"} /> : null },

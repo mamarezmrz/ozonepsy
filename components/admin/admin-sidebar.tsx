@@ -10,17 +10,18 @@ import type { AdminSessionView } from "@/lib/admin/session";
 
 const links = [
   { href: "/admin", label: "نمای کلی", permission: "dashboard.view" },
-  { href: "/users", label: "کاربران", permission: "users.read" },
-  { href: "/preconsultation-requests", label: "درخواست‌های پیش‌مشاوره", permission: "users.read" },
+  { href: "/admin/users", label: "کاربران", permission: "users.read" },
+  { href: "/admin/preconsultation-requests", label: "درخواست‌های پیش‌مشاوره", permission: "users.read" },
   { href: "/admin/courses", label: "دوره‌ها", permission: "courses.read" },
   { href: "/admin/group-therapy", label: "گروه‌درمانی", permission: "products.read" },
-  { href: "/individual-consultation", label: "مشاوره فردی", permission: "products.read" },
-  { href: "/sessions", label: "جلسات", permission: "sessions.read" },
-  { href: "/reviews", label: "نظرات", permission: "reviews.read" },
-  { href: "/content/faq", label: "سوالات متداول", permission: "content.read" },
-  { href: "/consultation-benefits", label: "مزایای مشاوره", permission: "content.read" },
-  { href: "/consultation-issues", label: "مشکلات حوزه‌های مشاوره", permission: "content.read" },
-  { href: "/audit-logs", label: "گزارش فعالیت", permission: "audit.read" },
+  { href: "/admin/individual-consultation", label: "مشاوره فردی", permission: "products.read" },
+  { href: "/admin/sessions", label: "جلسات", permission: "sessions.read" },
+  { href: "/admin/specialists", label: "متخصص ها", permission: "instructors.read" },
+  { href: "/admin/reviews", label: "نظرات", permission: "reviews.read" },
+  { href: "/admin/content/faq", label: "سوالات متداول", permission: "content.read" },
+  { href: "/admin/consultation-benefits", label: "مزایای مشاوره", permission: "content.read" },
+  { href: "/admin/consultation-issues", label: "مشکلات حوزه‌های مشاوره", permission: "content.read" },
+  { href: "/admin/audit-logs", label: "گزارش فعالیت", permission: "audit.read" },
 ] as const;
 
 function isActive(pathname: string, href: string) {

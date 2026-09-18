@@ -60,9 +60,7 @@ export async function createAdminInvite(session: AdminSessionView, input: { emai
     await recordAdminAuditWithClient(tx, { actorId: session.userId, action: "ADMIN_INVITE_CREATED", targetType: "ADMIN_INVITE", targetId: created.id, afterState: { email: created.email, role: created.role, expiresAt: created.expiresAt.toISOString() }, reason: input.reason?.trim() || undefined });
     return created;
   });
-  // This is the browser path on the admin host. proxy.ts maps it to the
-  // internal /admin/invite route.
-  return { ...invite, invitePath: `/invite/${rawToken}` };
+  return { ...invite, invitePath: `/admin/invite/${rawToken}` };
 }
 
 export async function acceptAdminInvite(token: string, password: string, firstName: string, lastName: string) {

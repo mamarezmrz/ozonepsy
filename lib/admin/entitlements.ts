@@ -1,7 +1,8 @@
-import { AppointmentStatus, EntitlementStatus, ProductKind, ProductStatus, RoleName, SessionUsageStatus } from "@/lib/generated/prisma/enums";
+import { AppointmentStatus, EntitlementStatus, ProductKind, ProductStatus, RoleName, SessionUsageStatus, SpecialistStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { AdminServiceError } from "@/lib/admin/errors";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
+import { sendAppointmentConfirmationEmail } from "@/lib/auth/email";
 
 const sessionProductKinds = [ProductKind.CONSULTATION, ProductKind.PACKAGE];
 const reservableAppointmentStatuses = [AppointmentStatus.SCHEDULED, AppointmentStatus.RESCHEDULED];
@@ -122,6 +123,7 @@ export async function scheduleAdminAppointment(
   startsAt: Date,
   endsAt: Date | null,
   meetingUrl: string | null,
+  specialistId: string | null,
   reason?: string,
 ) {
   assertFutureDate(startsAt, "زمان شروع جلسه");
@@ -129,7 +131,7 @@ export async function scheduleAdminAppointment(
     throw new AdminServiceError("VALIDATION_ERROR", "زمان پایان باید بعد از زمان شروع باشد.");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const appointment = await prisma.$transaction(async (tx) => {
     const entitlement = await tx.entitlement.findFirst({
       where: {
         id: entitlementId,
@@ -150,6 +152,11 @@ export async function scheduleAdminAppointment(
     });
     if (!entitlement) throw new AdminServiceError("NOT_FOUND", "اعتبار فعال جلسات پیدا نشد.");
 
+    if (specialistId) {
+      const specialist = await tx.specialist.findFirst({ where: { id: specialistId, status: SpecialistStatus.ACTIVE }, select: { id: true } });
+      if (!specialist) throw new AdminServiceError("VALIDATION_ERROR", "متخصص انتخاب‌شده فعال نیست.");
+    }
+
     const completedCount = entitlement.usages.length;
     const reservedCount = entitlement.appointments.length;
     if (entitlement.totalSessions === null || completedCount + reservedCount >= entitlement.totalSessions) {
@@ -165,8 +172,8 @@ export async function scheduleAdminAppointment(
     if (claimed.count !== 1) throw new AdminServiceError("CONFLICT", "اعتبار جلسات هم‌زمان تغییر کرده است. دوباره تلاش کنید.");
 
     const appointment = await tx.appointment.create({
-      data: { userId: entitlement.userId, productId: entitlement.productId, entitlementId, status: AppointmentStatus.SCHEDULED, startsAt, endsAt, meetingUrl },
-      select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true },
+      data: { userId: entitlement.userId, productId: entitlement.productId, entitlementId, specialistId, status: AppointmentStatus.SCHEDULED, startsAt, endsAt, meetingUrl, notes: reason?.trim() || null },
+      select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, user: { select: { email: true, profile: { select: { displayName: true } } } }, product: { select: { title: true } } },
     });
     await recordAdminAuditWithClient(tx, {
       actorId,
@@ -178,6 +185,8 @@ export async function scheduleAdminAppointment(
     });
     return appointment;
   });
+  await sendAppointmentConfirmationEmail({ email: appointment.user.email, userName: appointment.user.profile?.displayName, title: appointment.product.title, startsAt: appointment.startsAt, endsAt: appointment.endsAt, meetingUrl: appointment.meetingUrl });
+  return appointment;
 }
 
 export async function scheduleAdminUserAppointment(
@@ -187,6 +196,7 @@ export async function scheduleAdminUserAppointment(
   startsAt: Date,
   endsAt: Date | null,
   meetingUrl: string | null,
+  specialistId: string | null,
   reason?: string,
 ) {
   assertFutureDate(startsAt, "زمان شروع جلسه");
@@ -194,7 +204,7 @@ export async function scheduleAdminUserAppointment(
     throw new AdminServiceError("VALIDATION_ERROR", "زمان پایان باید بعد از زمان شروع باشد.");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const appointment = await prisma.$transaction(async (tx) => {
     const [user, product] = await Promise.all([
       tx.user.findFirst({ where: { id: userId, roles: { some: { role: { name: RoleName.USER } } } }, select: { id: true } }),
       tx.product.findFirst({ where: { id: productId, kind: { in: sessionProductKinds }, status: ProductStatus.PUBLISHED }, select: { id: true, title: true } }),
@@ -202,9 +212,14 @@ export async function scheduleAdminUserAppointment(
     if (!user) throw new AdminServiceError("NOT_FOUND", "کاربر پیدا نشد.");
     if (!product) throw new AdminServiceError("NOT_FOUND", "نوع جلسهٔ منتشرشده پیدا نشد.");
 
+    if (specialistId) {
+      const specialist = await tx.specialist.findFirst({ where: { id: specialistId, status: SpecialistStatus.ACTIVE }, select: { id: true } });
+      if (!specialist) throw new AdminServiceError("VALIDATION_ERROR", "متخصص انتخاب‌شده فعال نیست.");
+    }
+
     const appointment = await tx.appointment.create({
-      data: { userId: user.id, productId: product.id, entitlementId: null, status: AppointmentStatus.SCHEDULED, startsAt, endsAt, meetingUrl },
-      select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true },
+      data: { userId: user.id, productId: product.id, entitlementId: null, specialistId, status: AppointmentStatus.SCHEDULED, startsAt, endsAt, meetingUrl, notes: reason?.trim() || null },
+      select: { id: true, status: true, startsAt: true, endsAt: true, meetingUrl: true, user: { select: { email: true, profile: { select: { displayName: true } } } }, product: { select: { title: true } } },
     });
     await recordAdminAuditWithClient(tx, {
       actorId,
@@ -216,4 +231,6 @@ export async function scheduleAdminUserAppointment(
     });
     return appointment;
   });
+  await sendAppointmentConfirmationEmail({ email: appointment.user.email, userName: appointment.user.profile?.displayName, title: appointment.product.title, startsAt: appointment.startsAt, endsAt: appointment.endsAt, meetingUrl: appointment.meetingUrl });
+  return appointment;
 }

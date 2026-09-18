@@ -2,6 +2,7 @@ export type EmailMessage = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
 };
 
 export interface EmailDeliveryAdapter {
@@ -50,6 +51,7 @@ class ResendEmailDelivery implements EmailDeliveryAdapter {
         to: [message.to],
         subject: message.subject,
         text: message.text,
+        ...(message.html ? { html: message.html } : {}),
       }),
     });
 
@@ -82,4 +84,73 @@ export async function sendEmailVerificationEmail(email: string, token: string, b
     subject: "تأیید ایمیل اُزون",
     text: `برای تأیید ایمیل از این لینک استفاده کنید: ${verifyUrl}`,
   });
+}
+
+export async function sendTherapistCredentialsEmail(input: { email: string; displayName?: string; temporaryPassword: string; reset?: boolean }) {
+  const loginUrl = `${(process.env.PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "")}/therapist-panel/login`;
+  const greeting = input.displayName?.trim() ? `سلام ${input.displayName.trim()}،` : "سلام،";
+  const subject = input.reset ? "رمز ورود متخصص اُزون تنظیم شد" : "دسترسی پنل متخصص اُزون";
+  const text = `${greeting}\n\n${input.reset ? "رمز ورود موقت شما دوباره تنظیم شده است." : "حساب متخصص شما در اُزون ایجاد شده است."}\nایمیل ورود: ${input.email}\nرمز موقت: ${input.temporaryPassword}\n\nورود به پنل متخصص: ${loginUrl}\n\nپس از ورود، رمز موقت را با رمز شخصی خود عوض کنید.\nاُزون`;
+  await sendConfiguredEmail({ to: input.email, subject, text });
+}
+
+type AppointmentConfirmationInput = {
+  email: string;
+  userName?: string | null;
+  title: string;
+  startsAt: Date;
+  endsAt?: Date | null;
+  meetingUrl?: string | null;
+};
+
+function calendarDate(value: Date) {
+  return value.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function calendarUrl(input: AppointmentConfirmationInput) {
+  const end = input.endsAt && input.endsAt > input.startsAt ? input.endsAt : new Date(input.startsAt.getTime() + 50 * 60 * 1000);
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: input.title,
+    dates: `${calendarDate(input.startsAt)}/${calendarDate(end)}`,
+    details: input.meetingUrl ? `لینک جلسه: ${input.meetingUrl}` : "جلسه‌ی شما با اُزون تأیید شده است.",
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function escapeHtml(value: string) {
+  const replacements: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;", "'": "&#39;" };
+  return value.replace(/[&<>\"']/g, (character) => replacements[character] ?? character);
+}
+
+export async function sendAppointmentConfirmationEmail(input: AppointmentConfirmationInput) {
+  const addToCalendarUrl = calendarUrl(input);
+  const greeting = input.userName?.trim() ? `سلام ${input.userName.trim()}،` : "سلام،";
+  const meetingLine = input.meetingUrl ? `\nلینک جلسه: ${input.meetingUrl}` : "";
+  const dateText = input.startsAt.toLocaleString("fa-IR-u-ca-gregory", { dateStyle: "full", timeStyle: "short" });
+  const text = `${greeting}\n\nجلسه‌ی «${input.title}» برای شما تأیید شد.\nزمان جلسه: ${dateText}${meetingLine}\n\nافزودن به تقویم: ${addToCalendarUrl}\n\nاُزون`;
+  const html = `<div dir="rtl"><p>${escapeHtml(greeting)}</p><p>جلسه‌ی «${escapeHtml(input.title)}» برای شما تأیید شد.</p><p>زمان جلسه: ${escapeHtml(dateText)}</p>${input.meetingUrl ? `<p>لینک جلسه: <a href="${escapeHtml(input.meetingUrl)}">ورود به جلسه</a></p>` : ""}<p><a href="${escapeHtml(addToCalendarUrl)}">افزودن به تقویم</a></p></div>`;
+  await sendConfiguredEmail({ to: input.email, subject: `تأیید جلسه‌ی ${input.title} | اُزون`, text, html });
+}
+
+export type AdminNotificationEmailInput = {
+  subject: string;
+  text: string;
+};
+
+export async function sendAdminNotificationEmail(input: AdminNotificationEmailInput) {
+  const recipient = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
+  if (!recipient || !process.env.EMAIL_PROVIDER?.trim()) return { sent: false, configured: false };
+  return { sent: await sendConfiguredEmail({ to: recipient, subject: input.subject, text: input.text }), configured: true };
+}
+
+async function sendConfiguredEmail(message: EmailMessage): Promise<boolean> {
+  if (!message.to.trim() || !process.env.EMAIL_PROVIDER?.trim()) return false;
+  try {
+    await getEmailDeliveryAdapter().send(message);
+    return true;
+  } catch (error) {
+    console.error("[email] delivery failed", error);
+    return false;
+  }
 }

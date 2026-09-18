@@ -27,7 +27,7 @@ function isUniqueConstraintError(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
-function sessionData(userId: string, token: string, metadata: AuthMetadata) {
+export function sessionData(userId: string, token: string, metadata: AuthMetadata) {
   return {
     userId,
     tokenHash: hashSessionToken(token),
@@ -185,7 +185,10 @@ export async function getCurrentUser() {
       tokenHash: hashSessionToken(token),
       revokedAt: null,
       expiresAt: { gt: new Date() },
-      user: { status: UserStatus.ACTIVE },
+      user: {
+        status: UserStatus.ACTIVE,
+        roles: { none: { role: { name: RoleName.THERAPIST } } },
+      },
     },
     select: {
       user: {

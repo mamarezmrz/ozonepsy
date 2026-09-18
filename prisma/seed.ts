@@ -68,6 +68,7 @@ const rolePermissions: Record<string, string[]> = {
   ],
   SUPPORT: ["dashboard.view", "users.read", "users.update", "reviews.read", "sessions.read"],
   INSTRUCTOR: ["courses.read", "lessons.read", "sessions.read", "instructors.read"],
+  THERAPIST: [],
   USER: [],
 };
 

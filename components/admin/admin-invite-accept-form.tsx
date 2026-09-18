@@ -17,7 +17,7 @@ export function AdminInviteAcceptForm({ token }: { token: string }) {
       const response = await fetch(`/api/admin/invites/${encodeURIComponent(token)}`, { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(form.entries())) });
       const body = await response.json() as { ok?: boolean; message?: string; error?: string; fieldErrors?: Record<string, string> };
       if (!response.ok || !body.ok) { setError(body.message ?? body.error ?? Object.values(body.fieldErrors ?? {})[0] ?? "پذیرش دعوت‌نامه انجام نشد."); return; }
-      router.replace("/");
+      router.replace("/admin");
     } catch { setError("ارتباط با سرور برقرار نشد."); } finally { setPending(false); }
   }
 

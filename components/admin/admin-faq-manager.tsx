@@ -400,7 +400,7 @@ export function AdminFaqManager({ pageKey, rows, defaults, canWrite }: { pageKey
     if (pointerId !== null && event.pointerId === pointerId && draggedKey) movePointerDrag(event, draggedKey);
   }} onPointerUp={(event) => finishPointerDrag(event.pointerId)} onPointerCancel={(event) => finishPointerDrag(event.pointerId)}>
     <nav className="admin-faq-tabs" aria-label="صفحات دارای سوالات متداول">
-      {faqPageDefinitions.map((page) => <Link key={page.key} href={`/content/faq?pageKey=${page.key}`} className={`admin-faq-tab${page.key === pageKey ? " is-active" : ""}`} aria-current={page.key === pageKey ? "page" : undefined}>{page.label}</Link>)}
+      {faqPageDefinitions.map((page) => <Link key={page.key} href={`/admin/content/faq?pageKey=${page.key}`} className={`admin-faq-tab${page.key === pageKey ? " is-active" : ""}`} aria-current={page.key === pageKey ? "page" : undefined}>{page.label}</Link>)}
     </nav>
 
     <div className="admin-faq-list" aria-live="polite">

@@ -21,6 +21,7 @@ enum RoleName {
   CONTENT_MANAGER
   SUPPORT
   INSTRUCTOR
+  THERAPIST
 }
 
 enum AuthTokenType {
@@ -107,6 +108,11 @@ enum ContentStatus {
   ARCHIVED
 }
 
+enum AdminNotificationType {
+  PRECONSULTATION_REQUEST
+  REVIEW_SUBMITTED
+}
+
 enum MediaStatus {
   ACTIVE
   ARCHIVED
@@ -140,6 +146,7 @@ model User {
   id                      String                   @id @default(uuid()) @db.Uuid
   email                   String                   @unique @db.VarChar(320)
   passwordHash            String?                  @db.VarChar(255)
+  mustChangePassword      Boolean                  @default(false)
   status                  UserStatus               @default(ACTIVE)
   emailVerifiedAt         DateTime?
   createdAt               DateTime                 @default(now())
@@ -148,6 +155,7 @@ model User {
   roles                   UserRole[]
   sessions                AuthSession[]
   adminSessions           AdminSession[]
+  authIdentities          AuthIdentity[]
   authTokens              AuthToken[]
   orders                  Order[]
   purchases               Purchase[]
@@ -249,6 +257,32 @@ model AdminSession {
   @@index([expiresAt, revokedAt])
 }
 
+model AuthIdentity {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @db.Uuid
+  provider          String   @db.VarChar(40)
+  providerAccountId String   @db.VarChar(255)
+  email             String?  @db.VarChar(320)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model AdminNotification {
+  id          String                @id @default(uuid()) @db.Uuid
+  type        AdminNotificationType
+  title       String                @db.VarChar(240)
+  description String                @db.Text
+  href        String?               @db.VarChar(500)
+  createdAt   DateTime              @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+}
+
 model AdminLoginRateLimit {
   id              String    @id @default(uuid()) @db.Uuid
   keyHash         String    @unique @db.VarChar(64)
@@ -318,7 +352,23 @@ model Specialist {
   slug                 String                @unique @db.VarChar(120)
   displayName          String                @db.VarChar(200)
   bio                  String?
+  aboutTitle           String?               @db.VarChar(240)
+  aboutDescription     String?
   specialty            String?               @db.VarChar(200)
+  specialtiesTitle     String?               @db.VarChar(240)
+  specialtiesItems     String[]              @default([])
+  educationTitle       String?               @db.VarChar(240)
+  educationItems       String[]              @default([])
+  responsibilitiesTitle String?              @db.VarChar(240)
+  responsibilitiesItems String[]             @default([])
+  booksTitle            String?               @db.VarChar(240)
+  booksItems            String[]              @default([])
+  quoteTitle            String?               @db.VarChar(240)
+  quote                 String?
+  profileSections       Json?
+  phone                String?               @db.VarChar(40)
+  country              String?               @db.VarChar(120)
+  email                String?               @db.VarChar(320)
   imageUrl             String?
   profileMediaId       String?               @db.Uuid
   profileMedia         MediaAsset?           @relation("SpecialistProfileMedia", fields: [profileMediaId], references: [id], onDelete: SetNull)
@@ -579,6 +629,7 @@ model Appointment {
   startsAt      DateTime
   endsAt        DateTime?
   meetingUrl    String?           @db.VarChar(2000)
+  notes         String?           @db.Text
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   user          User              @relation("UserAppointments", fields: [userId], references: [id], onDelete: Restrict)
@@ -719,12 +770,15 @@ model IndividualConsultationTopic {
   signs              Json
   signsNote          String?
   why                String
+  whyTitle           String        @default("چرا پیش می‌آید؟") @db.VarChar(240)
   whenToGetHelpTitle String?       @db.VarChar(240)
   whenToGetHelp      Json
+  whatHelpsTitle     String        @default("چه کارهایی معمولاً کمک می‌کند؟") @db.VarChar(240)
   whatHelps          Json
   approachTitle      String?       @db.VarChar(240)
   approachParagraphs Json?
   approach           Json
+  customSections     Json?
   hideShortQuestions Boolean       @default(true)
   shortQuestions     Json
   imageMode          String        @default("multiply") @db.VarChar(20)
@@ -804,6 +858,8 @@ model SupportContribution {
 model PreconsultationRequest {
   id        String                       @id @default(uuid()) @db.Uuid
   userId    String?                      @db.Uuid
+  fullName  String                       @default("") @db.VarChar(200)
+  email     String                       @default("") @db.VarChar(320)
   country   String                       @db.VarChar(120)
   phone     String                       @db.VarChar(40)
   message   String?                      @db.Text

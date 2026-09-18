@@ -44,6 +44,23 @@ export function parseLoginInput(payload: unknown) {
   };
 }
 
+export function parseTherapistPasswordChangeInput(payload: unknown) {
+  if (!isRecord(payload)) throw new AuthInputError("اطلاعات تغییر رمز معتبر نیست.");
+
+  const currentPassword = readPassword(payload.currentPassword);
+  const newPassword = readPassword(payload.newPassword);
+  const passwordConfirmation = readPassword(payload.passwordConfirmation);
+
+  if (newPassword !== passwordConfirmation) {
+    throw new AuthInputError("رمز جدید و تکرار آن یکسان نیستند.");
+  }
+  if (currentPassword === newPassword) {
+    throw new AuthInputError("رمز جدید باید با رمز فعلی متفاوت باشد.");
+  }
+
+  return { currentPassword, newPassword };
+}
+
 export function parseRegisterInput(payload: unknown) {
   if (!isRecord(payload)) throw new AuthInputError("اطلاعات ثبت‌نام معتبر نیست.");
 

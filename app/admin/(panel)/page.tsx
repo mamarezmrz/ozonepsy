@@ -24,7 +24,7 @@ export default async function AdminOverviewPage() {
 
       <section className="admin-dashboard-grid">
         <article className="admin-panel-card">
-          <div className="admin-section-heading"><h3>ثبت‌نام‌های اخیر</h3>{session.permissions.includes("users.read") ? <AdminButton href="/users" variant="secondary">همه کاربران</AdminButton> : null}</div>
+          <div className="admin-section-heading"><h3>ثبت‌نام‌های اخیر</h3>{session.permissions.includes("users.read") ? <AdminButton href="/admin/users" variant="secondary">همه کاربران</AdminButton> : null}</div>
           <AdminDataTable
             rows={data.recentUsers}
             getRowKey={(row) => row.id}
@@ -39,7 +39,7 @@ export default async function AdminOverviewPage() {
         </article>
 
         <article className="admin-panel-card">
-          <div className="admin-section-heading"><h3>جلسات آینده</h3>{session.permissions.includes("sessions.read") ? <AdminButton href="/sessions" variant="secondary">همه جلسات</AdminButton> : null}</div>
+          <div className="admin-section-heading"><h3>جلسات آینده</h3>{session.permissions.includes("sessions.read") ? <AdminButton href="/admin/sessions" variant="secondary">همه جلسات</AdminButton> : null}</div>
           <AdminDataTable
             rows={data.upcomingSessions}
             getRowKey={(row) => row.id}

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { hasSameOrigin } from "@/lib/admin/security";
 import { requireAdminPermissionFromSession } from "@/lib/admin/authorization";
 import { requireAdminSession } from "@/lib/admin/session";
@@ -14,7 +13,6 @@ const userStatusSchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!isAdminHost(request.headers.get("host"))) return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
   if (!hasSameOrigin(request)) return NextResponse.json({ code: "FORBIDDEN", message: "درخواست نامعتبر است." }, { status: 403 });
   try {
     const session = await requireAdminSession();

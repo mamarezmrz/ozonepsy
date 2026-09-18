@@ -122,6 +122,11 @@ export function AuthModal({ open, mode, onClose, onModeChange, onNotification }:
         </div>
 
         <form className="auth-modal-form" noValidate onSubmit={handleSubmit}>
+            {!isForgot ? <a className="auth-modal-google-button" href={`/api/auth/google?intent=${isLogin ? "login" : "signup"}`}>
+              <Image src="/google-icon-logo-svgrepo-com.svg" alt="" width={20} height={20} />
+              <span>{isLogin ? "ورود با گوگل" : "ثبت‌نام با گوگل"}</span>
+            </a> : null}
+
             <label className="auth-modal-field">
               <span>ایمیل</span>
               <input required type="email" name="email" autoComplete="email" dir="ltr" />

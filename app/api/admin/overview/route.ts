@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { requireAdminPermissionFromSession } from "@/lib/admin/authorization";
 import { requireAdminSession } from "@/lib/admin/session";
 
-export async function GET(request: Request) {
-  if (!isAdminHost(request.headers.get("host"))) {
-    return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
-  }
-
+export async function GET() {
   try {
     const session = await requireAdminSession();
     requireAdminPermissionFromSession(session, "dashboard.view");

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { dispatchAdminNotification } from "@/components/admin/admin-notification-host";
 import type { AdminIndividualConsultationTopic } from "@/lib/admin/individual-consultation-content";
 
@@ -24,6 +24,37 @@ function parseLines(value: string) {
 }
 
 type TopicImageMode = TopicState["imageMode"];
+
+type CoreSectionKey = "signs" | "why" | "whenToGetHelp" | "whatHelps" | "approach";
+
+const coreSectionKeys: CoreSectionKey[] = ["signs", "why", "whenToGetHelp", "whatHelps", "approach"];
+const coreSectionLabels: Record<CoreSectionKey, string> = {
+  signs: "نشانه‌های رایج",
+  why: "چرا پیش می‌آید؟",
+  whenToGetHelp: "چه زمانی لازم است کمک بگیرم؟",
+  whatHelps: "چه کارهایی معمولاً کمک می‌کند؟",
+  approach: "اُزون چگونه به تو کمک می‌کند؟",
+};
+
+function hasText(value: string | string[]) {
+  return Array.isArray(value) ? value.some((item) => item.trim()) : Boolean(value.trim());
+}
+
+function hasCoreSectionContent(topic: TopicState, key: CoreSectionKey) {
+  switch (key) {
+    case "signs": return hasText(topic.signsTitle) || hasText(topic.signs) || hasText(topic.signsNote);
+    case "why": return hasText(topic.whyTitle) || hasText(topic.why);
+    case "whenToGetHelp": return hasText(topic.whenToGetHelpTitle) || hasText(topic.whenToGetHelp);
+    case "whatHelps": return hasText(topic.whatHelpsTitle) || hasText(topic.whatHelps);
+    case "approach": return hasText(topic.approachTitle) || hasText(topic.approachParagraphs) || hasText(topic.approach);
+  }
+}
+
+function editableSectionCount(topic: TopicState) {
+  const coreCount = coreSectionKeys.filter((key) => hasCoreSectionContent(topic, key)).length;
+  const customCount = topic.customSections.filter((section) => section.title.trim() || section.description.trim()).length;
+  return coreCount + customCount;
+}
 
 function hasHeroBranding(mode: TopicImageMode) {
   return !mode.endsWith("-no-branding");
@@ -68,14 +99,14 @@ export function AdminIndividualConsultationTopicForm({ initial, returnCardTitle,
   async function save() {
     setPending(true);
     try {
-      const response = await fetch(`/api/admin/consultation-issues/${encodeURIComponent(topic.slug)}?pageKey=${encodeURIComponent(topic.pageKey)}`, { method: "PATCH", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: topic.title, description: topic.description, introList: topic.introList, signsTitle: topic.signsTitle, signs: topic.signs, signsNote: topic.signsNote, why: topic.why, whenToGetHelpTitle: topic.whenToGetHelpTitle, whenToGetHelp: topic.whenToGetHelp, whatHelps: topic.whatHelps, approachTitle: topic.approachTitle, approachParagraphs: topic.approachParagraphs, approach: topic.approach, hideShortQuestions: topic.hideShortQuestions, shortQuestions: topic.shortQuestions, imageMode: topic.imageMode, heroMediaId: topic.heroMediaId, heroImageRemoved: topic.heroImageRemoved }) });
+      const response = await fetch(`/api/admin/consultation-issues/${encodeURIComponent(topic.slug)}?pageKey=${encodeURIComponent(topic.pageKey)}`, { method: "PATCH", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: topic.title, description: topic.description, introList: topic.introList, signsTitle: topic.signsTitle, signs: topic.signs, signsNote: topic.signsNote, why: topic.why, whyTitle: topic.whyTitle, whenToGetHelpTitle: topic.whenToGetHelpTitle, whenToGetHelp: topic.whenToGetHelp, whatHelpsTitle: topic.whatHelpsTitle, whatHelps: topic.whatHelps, approachTitle: topic.approachTitle, approachParagraphs: topic.approachParagraphs, approach: topic.approach, customSections: topic.customSections, hideShortQuestions: topic.hideShortQuestions, shortQuestions: topic.shortQuestions, imageMode: topic.imageMode, heroMediaId: topic.heroMediaId, heroImageRemoved: topic.heroImageRemoved }) });
       const body = await response.json() as { ok?: boolean; message?: string };
       if (!response.ok || !body.ok) {
         dispatchAdminNotification(body.message ?? "ذخیره محتوای صفحه انجام نشد.", "error");
         return;
       }
       dispatchAdminNotification("محتوای صفحه به‌صورت پیش‌نویس ذخیره شد؛ برای انتشار، در صفحه کارت‌ها ذخیره تغییرات را بزنید.");
-      const returnUrl = `/consultation-issues?tab=${encodeURIComponent(topic.pageKey)}${returnCardTitle?.trim() ? `&draftSlug=${encodeURIComponent(topic.slug)}&draftTitle=${encodeURIComponent(returnCardTitle.trim())}` : ""}`;
+      const returnUrl = `/admin/consultation-issues?tab=${encodeURIComponent(topic.pageKey)}${returnCardTitle?.trim() ? `&draftSlug=${encodeURIComponent(topic.slug)}&draftTitle=${encodeURIComponent(returnCardTitle.trim())}` : ""}`;
       router.push(returnUrl);
       router.refresh();
     } catch {
@@ -96,7 +127,7 @@ export function AdminIndividualConsultationTopicForm({ initial, returnCardTitle,
         return;
       }
       dispatchAdminNotification("محتوای صفحه حذف شد.");
-      router.push("/consultation-issues");
+      router.push("/admin/consultation-issues");
       router.refresh();
     } catch {
       dispatchAdminNotification("ارتباط با سرور برقرار نشد.", "error");
@@ -110,6 +141,56 @@ export function AdminIndividualConsultationTopicForm({ initial, returnCardTitle,
     : <label className={`admin-form-field${className ? ` ${className}` : ""}`}><span>{label}</span><input value={value} disabled={readOnly || pending} onChange={(event) => setValue(event.target.value)} /></label>;
 
   const showBranding = hasHeroBranding(topic.imageMode);
+
+  function addCustomSection() {
+    update({ customSections: [...topic.customSections, { id: crypto.randomUUID(), title: "", description: "" }] });
+  }
+
+  function updateCustomSection(id: string, values: Partial<{ title: string; description: string }>) {
+    update({ customSections: topic.customSections.map((section) => section.id === id ? { ...section, ...values } : section) });
+  }
+
+  function removeCustomSection(id: string) {
+    const section = topic.customSections.find((item) => item.id === id);
+    if (section && (section.title.trim() || section.description.trim()) && editableSectionCount(topic) <= 1) {
+      dispatchAdminNotification("حداقل یک بخش از محتوای اصلی صفحه باید باقی بماند.", "error");
+      return;
+    }
+    update({ customSections: topic.customSections.filter((section) => section.id !== id) });
+  }
+
+  function removeCoreSection(key: CoreSectionKey) {
+    if (editableSectionCount(topic) <= 1) {
+      dispatchAdminNotification("حداقل یک بخش از محتوای اصلی صفحه باید باقی بماند.", "error");
+      return;
+    }
+    switch (key) {
+      case "signs": update({ signsTitle: "", signs: [], signsNote: "" }); break;
+      case "why": update({ whyTitle: "", why: "" }); break;
+      case "whenToGetHelp": update({ whenToGetHelpTitle: "", whenToGetHelp: [] }); break;
+      case "whatHelps": update({ whatHelpsTitle: "", whatHelps: [] }); break;
+      case "approach": update({ approachTitle: "", approachParagraphs: [], approach: [] }); break;
+    }
+  }
+
+  function restoreCoreSection(key: CoreSectionKey) {
+    switch (key) {
+      case "signs": update({ signsTitle: coreSectionLabels.signs }); break;
+      case "why": update({ whyTitle: coreSectionLabels.why }); break;
+      case "whenToGetHelp": update({ whenToGetHelpTitle: coreSectionLabels.whenToGetHelp }); break;
+      case "whatHelps": update({ whatHelpsTitle: coreSectionLabels.whatHelps }); break;
+      case "approach": update({ approachTitle: coreSectionLabels.approach }); break;
+    }
+  }
+
+  const renderCoreSection = (key: CoreSectionKey, content: ReactNode) => hasCoreSectionContent(topic, key) ? (
+    <div className="admin-topic-editable-section admin-form-field-full">
+      <div className="admin-topic-editable-section-heading"><strong>{coreSectionLabels[key]}</strong>{!readOnly ? <button type="button" className="admin-topic-section-remove" disabled={pending || editableSectionCount(topic) <= 1} title={editableSectionCount(topic) <= 1 ? "حداقل یک بخش باید باقی بماند" : "حذف بخش"} onClick={() => removeCoreSection(key)}>× حذف بخش</button> : null}</div>
+      <div className="admin-topic-editable-section-grid">{content}</div>
+    </div>
+  ) : null;
+
+  const removedCoreSections = coreSectionKeys.filter((key) => !hasCoreSectionContent(topic, key));
 
   return (
     <div className="admin-individual-consultation-topic-form">
@@ -128,11 +209,16 @@ export function AdminIndividualConsultationTopicForm({ initial, returnCardTitle,
           <section className="admin-topic-editor-block" aria-labelledby="admin-topic-content-title">
             <div className="admin-topic-editor-block-heading"><h2 id="admin-topic-content-title">محتوای اصلی صفحه</h2><p>هر بخش در جای خودش نمایش داده می‌شود و ترتیب خطوط حفظ خواهد شد.</p></div>
             <div className="admin-topic-editor-grid">
-              {field(topic.signsTitle || "نشانه‌های رایج", lines(topic.signs), (value) => update({ signs: parseLines(value) }), true, "admin-form-field-full")}
-              {field("چرا پیش می‌آید؟", topic.why, (value) => update({ why: value }), true, "admin-form-field-full")}
-              {field(topic.whenToGetHelpTitle || "چه زمانی لازم است کمک بگیرم؟", lines(topic.whenToGetHelp), (value) => update({ whenToGetHelp: parseLines(value) }), true, "admin-form-field-full")}
-              {field("چه کارهایی معمولاً کمک می‌کند؟", lines(topic.whatHelps), (value) => update({ whatHelps: parseLines(value) }), true, "admin-form-field-full")}
-              {field(topic.approachTitle || "اُزون چگونه به تو کمک می‌کند؟", lines(topic.approachParagraphs), (value) => update({ approachParagraphs: parseLines(value) }), true, "admin-form-field-full")}
+              {renderCoreSection("signs", <>{field("عنوان بخش", topic.signsTitle, (value) => update({ signsTitle: value }))}{field("موارد این بخش", lines(topic.signs), (value) => update({ signs: parseLines(value) }), true)}</>)}
+              {renderCoreSection("why", <>{field("عنوان بخش", topic.whyTitle, (value) => update({ whyTitle: value }))}{field("توضیحات این بخش", topic.why, (value) => update({ why: value }), true)}</>)}
+              {renderCoreSection("whenToGetHelp", <>{field("عنوان بخش", topic.whenToGetHelpTitle, (value) => update({ whenToGetHelpTitle: value }))}{field("موارد این بخش", lines(topic.whenToGetHelp), (value) => update({ whenToGetHelp: parseLines(value) }), true)}</>)}
+              {renderCoreSection("whatHelps", <>{field("عنوان بخش", topic.whatHelpsTitle, (value) => update({ whatHelpsTitle: value }))}{field("موارد این بخش", lines(topic.whatHelps), (value) => update({ whatHelps: parseLines(value) }), true)}</>)}
+              {renderCoreSection("approach", <>{field("عنوان بخش", topic.approachTitle, (value) => update({ approachTitle: value }))}{field("توضیحات این بخش", lines(topic.approachParagraphs), (value) => update({ approachParagraphs: parseLines(value) }), true)}</>)}
+              {removedCoreSections.length > 0 ? <div className="admin-topic-removed-sections admin-form-field-full"><div className="admin-topic-removed-sections-heading"><strong>بخش‌های حذف‌شده</strong><span>در صورت نیاز می‌توانید هر بخش را دوباره به ویرایشگر برگردانید.</span></div><div className="admin-topic-removed-sections-list">{removedCoreSections.map((key) => <button key={key} type="button" className="admin-topic-section-restore" disabled={readOnly || pending} onClick={() => restoreCoreSection(key)}>+ بازگردانی {coreSectionLabels[key]}</button>)}</div></div> : null}
+              <div className="admin-topic-custom-sections admin-form-field-full">
+                <div className="admin-topic-custom-sections-heading"><div><strong>بخش‌های جدید</strong><span>برای ساخت بخش اختصاصی، عنوان و توضیحات آن را وارد کنید.</span></div>{!readOnly ? <button type="button" className="admin-button admin-button-secondary" disabled={pending} onClick={addCustomSection}>+ افزودن بخش</button> : null}</div>
+                {topic.customSections.map((section, index) => <div className="admin-topic-custom-section" key={section.id}><div className="admin-topic-custom-section-heading"><strong>بخش جدید {index + 1}</strong>{!readOnly ? <button type="button" className="admin-topic-custom-section-remove" aria-label={`حذف بخش جدید ${index + 1}`} disabled={pending} onClick={() => removeCustomSection(section.id)}>×</button> : null}</div><div className="admin-topic-editable-section-grid">{field("عنوان بخش", section.title, (value) => updateCustomSection(section.id, { title: value }))}{field("توضیحات بخش", section.description, (value) => updateCustomSection(section.id, { description: value }), true)}</div></div>)}
+              </div>
             </div>
           </section>
 
@@ -151,7 +237,7 @@ export function AdminIndividualConsultationTopicForm({ initial, returnCardTitle,
             </div>
           </section>
 
-          {!readOnly ? <div className="admin-form-actions"><Link href={`/consultation-issues?tab=${encodeURIComponent(topic.pageKey)}`} className="admin-button admin-button-secondary">بازگشت</Link><button type="button" className="admin-button admin-button-primary" disabled={pending || uploading} onClick={() => void save()}>{pending ? "در حال ذخیره…" : "ذخیره پیش‌نویس و بازگشت"}</button>{topic.exists ? <button type="button" className="admin-button admin-button-danger" disabled={pending || uploading} onClick={() => void removeContent()}>حذف محتوای صفحه</button> : null}</div> : <div className="admin-form-actions"><Link href={`/consultation-issues?tab=${encodeURIComponent(topic.pageKey)}`} className="admin-button admin-button-secondary">بازگشت</Link></div>}
+          {!readOnly ? <div className="admin-form-actions"><Link href={`/admin/consultation-issues?tab=${encodeURIComponent(topic.pageKey)}`} className="admin-button admin-button-secondary">بازگشت</Link><button type="button" className="admin-button admin-button-primary" disabled={pending || uploading} onClick={() => void save()}>{pending ? "در حال ذخیره…" : "ذخیره پیش‌نویس و بازگشت"}</button>{topic.exists ? <button type="button" className="admin-button admin-button-danger" disabled={pending || uploading} onClick={() => void removeContent()}>حذف محتوای صفحه</button> : null}</div> : <div className="admin-form-actions"><Link href={`/admin/consultation-issues?tab=${encodeURIComponent(topic.pageKey)}`} className="admin-button admin-button-secondary">بازگشت</Link></div>}
         </div>
         <aside className="admin-topic-live-preview" aria-label="پیش‌نمایش زنده صفحه"><div className="admin-topic-live-preview-heading"><h2>پیش‌نمایش زنده</h2><span>همان ترتیب صفحه عمومی</span></div><AdminTopicPreview topic={topic} /></aside>
       </div>
@@ -166,11 +252,12 @@ function AdminTopicPreview({ topic }: { topic: TopicState }) {
   return <article className="admin-topic-preview">
     <header className="admin-topic-preview-heading"><h3>{text(topic.title, "عنوان صفحه")}</h3><p>{text(topic.description, "توضیحات معرفی صفحه در اینجا نمایش داده می‌شود.")}</p>{topic.introList.length > 0 ? <ul>{topic.introList.map((item, index) => <li key={`preview-intro-${index}`}>{item || "مورد معرفی"}</li>)}</ul> : null}</header>
     {topic.heroImageUrl ? <figure className="admin-topic-preview-hero"><div className={`admin-topic-preview-hero-image${isUploadedHero ? " is-uploaded" : ""}`}><img src={topic.heroImageUrl} alt="" />{showBranding ? <><span className="admin-topic-preview-circles" aria-hidden="true" /><img src="/ozone-logo.svg" alt="" className="admin-topic-preview-logo" /></> : null}</div></figure> : <div className="admin-topic-preview-empty-image">تصویر صفحه</div>}
-    <PreviewBlock title={text(topic.signsTitle, "نشانه‌های رایج")} items={topic.signs} list />
-    <PreviewBlock title="چرا پیش می‌آید؟" paragraphs={[topic.why]} />
-    <PreviewBlock title={text(topic.whenToGetHelpTitle, "چه زمانی لازم است کمک بگیرم؟")} items={topic.whenToGetHelp} list />
-    <PreviewBlock title="چه کارهایی معمولاً کمک می‌کند؟" items={topic.whatHelps} list />
-    <PreviewBlock title={text(topic.approachTitle, "اُزون چگونه به تو کمک می‌کند؟")} paragraphs={topic.approachParagraphs} />
+    {hasCoreSectionContent(topic, "signs") ? <PreviewBlock title={text(topic.signsTitle, "نشانه‌های رایج")} items={topic.signs} list /> : null}
+    {hasCoreSectionContent(topic, "why") ? <PreviewBlock title={text(topic.whyTitle, "چرا پیش می‌آید؟")} paragraphs={[topic.why]} /> : null}
+    {hasCoreSectionContent(topic, "whenToGetHelp") ? <PreviewBlock title={text(topic.whenToGetHelpTitle, "چه زمانی لازم است کمک بگیرم؟")} items={topic.whenToGetHelp} list /> : null}
+    {hasCoreSectionContent(topic, "whatHelps") ? <PreviewBlock title={text(topic.whatHelpsTitle, "چه کارهایی معمولاً کمک می‌کند?")} items={topic.whatHelps} list /> : null}
+    {hasCoreSectionContent(topic, "approach") ? <PreviewBlock title={text(topic.approachTitle, "اُزون چگونه به تو کمک می‌کند؟")} paragraphs={topic.approachParagraphs} /> : null}
+    {topic.customSections.map((section) => section.title.trim() || section.description.trim() ? <PreviewBlock key={section.id} title={text(section.title, "عنوان بخش جدید")} paragraphs={[section.description]} /> : null)}
   </article>;
 }
 

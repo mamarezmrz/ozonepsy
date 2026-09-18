@@ -1,4 +1,5 @@
 import type { AdminSessionView } from "@/lib/admin/session";
+import { AdminNotificationsPanel } from "@/components/admin/admin-notifications-panel";
 
 export function AdminTopbar({ onOpenMenu }: { session: AdminSessionView; onOpenMenu?: () => void }) {
   return (
@@ -10,6 +11,9 @@ export function AdminTopbar({ onOpenMenu }: { session: AdminSessionView; onOpenM
           <span aria-hidden="true" />
         </button>
         <span className="admin-topbar-title">پنل مدیریت</span>
+      </div>
+      <div className="admin-topbar-actions">
+        <AdminNotificationsPanel />
       </div>
     </header>
   );

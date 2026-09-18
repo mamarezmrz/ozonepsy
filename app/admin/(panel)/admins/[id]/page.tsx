@@ -16,7 +16,7 @@ export default async function AdminDetailPage({ params }: { params: Promise<{ id
   try { admin = await getAdminUser((await params).id, session); } catch { notFound(); }
   const role = admin.roles[0] as AdminRole | undefined;
   return <div className="admin-page-stack">
-    <AdminPageHeader eyebrow="مدیریت ادمین‌ها" title={admin.name} description={admin.email} action={<AdminButton href="/admins" variant="secondary">بازگشت</AdminButton>} />
+    <AdminPageHeader eyebrow="مدیریت ادمین‌ها" title={admin.name} description={admin.email} action={<AdminButton href="/admin/admins" variant="secondary">بازگشت</AdminButton>} />
     <section className="admin-panel-card"><dl className="admin-detail-list"><div><dt>ایمیل</dt><dd dir="ltr">{admin.email}</dd></div><div><dt>نقش</dt><dd>{admin.roles.map((item) => ADMIN_ROLE_LABELS[item as AdminRole] ?? item).join("، ")}</dd></div><div><dt>وضعیت</dt><dd><AdminStatusBadge tone={admin.status === UserStatus.ACTIVE ? "success" : "danger"}>{admin.status === UserStatus.ACTIVE ? "فعال" : "غیرفعال"}</AdminStatusBadge></dd></div><div><dt>تاریخ ایجاد</dt><dd>{admin.createdAt.toLocaleString("fa-IR")}</dd></div></dl>
       {role ? <AdminRoleForm adminId={admin.id} currentRole={role} /> : null}
       <div className="admin-form-actions">{admin.status === UserStatus.ACTIVE ? <AdminActionButton action={`/api/admin/admins/${admin.id}`} method="PATCH" body={{ status: "SUSPENDED" }} reasonRequired label="غیرفعال‌سازی" variant="danger" confirm="این ادمین غیرفعال شود؟" /> : <AdminActionButton action={`/api/admin/admins/${admin.id}`} method="PATCH" body={{ status: "ACTIVE" }} reasonRequired label="فعال‌سازی مجدد" />}</div>

@@ -44,6 +44,7 @@ const sectionDefaults: Array<{ pageKey: ConsultationCasesPageKey; label: string;
 ];
 
 type TopicJsonInput = string[];
+export type AdminTopicCustomSection = { id: string; title: string; description: string };
 export type AdminTopicImageMode = "multiply" | "normal" | "multiply-no-branding" | "normal-no-branding";
 
 export type AdminIndividualConsultationTopic = {
@@ -60,12 +61,15 @@ export type AdminIndividualConsultationTopic = {
   signs: string[];
   signsNote: string;
   why: string;
+  whyTitle: string;
   whenToGetHelpTitle: string;
   whenToGetHelp: string[];
+  whatHelpsTitle: string;
   whatHelps: string[];
   approachTitle: string;
   approachParagraphs: string[];
   approach: string[];
+  customSections: AdminTopicCustomSection[];
   hideShortQuestions: boolean;
   shortQuestions: string[];
   imageMode: AdminTopicImageMode;
@@ -110,12 +114,15 @@ function topicView(slug: string, row?: {
   signs: unknown;
   signsNote: string | null;
   why: string;
+  whyTitle: string;
   whenToGetHelpTitle: string | null;
   whenToGetHelp: unknown;
+  whatHelpsTitle: string;
   whatHelps: unknown;
   approachTitle: string | null;
   approachParagraphs: unknown;
   approach: unknown;
+  customSections: unknown;
   hideShortQuestions: boolean;
   shortQuestions: unknown;
   imageMode: string;
@@ -136,12 +143,15 @@ function topicView(slug: string, row?: {
     signs: strings(row?.signs ?? legacy?.signs),
     signsNote: row?.signsNote ?? legacy?.signsNote ?? "",
     why: row?.why ?? legacy?.why ?? "",
+    whyTitle: row?.whyTitle ?? "چرا پیش می‌آید؟",
     whenToGetHelpTitle: row?.whenToGetHelpTitle ?? legacy?.whenToGetHelpTitle ?? "چه زمانی لازم است کمک بگیرم؟",
     whenToGetHelp: strings(row?.whenToGetHelp ?? legacy?.whenToGetHelp),
+    whatHelpsTitle: row?.whatHelpsTitle ?? "چه کارهایی معمولاً کمک می‌کند؟",
     whatHelps: strings(row?.whatHelps ?? (Array.isArray(legacy?.whatHelps) ? legacy.whatHelps : legacy?.whatHelps ? [legacy.whatHelps] : [])),
     approachTitle: row?.approachTitle ?? legacy?.approachTitle ?? "اُزون چگونه به تو کمک می‌کند؟",
     approachParagraphs: strings(row?.approachParagraphs ?? (Array.isArray(legacy?.approachParagraphs) ? legacy.approachParagraphs : legacy?.approachParagraphs ? [legacy.approachParagraphs] : [])),
     approach: strings(row?.approach ?? legacy?.approach),
+    customSections: Array.isArray(row?.customSections) ? row.customSections.filter((item): item is AdminTopicCustomSection => typeof item === "object" && item !== null && typeof item.id === "string" && typeof item.title === "string" && typeof item.description === "string") : [],
     hideShortQuestions: row?.hideShortQuestions ?? legacy?.hideShortQuestions ?? true,
     shortQuestions: strings(row?.shortQuestions ?? (Array.isArray(legacy?.shortQuestions) ? legacy.shortQuestions : legacy?.shortQuestions ? [legacy.shortQuestions] : [])),
     imageMode: normalizeImageMode(row?.imageMode, legacy?.imageMode === "normal" ? "normal" : "multiply"),
@@ -188,7 +198,7 @@ export async function getAdminIndividualConsultationTopic(slug: string, pageKey:
     if (!candidate.individualConsultationTopic) throw Object.assign(new Error("Prisma client is stale."), { code: "P2021" });
     const row = await candidate.individualConsultationTopic.findUnique({
       where: { slug },
-      select: { title: true, description: true, introList: true, signsTitle: true, signs: true, signsNote: true, why: true, whenToGetHelpTitle: true, whenToGetHelp: true, whatHelps: true, approachTitle: true, approachParagraphs: true, approach: true, hideShortQuestions: true, shortQuestions: true, imageMode: true, heroMediaId: true, heroImageRemoved: true, status: true },
+      select: { title: true, description: true, introList: true, signsTitle: true, signs: true, signsNote: true, why: true, whyTitle: true, whenToGetHelpTitle: true, whenToGetHelp: true, whatHelpsTitle: true, whatHelps: true, approachTitle: true, approachParagraphs: true, approach: true, customSections: true, hideShortQuestions: true, shortQuestions: true, imageMode: true, heroMediaId: true, heroImageRemoved: true, status: true },
     });
     return topicView(slug, row ? { ...row, exists: true } : undefined, pageKey);
   } catch (error) {
@@ -265,12 +275,15 @@ type TopicInput = {
   signs: TopicJsonInput;
   signsNote: string;
   why: string;
+  whyTitle: string;
   whenToGetHelpTitle: string;
   whenToGetHelp: TopicJsonInput;
+  whatHelpsTitle: string;
   whatHelps: TopicJsonInput;
   approachTitle: string;
   approachParagraphs: TopicJsonInput;
   approach: TopicJsonInput;
+  customSections: AdminTopicCustomSection[];
   hideShortQuestions: boolean;
   shortQuestions: TopicJsonInput;
   imageMode: AdminTopicImageMode;
@@ -281,14 +294,27 @@ type TopicInput = {
 function cleanTopicInput(input: TopicInput) {
   const text = (value: string) => value.trim();
   return {
-    title: text(input.title), description: text(input.description), introList: input.introList.map(text).filter(Boolean), signsTitle: text(input.signsTitle), signs: input.signs.map(text).filter(Boolean), signsNote: text(input.signsNote), why: text(input.why), whenToGetHelpTitle: text(input.whenToGetHelpTitle), whenToGetHelp: input.whenToGetHelp.map(text).filter(Boolean), whatHelps: input.whatHelps.map(text).filter(Boolean), approachTitle: text(input.approachTitle), approachParagraphs: input.approachParagraphs.map(text).filter(Boolean), approach: input.approach.map(text).filter(Boolean), hideShortQuestions: input.hideShortQuestions, shortQuestions: input.shortQuestions.map(text).filter(Boolean), imageMode: input.imageMode, heroMediaId: input.heroMediaId, heroImageRemoved: input.heroImageRemoved,
+    title: text(input.title), description: text(input.description), introList: input.introList.map(text).filter(Boolean), signsTitle: text(input.signsTitle), signs: input.signs.map(text).filter(Boolean), signsNote: text(input.signsNote), why: text(input.why), whyTitle: text(input.whyTitle), whenToGetHelpTitle: text(input.whenToGetHelpTitle), whenToGetHelp: input.whenToGetHelp.map(text).filter(Boolean), whatHelpsTitle: text(input.whatHelpsTitle), whatHelps: input.whatHelps.map(text).filter(Boolean), approachTitle: text(input.approachTitle), approachParagraphs: input.approachParagraphs.map(text).filter(Boolean), approach: input.approach.map(text).filter(Boolean), customSections: input.customSections.map((section) => ({ id: section.id, title: text(section.title), description: text(section.description) })).filter((section) => section.title || section.description), hideShortQuestions: input.hideShortQuestions, shortQuestions: input.shortQuestions.map(text).filter(Boolean), imageMode: input.imageMode, heroMediaId: input.heroMediaId, heroImageRemoved: input.heroImageRemoved,
   };
+}
+
+function hasSectionContent(title: string, ...content: Array<string | string[]>) {
+  return Boolean(title.trim()) || content.some((value) => Array.isArray(value) ? value.some((item) => item.trim()) : Boolean(value.trim()));
 }
 
 export async function saveAdminIndividualConsultationTopic(session: AdminSessionView, slug: string, pageKey: ConsultationCasesPageKey, input: TopicInput) {
   if (!hasIndividualContentDelegates()) throw new AdminServiceError("CONFLICT", "کلاینت Prisma قدیمی است؛ سرور توسعه را یک‌بار restart کنید.");
   const data = cleanTopicInput(input);
-  if (!data.title || !data.description || !data.why) throw new AdminServiceError("VALIDATION_ERROR", "عنوان، توضیحات و بخش «چرا پیش می‌آید؟» الزامی هستند.");
+  const hasAtLeastOneSection = [
+    hasSectionContent(data.signsTitle, data.signs, data.signsNote),
+    hasSectionContent(data.whyTitle, data.why),
+    hasSectionContent(data.whenToGetHelpTitle, data.whenToGetHelp),
+    hasSectionContent(data.whatHelpsTitle, data.whatHelps),
+    hasSectionContent(data.approachTitle, data.approachParagraphs, data.approach),
+    data.customSections.some((section) => section.title || section.description),
+  ].some(Boolean);
+  if (!data.title || !data.description) throw new AdminServiceError("VALIDATION_ERROR", "عنوان و توضیحات معرفی صفحه الزامی هستند.");
+  if (!hasAtLeastOneSection) throw new AdminServiceError("VALIDATION_ERROR", "حداقل یک بخش از محتوای اصلی صفحه باید باقی بماند.");
   return prisma.$transaction(async (tx) => {
     if (data.heroMediaId) {
       const media = await tx.mediaAsset.findUnique({ where: { id: data.heroMediaId }, select: { id: true, status: true, visibility: true } });

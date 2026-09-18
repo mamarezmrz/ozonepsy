@@ -51,12 +51,15 @@ function toPublicTopic(row: {
   signs: unknown;
   signsNote: string | null;
   why: string;
+  whyTitle: string;
   whenToGetHelpTitle: string | null;
   whenToGetHelp: unknown;
+  whatHelpsTitle: string;
   whatHelps: unknown;
   approachTitle: string | null;
   approachParagraphs: unknown;
   approach: unknown;
+  customSections: unknown;
   hideShortQuestions: boolean;
   shortQuestions: unknown;
   imageMode: string;
@@ -76,12 +79,15 @@ function toPublicTopic(row: {
     signs: jsonStrings(row.signs),
     signsNote: row.signsNote ?? undefined,
     why: row.why,
+    whyTitle: row.whyTitle ?? undefined,
     whenToGetHelpTitle: row.whenToGetHelpTitle ?? undefined,
     whenToGetHelp: jsonStrings(row.whenToGetHelp),
+    whatHelpsTitle: row.whatHelpsTitle ?? undefined,
     whatHelps: jsonText(row.whatHelps),
     approachTitle: row.approachTitle ?? undefined,
     approachParagraphs: jsonText(row.approachParagraphs),
     approach: jsonStrings(row.approach),
+    customSections: Array.isArray(row.customSections) ? row.customSections.filter((item): item is { id: string; title: string; description: string } => typeof item === "object" && item !== null && typeof item.id === "string" && typeof item.title === "string" && typeof item.description === "string") : [],
     hideShortQuestions: row.hideShortQuestions,
     shortQuestions: jsonText(row.shortQuestions),
   };
@@ -150,12 +156,15 @@ export async function getPublicConsultationTopic(slug: string, pageKey: Consulta
         signs: true,
         signsNote: true,
         why: true,
+        whyTitle: true,
         whenToGetHelpTitle: true,
         whenToGetHelp: true,
+        whatHelpsTitle: true,
         whatHelps: true,
         approachTitle: true,
         approachParagraphs: true,
         approach: true,
+        customSections: true,
         hideShortQuestions: true,
         shortQuestions: true,
         imageMode: true,

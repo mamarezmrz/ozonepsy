@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import { isAdminHost } from "@/lib/admin/host";
 import { getCurrentAdminSession } from "@/lib/admin/session";
 import { adminErrorResponse } from "@/lib/admin/errors";
 
-export async function GET(request: Request) {
-  if (!isAdminHost(request.headers.get("host"))) {
-    return NextResponse.json({ code: "NOT_FOUND", message: "یافت نشد." }, { status: 404 });
-  }
-
+export async function GET() {
   try {
     const session = await getCurrentAdminSession();
     if (!session) {
