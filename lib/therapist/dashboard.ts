@@ -76,6 +76,7 @@ export type TherapistClientRow = {
   upcomingSessions: number;
   services: string[];
   nextAppointment: Date | null;
+  note: string | null;
 };
 
 async function loadClientRows(specialistId: string, assignedProductIds: string[]) {
@@ -103,11 +104,18 @@ async function loadClientRows(specialistId: string, assignedProductIds: string[]
   const userIds = Array.from(new Set([...appointmentRows.map((row) => row.userId), ...entitlementRows.map((row) => row.userId)]));
   if (!userIds.length) return [] satisfies TherapistClientRow[];
 
-  const users = await prisma.user.findMany({
+  const [users, notes] = await Promise.all([
+    prisma.user.findMany({
     where: { id: { in: userIds } },
     orderBy: { createdAt: "desc" },
     select: { id: true, email: true, status: true, profile: { select: { displayName: true, firstName: true, lastName: true, phone: true } } },
-  });
+    }),
+    prisma.specialistClientNote.findMany({
+      where: { specialistId, userId: { in: userIds } },
+      select: { userId: true, body: true },
+    }),
+  ]);
+  const noteByUserId = new Map(notes.map((note) => [note.userId, note.body]));
   const byId = new Map<string, TherapistClientRow>();
   for (const user of users) {
     byId.set(user.id, {
@@ -122,6 +130,7 @@ async function loadClientRows(specialistId: string, assignedProductIds: string[]
       upcomingSessions: 0,
       services: [],
       nextAppointment: null,
+      note: noteByUserId.get(user.id) ?? null,
     });
   }
 
@@ -199,40 +208,13 @@ export async function getTherapistClients() {
   return loadClientRows(therapist.specialist.id, assignedProducts(assigned).map((product) => product.id));
 }
 
-export async function getTherapistServices() {
+export async function getTherapistPayouts() {
   const therapist = await requireTherapist();
-  const assigned = await loadAssignedData(therapist.specialist.id);
-  return {
-    consultations: assigned.consultationRows.map((row) => ({ ...row.product, durationMinutes: row.durationMinutes })),
-    courses: assigned.courseRows.map((row) => row.courseProduct.product),
-  };
-}
-
-export type TherapistReviewRow = Awaited<ReturnType<typeof listTherapistReviews>>["rows"][number];
-
-export async function listTherapistReviews(query: AdminListQuery) {
-  const therapist = await requireTherapist();
-  const assigned = await loadAssignedData(therapist.specialist.id);
-  const productIds = assignedProducts(assigned).map((product) => product.id);
-  const where = {
-    productId: { in: productIds },
-    ...(query.search ? { OR: [
-      { body: { contains: query.search, mode: "insensitive" as const } },
-      { user: { email: { contains: query.search, mode: "insensitive" as const } } },
-      { product: { title: { contains: query.search, mode: "insensitive" as const } } },
-    ] } : {}),
-  };
-  const [total, rows] = await Promise.all([
-    prisma.review.count({ where }),
-    prisma.review.findMany({
-      where,
-      orderBy: { createdAt: query.direction },
-      skip: paginationOffset(query),
-      take: query.pageSize,
-      select: { id: true, rating: true, body: true, status: true, createdAt: true, user: { select: { email: true, profile: { select: { displayName: true } } } }, product: { select: { title: true } } },
-    }),
-  ]);
-  return { rows, meta: pageMeta(total, query) };
+  return prisma.specialistPayout.findMany({
+    where: { specialistId: therapist.specialist.id },
+    orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true, amountMinor: true, currency: true, status: true, paidAt: true, reference: true, note: true, createdAt: true },
+  });
 }
 
 export async function getTherapistOverview() {
@@ -250,26 +232,12 @@ export async function getTherapistOverview() {
   ]);
   const products = assignedProducts(assigned);
   const clients = await loadClientRows(specialistId, products.map((product) => product.id));
-  const ownReviewCount = products.length
-    ? await prisma.review.count({ where: { productId: { in: products.map((product) => product.id) } } })
-    : 0;
   return {
     metrics: [
       { label: "مراجعان", value: clients.length },
       { label: "جلسات آینده", value: upcomingCount },
-      { label: "خدمات من", value: products.length },
-      { label: "بازخوردها", value: ownReviewCount },
     ],
     upcoming,
-    recentReviews: products.length
-      ? await prisma.review.findMany({
-        where: { productId: { in: products.map((product) => product.id) } },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: { id: true, body: true, rating: true, status: true, createdAt: true, product: { select: { title: true } }, user: { select: { email: true, profile: { select: { displayName: true } } } } },
-      })
-      : [],
     clients,
-    services: products,
   };
 }

@@ -3987,6 +3987,7 @@ This set of fonts are used in this project under the license: (.....)
 .admin-specialist-preview-scroll .about-preconsultation-copy h2 { font-size: 20px; }
 .admin-specialist-preview-scroll .about-preconsultation-copy p { font-size: 12px; line-height: 1.9; }
 .admin-form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.admin-specialist-payout-form { margin-bottom: 24px; }
 
 /* Course creation editor ------------------------------------------------ */
 .admin-course-create-card { padding: 20px; }
@@ -4091,8 +4092,14 @@ This set of fonts are used in this project under the license: (.....)
 .admin-notification-link:hover .admin-notification-item { border-color: #a8d4d4; background: #f1fafa; }
 .admin-notification-item-dot { width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: var(--admin-primary); }
 .admin-notification-item h3 { margin: 0; color: var(--admin-text); font-size: 14px; }
-.admin-notification-item p { margin: 5px 0 8px; color: var(--admin-muted); font-size: 12px; line-height: 1.8; }
+.admin-notification-item p { margin: 5px 0 8px; color: var(--admin-muted); font-size: 12px; line-height: 1.8; white-space: pre-line; }
 .admin-notification-item time { color: #849292; font-size: 10px; }
+.admin-notification-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 12px; }
+.admin-notification-actions button, .admin-notification-details-link { display: inline-flex; min-height: 30px; align-items: center; justify-content: center; border-radius: 9px; padding: 4px 10px; font: inherit; font-size: 11px; text-decoration: none; cursor: pointer; }
+.admin-notification-details-link { border: 1px solid #dce8e8; background: #fff; color: var(--admin-primary); }
+.admin-notification-approve { border: 1px solid #9bcebd; background: #eaf8f1; color: #26745c; }
+.admin-notification-reject { border: 1px solid #efb8b8; background: #fff3f3; color: #c94d4d; }
+.admin-notification-actions button:disabled { cursor: wait; opacity: .55; }
 .admin-details-modal-backdrop { position: fixed; inset: 0; z-index: 180; display: grid; place-items: center; background: rgb(20 37 38 / 26%); padding: 20px; backdrop-filter: blur(2px); animation: admin-details-fade-in .18s ease-out; }
 .admin-details-modal { position: relative; width: min(100%, 520px); border: 1px solid #dfeaea; border-radius: 22px; background: #fff; padding: 28px; box-shadow: 0 20px 60px rgb(53 88 89 / 18%); animation: admin-details-modal-in .2s ease-out; }
 .admin-details-modal h2 { margin: 4px 0 0; color: var(--admin-text); font-size: 19px; }
@@ -5266,6 +5273,8 @@ This set of fonts are used in this project under the license: (.....)
 .therapist-status-select:focus-visible { outline: 0; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgb(15 139 141 / 14%); }
 .therapist-status-select:disabled { cursor: wait; opacity: .6; }
 .therapist-profile-layout { grid-template-columns: 1fr; align-items: start; }
+.therapist-client-note-modal { width: min(100%, 560px); }
+.therapist-client-note-hint { margin: 0 0 16px; color: var(--admin-muted); font-size: 13px; line-height: 1.8; }
 .therapist-profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .therapist-profile-description { margin: -6px 0 18px; color: var(--admin-muted); font-size: 13px; line-height: 1.9; }
 .therapist-profile-image-field { display: grid; gap: 10px; }

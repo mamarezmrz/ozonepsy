@@ -35,6 +35,8 @@ export default async function SpecialistsPage({ searchParams }: { searchParams: 
         { key: "country", label: "کشور", render: (row) => <span>{row.country || "—"}</span> },
         { key: "email", label: "ایمیل", render: (row) => <span dir="ltr">{row.email || "—"}</span> },
         { key: "status", label: "وضعیت پروفایل", render: (row) => <AdminStatusBadge tone={row.status === SpecialistStatus.ACTIVE ? "success" : "neutral"}>{statusLabel(row.status)}</AdminStatusBadge> },
+        { key: "visibility", label: "نمایش عمومی", render: (row) => <AdminStatusBadge tone={row.profileVisible ? "success" : "neutral"}>{row.profileVisible ? "نمایش داده می‌شود" : "پنهان"}</AdminStatusBadge> },
+        { key: "pending", label: "تغییرات", render: (row) => row.hasPendingProfileChange ? <AdminStatusBadge tone="warning">در انتظار تأیید</AdminStatusBadge> : <span>—</span> },
         { key: "accountStatus", label: "حساب ورود", render: (row) => <AdminStatusBadge tone={row.user?.status === UserStatus.ACTIVE ? "success" : "warning"}>{row.user?.status === UserStatus.ACTIVE ? "فعال" : row.user ? "غیرفعال" : "بدون حساب"}</AdminStatusBadge> },
         ...(canWrite ? [{ key: "actions", label: "عملیات", render: (row: typeof data.rows[number]) => <div className="admin-table-actions"><AdminButton href={`/admin/specialists/${row.id}`} variant="secondary">ویرایش</AdminButton></div> }] : []),
       ]} /> : <AdminEmptyState title="متخصصی ثبت نشده است" description="برای اضافه‌کردن اولین متخصص، از دکمهٔ بالای صفحه استفاده کنید." action={canWrite ? <AdminButton href="/admin/specialists/new">افزودن متخصص</AdminButton> : undefined} />}

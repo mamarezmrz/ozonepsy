@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { MediaStatus, MediaVisibility, RoleName, SpecialistStatus, UserStatus } from "@/lib/generated/prisma/enums";
+import { AdminNotificationType, MediaStatus, MediaVisibility, RoleName, SpecialistStatus, UserStatus } from "@/lib/generated/prisma/enums";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { AdminServiceError } from "@/lib/admin/errors";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
@@ -8,6 +9,7 @@ import type { AdminSessionView } from "@/lib/admin/session";
 import { hashPassword } from "@/lib/auth/password";
 import { sendTherapistCredentialsEmail } from "@/lib/auth/email";
 import { legacySpecialistProfileSections, parseSpecialistProfileSections, type SpecialistProfileSection } from "@/lib/specialist-profile";
+import { parseTherapistPendingProfileChange } from "@/lib/therapist/profile";
 
 function scopedWhere(session?: AdminSessionView) {
   return session?.roles.includes("INSTRUCTOR") && !session.roles.some((role) => role === "ADMIN" || role === "SUPER_ADMIN") ? { userId: session.userId } : {};
@@ -38,10 +40,10 @@ export async function listAdminSpecialists(query: AdminListQuery, status?: Speci
       orderBy,
       skip: paginationOffset(query),
       take: query.pageSize,
-      select: { id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, status: true, imageUrl: true, userId: true, user: { select: { status: true } }, createdAt: true, _count: { select: { appointments: true, courseAssignments: true } } },
+      select: { id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, status: true, profileVisible: true, imageUrl: true, userId: true, pendingProfileChangeAt: true, user: { select: { status: true } }, createdAt: true, _count: { select: { appointments: true, courseAssignments: true } } },
     }),
   ]);
-  return { rows: rows.map((row) => ({ ...row, appointmentCount: row._count.appointments, courseCount: row._count.courseAssignments })), meta: pageMeta(total, query) };
+  return { rows: rows.map((row) => ({ ...row, hasPendingProfileChange: Boolean(row.pendingProfileChangeAt), appointmentCount: row._count.appointments, courseCount: row._count.courseAssignments })), meta: pageMeta(total, query) };
 }
 
 export async function listAdminSpecialistOptions() {
@@ -56,14 +58,14 @@ export async function getAdminSpecialist(id: string, session?: AdminSessionView)
   const row = await prisma.specialist.findFirst({
     where: { id, ...scopedWhere(session) },
     select: {
-       id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, profileSections: true, imageUrl: true, profileMediaId: true, status: true, userId: true, createdAt: true, updatedAt: true,
+       id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, profileSections: true, imageUrl: true, profileMediaId: true, profileVisible: true, pendingProfileChanges: true, pendingProfileChangeAt: true, status: true, userId: true, createdAt: true, updatedAt: true,
        user: { select: { id: true, email: true, status: true, mustChangePassword: true, profile: { select: { displayName: true, firstName: true, lastName: true } } } },
       courseAssignments: { select: { courseProductId: true, courseProduct: { select: { product: { select: { id: true, title: true, slug: true, status: true } } } } } },
       _count: { select: { appointments: true } },
     },
   });
   if (!row) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
-  return { ...row, profileSections: parseSpecialistProfileSections(row.profileSections).length ? parseSpecialistProfileSections(row.profileSections) : legacySpecialistProfileSections(row) };
+  return { ...row, profileSections: parseSpecialistProfileSections(row.profileSections).length ? parseSpecialistProfileSections(row.profileSections) : legacySpecialistProfileSections(row), pendingProfileChange: parseTherapistPendingProfileChange(row.pendingProfileChanges) };
 }
 
 function splitDisplayName(displayName: string) {
@@ -71,7 +73,7 @@ function splitDisplayName(displayName: string) {
   return { firstName: parts.shift() || null, lastName: parts.join(" ") || null };
 }
 
-type SpecialistMutationInput = { slug?: string; displayName: string; specialty?: string; aboutTitle?: string; aboutDescription?: string; specialtiesTitle?: string; specialtiesItems?: string[]; educationTitle?: string; educationItems?: string[]; responsibilitiesTitle?: string; responsibilitiesItems?: string[]; booksTitle?: string; booksItems?: string[]; quoteTitle?: string; quote?: string; profileSections?: SpecialistProfileSection[]; phone?: string; country?: string; email?: string; bio?: string; profileMediaId?: string | null; imageUrl?: string | null; userId?: string | null; initialPassword?: string; initialPasswordConfirmation?: string; accountActive?: boolean };
+type SpecialistMutationInput = { slug?: string; displayName: string; specialty?: string; aboutTitle?: string; aboutDescription?: string; specialtiesTitle?: string; specialtiesItems?: string[]; educationTitle?: string; educationItems?: string[]; responsibilitiesTitle?: string; responsibilitiesItems?: string[]; booksTitle?: string; booksItems?: string[]; quoteTitle?: string; quote?: string; profileSections?: SpecialistProfileSection[]; phone?: string; country?: string; email?: string; bio?: string; profileMediaId?: string | null; imageUrl?: string | null; userId?: string | null; initialPassword?: string; initialPasswordConfirmation?: string; accountActive?: boolean; profileVisible?: boolean };
 
 function contentItems(items?: string[]) {
   return [...new Set((items ?? []).map((item) => item.trim()).filter(Boolean))].slice(0, 50);
@@ -132,6 +134,7 @@ export async function createAdminSpecialist(actorId: string, input: SpecialistMu
           imageUrl: input.profileMediaId ? null : input.imageUrl?.trim() || null,
           profileMedia: input.profileMediaId ? { connect: { id: input.profileMediaId } } : undefined,
           status: accountActive ? SpecialistStatus.ACTIVE : SpecialistStatus.INACTIVE,
+          profileVisible: input.profileVisible !== false,
           user: {
             create: {
               email,
@@ -158,7 +161,7 @@ export async function createAdminSpecialist(actorId: string, input: SpecialistMu
 }
 
 export async function updateAdminSpecialist(actorId: string, id: string, input: SpecialistMutationInput, session?: AdminSessionView) {
-  const before = await prisma.specialist.findFirst({ where: { id, ...scopedWhere(session) }, select: { id: true, slug: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, imageUrl: true, profileMediaId: true, userId: true, email: true, displayName: true, specialty: true, phone: true, country: true, status: true, user: { select: { id: true, email: true, status: true } } } });
+  const before = await prisma.specialist.findFirst({ where: { id, ...scopedWhere(session) }, select: { id: true, slug: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, imageUrl: true, profileMediaId: true, profileVisible: true, userId: true, email: true, displayName: true, specialty: true, phone: true, country: true, status: true, user: { select: { id: true, email: true, status: true } } } });
   if (!before) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
   const displayName = input.displayName.trim();
   if (!displayName) throw new AdminServiceError("VALIDATION_ERROR", "نام و نام خانوادگی متخصص را وارد کنید.");
@@ -197,7 +200,7 @@ export async function updateAdminSpecialist(actorId: string, id: string, input: 
         if (accountActive === false || input.initialPassword) await tx.authSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
       }
 
-      const updated = await tx.specialist.update({ where: { id }, data: { slug: input.slug?.trim().toLowerCase() || before.slug, displayName, specialty: input.specialty?.trim() || null, phone: input.phone?.trim() || null, country: input.country?.trim() || null, email: email ?? null, bio: input.quote === undefined && input.bio === undefined ? before.bio : input.quote?.trim() || input.bio?.trim() || null, imageUrl: input.profileMediaId ? null : before.imageUrl, profileMediaId: input.profileMediaId === undefined ? before.profileMediaId : input.profileMediaId || null, ...specialistContentData(input), userId, ...(accountActive === undefined ? {} : { status: accountActive ? SpecialistStatus.ACTIVE : SpecialistStatus.INACTIVE }) }, select: { id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, imageUrl: true, profileMediaId: true, userId: true, status: true } });
+      const updated = await tx.specialist.update({ where: { id }, data: { slug: input.slug?.trim().toLowerCase() || before.slug, displayName, specialty: input.specialty?.trim() || null, phone: input.phone?.trim() || null, country: input.country?.trim() || null, email: email ?? null, bio: input.quote === undefined && input.bio === undefined ? before.bio : input.quote?.trim() || input.bio?.trim() || null, imageUrl: input.profileMediaId ? null : before.imageUrl, profileMediaId: input.profileMediaId === undefined ? before.profileMediaId : input.profileMediaId || null, profileVisible: input.profileVisible === undefined ? before.profileVisible : input.profileVisible, ...specialistContentData(input), userId, ...(accountActive === undefined ? {} : { status: accountActive ? SpecialistStatus.ACTIVE : SpecialistStatus.INACTIVE }) }, select: { id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, imageUrl: true, profileMediaId: true, profileVisible: true, userId: true, status: true } });
       await recordAdminAuditWithClient(tx, { actorId, action: "SPECIALIST_UPDATED", targetType: "SPECIALIST", targetId: id, beforeState: { ...before, user: before.user ? { id: before.user.id, email: before.user.email, status: before.user.status } : null }, afterState: updated });
       return updated;
     }).then(async (updated) => {
@@ -208,6 +211,48 @@ export async function updateAdminSpecialist(actorId: string, id: string, input: 
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") throw new AdminServiceError("CONFLICT", "این ایمیل یا اسلاگ برای متخصص دیگری ثبت شده است.");
     throw error;
   }
+}
+
+export async function approveAdminSpecialistProfile(actorId: string, id: string, session?: AdminSessionView) {
+  const before = await prisma.specialist.findFirst({
+    where: { id, ...scopedWhere(session) },
+    select: { id: true, userId: true, displayName: true, specialty: true, phone: true, country: true, email: true, pendingProfileChanges: true, pendingProfileChangeAt: true, user: { select: { id: true, email: true } } },
+  });
+  if (!before) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
+  const pending = parseTherapistPendingProfileChange(before.pendingProfileChanges);
+  if (!pending) throw new AdminServiceError("CONFLICT", "تغییری برای تأیید وجود ندارد.");
+  const duplicateEmail = await prisma.user.findFirst({ where: { email: pending.email, ...(before.userId ? { id: { not: before.userId } } : {}) }, select: { id: true } });
+  if (duplicateEmail) throw new AdminServiceError("CONFLICT", "این ایمیل قبلاً برای حساب دیگری استفاده شده است.");
+  const name = splitDisplayName(pending.displayName);
+
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.specialist.update({
+      where: { id },
+      data: { displayName: pending.displayName, specialty: pending.specialty || null, phone: pending.phone || null, country: pending.country || null, email: pending.email, pendingProfileChanges: Prisma.JsonNull, pendingProfileChangeAt: null },
+      select: { id: true, displayName: true, specialty: true, phone: true, country: true, email: true, pendingProfileChangeAt: true },
+    });
+    if (before.userId) {
+      await tx.user.update({
+        where: { id: before.userId },
+        data: { email: pending.email, profile: { upsert: { create: { displayName: pending.displayName, firstName: name.firstName, lastName: name.lastName, phone: pending.phone || null, country: pending.country || null }, update: { displayName: pending.displayName, firstName: name.firstName, lastName: name.lastName, phone: pending.phone || null, country: pending.country || null } } } },
+      });
+    }
+    await recordAdminAuditWithClient(tx, { actorId, action: "THERAPIST_PROFILE_CHANGE_APPROVED", targetType: "SPECIALIST", targetId: id, beforeState: { ...before, pendingProfileChanges: pending }, afterState: updated });
+    await tx.adminNotification.updateMany({ where: { type: AdminNotificationType.THERAPIST_PROFILE_CHANGE, targetId: id, resolvedAt: null }, data: { resolvedAt: new Date() } });
+    return updated;
+  });
+}
+
+export async function rejectAdminSpecialistProfile(actorId: string, id: string, session?: AdminSessionView) {
+  return prisma.$transaction(async (tx) => {
+    const before = await tx.specialist.findFirst({ where: { id, ...scopedWhere(session) }, select: { id: true, pendingProfileChanges: true, pendingProfileChangeAt: true } });
+    if (!before) throw new AdminServiceError("NOT_FOUND", "متخصص پیدا نشد.");
+    if (!parseTherapistPendingProfileChange(before.pendingProfileChanges)) throw new AdminServiceError("CONFLICT", "تغییری برای رد کردن وجود ندارد.");
+    const updated = await tx.specialist.update({ where: { id }, data: { pendingProfileChanges: Prisma.JsonNull, pendingProfileChangeAt: null }, select: { id: true, pendingProfileChangeAt: true } });
+    await recordAdminAuditWithClient(tx, { actorId, action: "THERAPIST_PROFILE_CHANGE_REJECTED", targetType: "SPECIALIST", targetId: id, beforeState: before, afterState: updated });
+    await tx.adminNotification.updateMany({ where: { type: AdminNotificationType.THERAPIST_PROFILE_CHANGE, targetId: id, resolvedAt: null }, data: { resolvedAt: new Date() } });
+    return updated;
+  });
 }
 
 export async function resetAdminSpecialistPassword(actorId: string, id: string, password: string, reason: string, session?: AdminSessionView) {

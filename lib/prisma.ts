@@ -30,18 +30,24 @@ function isCurrentPrismaClient(client: PrismaClient | undefined): client is Pris
     courseTag?: unknown;
     authIdentity?: unknown;
     adminNotification?: unknown;
+    specialistClientNote?: unknown;
+    specialistPayout?: unknown;
   _runtimeDataModel?: { models?: Record<string, { fields?: Array<{ name: string }> }> };
   };
   const groupFields = candidate._runtimeDataModel?.models?.GroupTherapyProduct?.fields?.map((field) => field.name) ?? [];
   const faqFields = candidate._runtimeDataModel?.models?.Faq?.fields?.map((field) => field.name) ?? [];
   const specialistFields = candidate._runtimeDataModel?.models?.Specialist?.fields?.map((field) => field.name) ?? [];
+  const notificationFields = candidate._runtimeDataModel?.models?.AdminNotification?.fields?.map((field) => field.name) ?? [];
   const hasCurrentGroupModel = groupFields.length
     ? ["instructorName", "durationSessions", "meetingUrl", "sessions"].every((field) => groupFields.includes(field))
     : typeof candidate.groupTherapySession !== "undefined";
   const hasCurrentFaqModel = faqFields.includes("pageKey");
   const hasCurrentSpecialistModel = specialistFields.length
-    ? ["aboutTitle", "aboutDescription", "specialtiesTitle", "specialtiesItems", "educationTitle", "educationItems", "responsibilitiesTitle", "responsibilitiesItems", "booksTitle", "booksItems", "quoteTitle", "profileSections"].every((field) => specialistFields.includes(field))
+    ? ["aboutTitle", "aboutDescription", "specialtiesTitle", "specialtiesItems", "educationItems", "educationTitle", "responsibilitiesTitle", "responsibilitiesItems", "booksTitle", "booksItems", "quoteTitle", "profileSections", "pendingProfileChanges", "pendingProfileChangeAt", "profileVisible"].every((field) => specialistFields.includes(field))
     : typeof candidate.specialist !== "undefined";
+  const hasCurrentNotificationModel = notificationFields.length
+    ? ["targetId", "resolvedAt"].every((field) => notificationFields.includes(field))
+    : typeof candidate.adminNotification !== "undefined";
 
   return typeof candidate.consultationBenefitsSection !== "undefined"
     && typeof candidate.individualConsultationCaseSection !== "undefined"
@@ -49,9 +55,12 @@ function isCurrentPrismaClient(client: PrismaClient | undefined): client is Pris
     && typeof candidate.courseTag !== "undefined"
     && typeof candidate.authIdentity !== "undefined"
     && typeof candidate.adminNotification !== "undefined"
+    && typeof candidate.specialistClientNote !== "undefined"
+    && typeof candidate.specialistPayout !== "undefined"
     && hasCurrentGroupModel
     && hasCurrentFaqModel
-    && hasCurrentSpecialistModel;
+    && hasCurrentSpecialistModel
+    && hasCurrentNotificationModel;
 }
 
 function getCurrentPrismaClient() {

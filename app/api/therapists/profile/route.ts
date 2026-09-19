@@ -11,7 +11,6 @@ export async function PATCH(request: Request) {
     const therapist = await requireTherapist();
     const contentType = request.headers.get("content-type") ?? "";
     let input: unknown;
-    let imageFile: File | undefined;
     if (contentType.includes("multipart/form-data")) {
       const form = await request.formData();
       const text = (name: string) => {
@@ -19,23 +18,18 @@ export async function PATCH(request: Request) {
         return typeof value === "string" ? value : "";
       };
       input = {
-        slug: text("slug"),
         displayName: text("displayName"),
         email: text("email"),
         specialty: text("specialty"),
         phone: text("phone"),
         country: text("country"),
-        bio: text("bio"),
-        profileSections: text("profileSections"),
       };
-      const file = form.get("profileImage");
-      if (file instanceof File && file.size > 0) imageFile = file;
     } else {
       input = await request.json();
     }
     const parsedInput = therapistProfileSchema.parse(input);
-    const data = await updateTherapistProfile(therapist.userId, therapist.specialist.id, parsedInput, imageFile);
-    return Response.json({ ok: true, data, message: "اطلاعات پروفایل با موفقیت ذخیره شد." });
+    const data = await updateTherapistProfile(therapist.userId, therapist.specialist.id, parsedInput);
+    return Response.json({ ok: true, data, message: "اطلاعات پروفایل برای بررسی مدیریت ارسال شد؛ پس از تأیید، تغییرات در پروفایل عمومی نمایش داده می‌شود." });
   } catch (error) {
     if (error instanceof TherapistAuthorizationError) return Response.json({ ok: false, message: error.message }, { status: error.code === "FORBIDDEN" ? 403 : 401 });
     return adminErrorResponse(error);

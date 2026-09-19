@@ -7,7 +7,7 @@ import { AdminSpecialistLivePreview } from "@/components/admin/admin-specialist-
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type Values = SpecialistProfileContentValues & { displayName?: string; specialty?: string | null; phone?: string | null; country?: string | null; email?: string | null; imageUrl?: string | null; profileMediaId?: string | null; bio?: string | null; accountActive?: boolean; hasAccount?: boolean };
+type Values = SpecialistProfileContentValues & { displayName?: string; specialty?: string | null; phone?: string | null; country?: string | null; email?: string | null; imageUrl?: string | null; profileMediaId?: string | null; bio?: string | null; accountActive?: boolean; profileVisible?: boolean; hasAccount?: boolean };
 
 export function AdminSpecialistForm({ action, method = "POST", values = {}, successRedirect, livePreview = false }: { action: string; method?: "POST" | "PATCH"; values?: Values; successRedirect?: string; livePreview?: boolean }) {
   const initialImage = values.profileMediaId ? `/api/admin/media/${values.profileMediaId}/preview` : values.imageUrl ?? "";
@@ -69,6 +69,7 @@ export function AdminSpecialistForm({ action, method = "POST", values = {}, succ
         <input type="hidden" name="profileMediaId" value={previewValues.profileMediaId ?? values.profileMediaId ?? ""} />
       </div>
       <label className="admin-specialist-active-field"><input type="hidden" name="accountActive" value="false" /><input type="checkbox" name="accountActive" value="true" defaultChecked={values.accountActive !== false} /><span>حساب متخصص فعال باشد</span></label>
+      <label className="admin-specialist-active-field"><input type="hidden" name="profileVisible" value="false" /><input type="checkbox" name="profileVisible" value="true" defaultChecked={values.profileVisible !== false} /><span>پروفایل عمومی نمایش داده شود</span></label>
       {accountFieldsVisible ? <div className="admin-specialist-form-row admin-specialist-form-row-passwords">
         <label className="admin-form-field"><span>{method === "POST" ? "رمز اولیه" : "رمز اولیهٔ حساب"}</span><AdminLatinPasswordInput name="initialPassword" minLength={12} required /></label>
         <label className="admin-form-field"><span>تکرار رمز اولیه</span><AdminLatinPasswordInput name="initialPasswordConfirmation" minLength={12} required /></label>

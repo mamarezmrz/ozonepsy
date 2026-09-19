@@ -3,6 +3,7 @@ import { AdminDataTable, AdminEmptyState, AdminPageHeader, AdminStatusBadge } fr
 import { getTherapistClients } from "@/lib/therapist/dashboard";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { formatPersianNumber } from "@/lib/format";
+import { TherapistClientNote } from "@/components/therapist-client-note";
 
 export const metadata: Metadata = { title: "مراجعان متخصص", robots: { index: false, follow: false } };
 
@@ -16,6 +17,7 @@ export default async function TherapistClientsPage() {
     { key: "sessions", label: "جلسات", render: (row) => <span>{formatPersianNumber(row.appointmentCount)}</span> },
     { key: "remaining", label: "باقی‌مانده", render: (row) => <span>{row.remainingSessions === null ? "—" : formatPersianNumber(row.remainingSessions)}</span> },
     { key: "next", label: "جلسه بعدی", render: (row) => row.nextAppointment ? <time dateTime={row.nextAppointment.toISOString()}>{row.nextAppointment.toLocaleString("fa-IR-u-ca-gregory", { dateStyle: "medium", timeStyle: "short" })}</time> : <span>—</span> },
+    { key: "note", label: "پرونده کمکی", render: (row) => <TherapistClientNote userId={row.id} clientName={row.name} initialNote={row.note} /> },
     { key: "status", label: "حساب", render: (row) => <AdminStatusBadge tone={row.status === UserStatus.ACTIVE ? "success" : "warning"}>{row.status === UserStatus.ACTIVE ? "فعال" : "غیرفعال"}</AdminStatusBadge> },
   ]} empty={<AdminEmptyState title="مراجعی برای نمایش نیست" description="با تخصیص جلسه یا دسترسی خدمت، مراجع در این فهرست دیده می‌شود." />} /></section></div>;
 }

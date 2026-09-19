@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 const titles: Array<[string, string]> = [
   ["/therapist-panel/clients", "مراجعان من"],
   ["/therapist-panel/sessions", "جلسات من"],
-  ["/therapist-panel/services", "خدمات من"],
-  ["/therapist-panel/reviews", "بازخوردها"],
+  ["/therapist-panel/payouts", "پرداخت‌های من"],
   ["/therapist-panel/profile", "پروفایل و تنظیمات"],
 ];
 

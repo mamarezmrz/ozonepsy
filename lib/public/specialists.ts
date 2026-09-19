@@ -168,28 +168,37 @@ const specialistSelect = {
   profileSections: true,
   imageUrl: true,
   profileMediaId: true,
+  profileVisible: true,
   profileMedia: {
     select: { id: true },
   },
 } as const;
 
 export async function getPublicSpecialists(): Promise<PublicSpecialistProfile[]> {
-  const rows = await prisma.specialist.findMany({
-    where: {
-      status: SpecialistStatus.ACTIVE,
-      OR: [
-        { profileMediaId: null },
-        { profileMedia: { is: { status: MediaStatus.ACTIVE, visibility: MediaVisibility.PUBLIC } } },
-      ],
-    },
-    orderBy: [{ displayName: "asc" }, { createdAt: "asc" }],
-    select: specialistSelect,
-  });
+  const [rows, hiddenRows] = await Promise.all([
+    prisma.specialist.findMany({
+      where: {
+        status: SpecialistStatus.ACTIVE,
+        profileVisible: true,
+        OR: [
+          { profileMediaId: null },
+          { profileMedia: { is: { status: MediaStatus.ACTIVE, visibility: MediaVisibility.PUBLIC } } },
+        ],
+      },
+      orderBy: [{ displayName: "asc" }, { createdAt: "asc" }],
+      select: specialistSelect,
+    }),
+    prisma.specialist.findMany({
+      where: { profileVisible: false },
+      select: { slug: true },
+    }),
+  ]);
 
   const databaseProfiles = rows.map(mapSpecialist);
   const databaseBySlug = new Map(databaseProfiles.map((profile) => [profile.slug, profile]));
   const fallbackSlugs = new Set(fallbackSpecialists.map((profile) => profile.slug));
-  const preservedFallbacks = fallbackSpecialists.map((profile) => databaseBySlug.get(profile.slug) ?? profile);
+  const hiddenSlugs = new Set(hiddenRows.map((row) => row.slug));
+  const preservedFallbacks = fallbackSpecialists.filter((profile) => !hiddenSlugs.has(profile.slug)).map((profile) => databaseBySlug.get(profile.slug) ?? profile);
   const additionalDatabaseProfiles = databaseProfiles.filter((profile) => !fallbackSlugs.has(profile.slug));
   return [...preservedFallbacks, ...additionalDatabaseProfiles];
 }
@@ -199,6 +208,7 @@ export async function getPublicSpecialistBySlug(slug: string): Promise<PublicSpe
     where: {
       slug,
       status: SpecialistStatus.ACTIVE,
+      profileVisible: true,
       OR: [
         { profileMediaId: null },
         { profileMedia: { is: { status: MediaStatus.ACTIVE, visibility: MediaVisibility.PUBLIC } } },
@@ -208,5 +218,7 @@ export async function getPublicSpecialistBySlug(slug: string): Promise<PublicSpe
   });
 
   if (row) return mapSpecialist(row);
+  const hiddenRow = await prisma.specialist.findFirst({ where: { slug, profileVisible: false }, select: { id: true } });
+  if (hiddenRow) return null;
   return fallbackSpecialists.find((profile) => profile.slug === slug) ?? null;
 }

@@ -10,7 +10,7 @@ type SiteNotificationProps = {
 
 export function SiteNotification({ message, tone = "success", onDismiss }: SiteNotificationProps) {
   useEffect(() => {
-    const timeout = window.setTimeout(onDismiss, 3000);
+    const timeout = window.setTimeout(onDismiss, 5000);
     return () => window.clearTimeout(timeout);
   }, [message, onDismiss]);
 

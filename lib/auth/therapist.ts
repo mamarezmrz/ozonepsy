@@ -6,6 +6,7 @@ import { clearTherapistSessionCookie, createSessionToken, getTherapistSessionTok
 import { sessionData } from "@/lib/auth/service";
 import { recordAdminAuditWithClient } from "@/lib/admin/audit";
 import { legacySpecialistProfileSections, parseSpecialistProfileSections, type SpecialistProfileSection } from "@/lib/specialist-profile";
+import { parseTherapistPendingProfileChange, type TherapistPendingProfileChange } from "@/lib/therapist/profile";
 
 type TherapistAuthMetadata = { ipAddress?: string; userAgent?: string };
 
@@ -38,6 +39,7 @@ export type TherapistSessionView = {
     booksItems: string[];
     quoteTitle: string | null;
     quote: string | null;
+    pendingProfileChanges: TherapistPendingProfileChange | null;
   };
 };
 
@@ -82,7 +84,7 @@ export async function getCurrentTherapist(): Promise<TherapistSessionView | null
           email: true,
           mustChangePassword: true,
           specialistProfile: {
-            select: { id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, profileSections: true, imageUrl: true, profileMediaId: true },
+            select: { id: true, slug: true, displayName: true, specialty: true, phone: true, country: true, email: true, bio: true, aboutTitle: true, aboutDescription: true, specialtiesTitle: true, specialtiesItems: true, educationTitle: true, educationItems: true, responsibilitiesTitle: true, responsibilitiesItems: true, booksTitle: true, booksItems: true, quoteTitle: true, quote: true, profileSections: true, imageUrl: true, profileMediaId: true, pendingProfileChanges: true },
           },
         },
       },
@@ -100,6 +102,7 @@ export async function getCurrentTherapist(): Promise<TherapistSessionView | null
     specialist: {
       ...specialist,
       profileSections: profileSections.length ? profileSections : legacySpecialistProfileSections(specialist),
+      pendingProfileChanges: parseTherapistPendingProfileChange(specialist.pendingProfileChanges),
     },
   };
 }

@@ -52,6 +52,12 @@ enum SpecialistStatus {
   INACTIVE
 }
 
+enum SpecialistPayoutStatus {
+  PENDING
+  PAID
+  CANCELED
+}
+
 enum CourseDeliveryMode {
   RECORDED
   LIVE
@@ -111,6 +117,7 @@ enum ContentStatus {
 enum AdminNotificationType {
   PRECONSULTATION_REQUEST
   REVIEW_SUBMITTED
+  THERAPIST_PROFILE_CHANGE
 }
 
 enum MediaStatus {
@@ -164,6 +171,7 @@ model User {
   reviews                 Review[]
   supportContributions    SupportContribution[]
   preconsultationRequests PreconsultationRequest[]
+  specialistClientNotes   SpecialistClientNote[]
   auditLogs               AdminAuditLog[]          @relation("AuditActor")
   recordedUsages          SessionUsage[]           @relation("UsageRecordedBy")
   reversedUsages          SessionUsage[]           @relation("UsageReversedBy")
@@ -277,10 +285,13 @@ model AdminNotification {
   title       String                @db.VarChar(240)
   description String                @db.Text
   href        String?               @db.VarChar(500)
+  targetId    String?               @db.Uuid
+  resolvedAt  DateTime?
   createdAt   DateTime              @default(now())
 
   @@index([createdAt])
   @@index([type, createdAt])
+  @@index([type, targetId, resolvedAt])
 }
 
 model AdminLoginRateLimit {
@@ -372,6 +383,9 @@ model Specialist {
   imageUrl             String?
   profileMediaId       String?               @db.Uuid
   profileMedia         MediaAsset?           @relation("SpecialistProfileMedia", fields: [profileMediaId], references: [id], onDelete: SetNull)
+  pendingProfileChanges Json?
+  pendingProfileChangeAt DateTime?
+  profileVisible       Boolean             @default(true)
   status               SpecialistStatus      @default(ACTIVE)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -380,6 +394,39 @@ model Specialist {
   consultationProducts ConsultationProduct[]
   appointments         Appointment[]
   courseAssignments    CourseSpecialist[]
+  clientNotes          SpecialistClientNote[]
+  payouts              SpecialistPayout[]
+}
+
+model SpecialistClientNote {
+  id           String     @id @default(uuid()) @db.Uuid
+  specialistId String     @db.Uuid
+  userId       String     @db.Uuid
+  body         String     @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  specialist   Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([specialistId, userId])
+  @@index([userId, updatedAt])
+}
+
+model SpecialistPayout {
+  id           String                @id @default(uuid()) @db.Uuid
+  specialistId String                @db.Uuid
+  amountMinor  Int
+  currency     String                @db.VarChar(3)
+  status       SpecialistPayoutStatus @default(PAID)
+  paidAt       DateTime?
+  reference    String?               @db.VarChar(200)
+  note         String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  specialist   Specialist            @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@index([specialistId, createdAt])
+  @@index([specialistId, status, paidAt])
 }
 
 model Product {

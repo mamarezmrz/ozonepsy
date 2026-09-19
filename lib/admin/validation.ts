@@ -202,6 +202,7 @@ export const adminSpecialistSchema = z.object({
   initialPassword: z.preprocess((value) => value === "" || value === undefined ? undefined : value, adminSpecialistPasswordField.optional()),
   initialPasswordConfirmation: z.preprocess((value) => value === "" || value === undefined ? undefined : value, z.string().max(128).optional()),
   accountActive: z.preprocess((value) => value === undefined ? undefined : value === true || value === "true" || value === "on", z.boolean().optional()),
+  profileVisible: z.preprocess((value) => value === undefined ? undefined : value === true || value === "true" || value === "on", z.boolean().optional()),
 }).superRefine((value, context) => {
   if ((value.initialPassword || value.initialPasswordConfirmation) && value.initialPassword !== value.initialPasswordConfirmation) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["initialPasswordConfirmation"], message: "رمز اولیه و تکرار آن یکسان نیستند." });

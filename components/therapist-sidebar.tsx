@@ -9,8 +9,7 @@ const links = [
   { href: "/therapist-panel", label: "نمای کلی" },
   { href: "/therapist-panel/clients", label: "مراجعان من" },
   { href: "/therapist-panel/sessions", label: "جلسات من" },
-  { href: "/therapist-panel/services", label: "خدمات من" },
-  { href: "/therapist-panel/reviews", label: "بازخوردها" },
+  { href: "/therapist-panel/payouts", label: "پرداخت‌های من" },
   { href: "/therapist-panel/profile", label: "پروفایل و تنظیمات" },
 ] as const;
 
