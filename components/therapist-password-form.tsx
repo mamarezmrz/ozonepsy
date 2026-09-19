@@ -9,6 +9,7 @@ export function TherapistPasswordForm({ firstLogin = false }: { firstLogin?: boo
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setPending(true);
     setError("");
     setSuccess("");
@@ -16,21 +17,20 @@ export function TherapistPasswordForm({ firstLogin = false }: { firstLogin?: boo
       const response = await fetch("/api/therapists/change-password", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries())),
+        body: JSON.stringify(Object.fromEntries(new FormData(form).entries())),
       });
       const body = await response.json() as { ok?: boolean; error?: string; message?: string };
       if (!response.ok || !body.ok) {
         setError(body.error ?? "تغییر رمز انجام نشد.");
         return;
       }
-      setSuccess(body.message ?? "رمز عبور با موفقیت تغییر کرد.");
-      event.currentTarget.reset();
+      form.reset();
       if (firstLogin) {
-        // The database transaction has committed before the response arrives.
-        // A full navigation avoids refreshing the still-mounted password page
-        // while its server guard is redirecting after mustChangePassword flips.
+        setSuccess("رمز عبور با موفقیت تغییر کرد. در حال ورود به پنل…");
         window.location.replace("/therapist-panel");
+        return;
       }
+      setSuccess(body.message ?? "رمز عبور با موفقیت تغییر کرد.");
     } catch {
       setError("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
     } finally {
